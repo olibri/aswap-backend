@@ -6,13 +6,13 @@ namespace Aswap_back.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class MarketController(IMarketDbCommand dbCommand) : ControllerBase
+public class MarketController(IMarketDbCommand dbCommand) : Controller
 {
     [Route("create-order")]
     [HttpPost]
     public async Task<ActionResult<OrderDto>> CreateOrderAsync(CreateOrderDto orderDto)
     {
-        var res =  await dbCommand.CreateOrderAsync(orderDto);
+        var res = await dbCommand.CreateOrderAsync(orderDto);
         return Ok(res);
     }
 }

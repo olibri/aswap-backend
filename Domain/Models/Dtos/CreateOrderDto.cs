@@ -3,7 +3,7 @@
 namespace Domain.Models.Dtos;
 
 public record CreateOrderDto(
-    string escrowPda,
+    string EscrowPda,
 
     OrderTypes OrderType,
     string Currency,
