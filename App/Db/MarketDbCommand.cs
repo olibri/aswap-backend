@@ -1,4 +1,4 @@
-﻿namespace App;
+﻿namespace App.Db;
 
 public class MarketDbCommand : Domain.Interfaces.Database.Command.IMarketDbCommand
 {

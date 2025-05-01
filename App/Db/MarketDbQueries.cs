@@ -1,6 +1,6 @@
 ﻿using Domain.Models.Dtos;
 
-namespace App;
+namespace App.Db;
 
 public class MarketDbQueries : Domain.Interfaces.Database.Queries.IMarketDbQueries
 {
