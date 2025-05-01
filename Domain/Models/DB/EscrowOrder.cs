@@ -9,7 +9,7 @@ public class EscrowOrderEntity
     public string TxInitSig { get; set; }
     public ulong DealId { get; set; }
 
-    // on-chain state (копія)
+    // on-chain state
     public string Seller { get; set; }
     public string? Buyer { get; set; }
     public string TokenMint { get; set; }

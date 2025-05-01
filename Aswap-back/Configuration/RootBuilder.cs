@@ -48,7 +48,6 @@ public class RootBuilder
                     }).AsSelf()
                     .InstancePerLifetimeScope();
 
-                builder.RegisterType<MarketController>().InstancePerDependency();
                 builder.RegisterType<WebHookController>().InstancePerDependency();
             })
             .ConfigureWebHostDefaults(webBuilder =>
