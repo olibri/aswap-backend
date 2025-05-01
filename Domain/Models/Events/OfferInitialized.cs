@@ -1,8 +1,7 @@
 ﻿using Hexarc.Borsh.Serialization;
-using System.Buffers.Text;
 using System.Text;
+using Domain.Models.Events.Helper;
 using SimpleBase;
-using Solnet.Programs.Utilities;
 namespace Domain.Models.Events;
 
 
@@ -10,11 +9,6 @@ namespace Domain.Models.Events;
 [BorshObject]
 public class OfferInitialized
 {
-    static string ToBase58(byte[] bytes)
-        => Base58.Bitcoin.Encode(bytes);
-    static string Fiat(byte[] code)     
-        => Encoding.ASCII.GetString(code).TrimEnd('\0');
-
     [BorshPropertyOrder(0)]
     [BorshFixedArray(32)]
     public byte[] Escrow { get; set; } = new byte[32];
@@ -37,10 +31,8 @@ public class OfferInitialized
     [BorshPropertyOrder(7)] public long Ts { get; set; }
 
     public override string ToString() =>                     // ← ось!
-        $"OfferInitialized {{ Escrow={ToBase58(Escrow)}, " +
-        $"Seller={ToBase58(Seller)}, Token={ToBase58(TokenMint)}, " +
-        $"Fiat={Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
+        $"OfferInitialized {{ Escrow={EventHelpers.ToBase58(Escrow)}, " +
+        $"Seller={EventHelpers.ToBase58(Seller)}, Token={EventHelpers.ToBase58(TokenMint)}, " +
+        $"Fiat={EventHelpers.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
         $"DealId={DealId}, Ts={Ts} }}";
-
-
 }
