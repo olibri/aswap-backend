@@ -2,6 +2,7 @@
 using System.Text;
 using App;
 using App.Parsing;
+using App.Strategy;
 using Aswap_back.Controllers;
 using Autofac;
 using Domain.Interfaces.Database.Command;
@@ -12,6 +13,9 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
+using Domain.Interfaces.Strategy;
+using App.Strategy.EventsHandler;
+using Domain.Models.Events;
 
 namespace Aswap_back.Configuration;
 
@@ -25,8 +29,14 @@ public class RootBuilder
             {
                 builder.RegisterType<MarketDbCommand>().As<IMarketDbCommand>().InstancePerDependency();
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
+
+                builder.RegisterType<EscrowInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
+                
                 builder.RegisterType<AnchorAnchorEventParser>().As<IAnchorEventParser>().InstancePerDependency();
 
+                builder.RegisterType<AnchorEventDispatcher>()
+                    .AsSelf()
+                    .InstancePerDependency();
 
                 builder.Register(ctx =>
                     {

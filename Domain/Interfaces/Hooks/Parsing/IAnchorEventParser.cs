@@ -2,5 +2,5 @@
 
 public interface IAnchorEventParser
 {
-    IEnumerable<object> Parse(string[] logs);
+    IEnumerable<IAnchorEvent> Parse(string[] logs);
 }

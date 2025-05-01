@@ -13,9 +13,9 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         //arrange
         var controller = fixture.GetService<WebHookController>();
         controller.SetJsonBody(TestJson.OfferInitialized);
-
+        var token = new CancellationToken();
         //act
-        var result = await controller.QuickNodeCallback();
+        var result = await controller.QuickNodeCallback(token);
 
         //assert
         result.ShouldBeOfType<OkResult>();

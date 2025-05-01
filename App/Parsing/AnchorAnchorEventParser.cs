@@ -10,7 +10,7 @@ public sealed class AnchorAnchorEventParser : IAnchorEventParser
         typeof(BorshSerializer).GetMethod(nameof(BorshSerializer.Deserialize), 1,
             new[] { typeof(byte[]), typeof(BorshSerializerOptions) })!;
 
-    public IEnumerable<object> Parse(string[] logs)
+    public IEnumerable<IAnchorEvent> Parse(string[] logs)
     {
         foreach (var line in logs)
         {
@@ -24,13 +24,16 @@ public sealed class AnchorAnchorEventParser : IAnchorEventParser
         }
     }
 
-    private static object? Deserialize(Type t, ReadOnlySpan<byte> payload)
+    private static IAnchorEvent? Deserialize(Type t, ReadOnlySpan<byte> payload)
     {
         try
         {
             var m = deserialize.MakeGenericMethod(t);
-            return m.Invoke(null, new object?[] { payload.ToArray(), null });
+            return (IAnchorEvent?)m.Invoke(null, new object?[] { payload.ToArray(), null });
         }
-        catch { return null; }
+        catch
+        {
+            return null;
+        }
     }
 }

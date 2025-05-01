@@ -9,7 +9,7 @@ public static class DiscriminatorMap
     private static byte[] Disc(string name) =>
         SHA256.HashData(Encoding.UTF8.GetBytes($"event:{name}"))[..8];
 
-    private static readonly Dictionary<string, Type> _map = new()
+    private static readonly Dictionary<string, Type> Map = new()
     {
         { Hex(Disc("OfferInitialized")),  typeof(OfferInitialized)  },
         { Hex(Disc("EscrowInitialized")), typeof(EscrowInitialized) },
@@ -20,7 +20,7 @@ public static class DiscriminatorMap
     };
 
     public static bool TryGetType(ReadOnlySpan<byte> disc, out Type? type) =>
-        _map.TryGetValue(Hex(disc), out type);
+        Map.TryGetValue(Hex(disc), out type);
 
     private static string Hex(ReadOnlySpan<byte> b) => Convert.ToHexString(b);
 
