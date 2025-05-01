@@ -1,21 +1,19 @@
-﻿using Autofac.Extensions.DependencyInjection;
-using System.Text;
-using App;
+﻿using App;
 using App.Parsing;
 using App.Strategy;
+using App.Strategy.EventsHandler;
 using Aswap_back.Controllers;
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
-using Infrastructure;
-using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.EntityFrameworkCore;
 using Domain.Interfaces.Strategy;
-using App.Strategy.EventsHandler;
-using Domain.Models.Events;
+using Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace Aswap_back.Configuration;
 
@@ -31,7 +29,7 @@ public class RootBuilder
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
 
                 builder.RegisterType<EscrowInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
-                
+
                 builder.RegisterType<AnchorAnchorEventParser>().As<IAnchorEventParser>().InstancePerDependency();
 
                 builder.RegisterType<AnchorEventDispatcher>()
@@ -123,7 +121,7 @@ public class RootBuilder
                     });
                 services.AddAuthorization();
             })
-            
+
             .Build();
 
         //using var scope = host.Services.CreateScope();

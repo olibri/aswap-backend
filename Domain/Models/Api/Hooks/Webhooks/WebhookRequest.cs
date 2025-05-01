@@ -1,6 +1,6 @@
 ﻿using Domain.Interfaces.Hooks;
 
-namespace Domain.Models.Api.Hooks;
+namespace Domain.Models.Api.Hooks.Webhooks;
 
 public class WebhookRequest
 {

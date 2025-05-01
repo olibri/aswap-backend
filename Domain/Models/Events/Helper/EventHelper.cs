@@ -1,5 +1,5 @@
-﻿using System.Text;
-using SimpleBase;
+﻿using SimpleBase;
+using System.Text;
 
 namespace Domain.Models.Events.Helper;
 

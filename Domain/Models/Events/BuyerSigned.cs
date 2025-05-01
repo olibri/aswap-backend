@@ -5,7 +5,7 @@ using Hexarc.Borsh.Serialization;
 namespace Domain.Models.Events;
 
 [BorshObject]
-public class BuyerSigned: IAnchorEvent
+public class BuyerSigned : IAnchorEvent
 {
     [BorshPropertyOrder(0)]
     [BorshFixedArray(32)]

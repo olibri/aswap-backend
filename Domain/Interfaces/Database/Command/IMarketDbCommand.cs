@@ -3,6 +3,6 @@
 namespace Domain.Interfaces.Database.Command;
 
 public interface IMarketDbCommand
-{   
+{
     Task<OrderDto> CreateOrderAsync(CreateOrderDto order);
 }

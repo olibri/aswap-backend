@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace Domain.Models.Api.Hooks;
+namespace Domain.Models.Api.Hooks.Webhooks;
 
 public class WebhookHeaders
 {

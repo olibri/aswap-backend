@@ -1,6 +1,6 @@
-﻿using Hexarc.Borsh;
+﻿using Domain.Interfaces.Hooks.Parsing;
+using Hexarc.Borsh;
 using System.Reflection;
-using Domain.Interfaces.Hooks.Parsing;
 
 namespace App.Parsing;
 

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Domain.Models.Api.Hooks;
+namespace Domain.Models.Api.Hooks.Solana;
 
 public class SolanaEventChunk
 {

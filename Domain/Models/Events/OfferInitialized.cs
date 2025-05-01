@@ -1,12 +1,12 @@
-﻿using Hexarc.Borsh.Serialization;
-using Domain.Interfaces.Hooks.Parsing;
+﻿using Domain.Interfaces.Hooks.Parsing;
 using Domain.Models.Events.Helper;
+using Hexarc.Borsh.Serialization;
 namespace Domain.Models.Events;
 
 
 
 [BorshObject]
-public class OfferInitialized: IAnchorEvent
+public class OfferInitialized : IAnchorEvent
 {
     [BorshPropertyOrder(0)]
     [BorshFixedArray(32)]

@@ -1,8 +1,8 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using Domain.Interfaces.Hooks;
-using Domain.Models.Api.Hooks;
+﻿using Domain.Interfaces.Hooks;
+using Domain.Models.Api.Hooks.Webhooks;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace App.WebhookSettings;
 

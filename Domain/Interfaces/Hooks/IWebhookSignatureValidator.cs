@@ -1,4 +1,4 @@
-﻿using Domain.Models.Api.Hooks;
+﻿using Domain.Models.Api.Hooks.Webhooks;
 
 namespace Domain.Interfaces.Hooks;
 

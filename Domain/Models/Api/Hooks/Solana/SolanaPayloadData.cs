@@ -1,4 +1,4 @@
-﻿namespace Domain.Models.Api.Hooks;
+﻿namespace Domain.Models.Api.Hooks.Solana;
 
 public class SolanaPayloadData
 {
