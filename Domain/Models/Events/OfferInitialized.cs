@@ -31,8 +31,8 @@ public class OfferInitialized
     [BorshPropertyOrder(7)] public long Ts { get; set; }
 
     public override string ToString() =>                     // ← ось!
-        $"OfferInitialized {{ Escrow={EventHelpers.ToBase58(Escrow)}, " +
-        $"Seller={EventHelpers.ToBase58(Seller)}, Token={EventHelpers.ToBase58(TokenMint)}, " +
-        $"Fiat={EventHelpers.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
+        $"OfferInitialized {{ Escrow={EventHelper.ToBase58(Escrow)}, " +
+        $"Seller={EventHelper.ToBase58(Seller)}, Token={EventHelper.ToBase58(TokenMint)}, " +
+        $"Fiat={EventHelper.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
         $"DealId={DealId}, Ts={Ts} }}";
 }

@@ -2,5 +2,5 @@
 
 public class SolanaPayloadData
 {
-    public string[] logs { get; set; }
+    public string[] Logs { get; set; }
 }

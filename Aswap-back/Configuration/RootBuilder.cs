@@ -1,10 +1,12 @@
 ﻿using Autofac.Extensions.DependencyInjection;
 using System.Text;
 using App;
+using App.Parsing;
 using Aswap_back.Controllers;
 using Autofac;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Hooks.Parsing;
 using Infrastructure;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,10 +23,9 @@ public class RootBuilder
             .UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureContainer<ContainerBuilder>(builder =>
             {
-
-
                 builder.RegisterType<MarketDbCommand>().As<IMarketDbCommand>().InstancePerDependency();
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
+                builder.RegisterType<AnchorAnchorEventParser>().As<IAnchorEventParser>().InstancePerDependency();
 
 
                 builder.Register(ctx =>

@@ -3,7 +3,7 @@ using SimpleBase;
 
 namespace Domain.Models.Events.Helper;
 
-internal static class EventHelpers
+public static class EventHelper
 {
     public static string ToBase58(byte[] bytes) =>
         Base58.Bitcoin.Encode(bytes);

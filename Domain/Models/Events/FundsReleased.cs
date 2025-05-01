@@ -20,8 +20,8 @@ public class FundsReleased
 
     public override string ToString()
     {
-        return $"FundsReleased {{ Escrow={EventHelpers.ToBase58(Escrow)}, " +
-               $"Buyer={EventHelpers.ToBase58(Buyer)}, Amount={Amount}, " +
+        return $"FundsReleased {{ Escrow={EventHelper.ToBase58(Escrow)}, " +
+               $"Buyer={EventHelper.ToBase58(Buyer)}, Amount={Amount}, " +
                $"DealId={DealId}, Ts={Ts} }}";
     }
 }

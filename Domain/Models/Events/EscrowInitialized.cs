@@ -33,9 +33,9 @@ public class EscrowInitialized
 
     public override string ToString()
     {
-        return $"EscrowInitialized {{ Escrow={EventHelpers.ToBase58(Escrow)}, " +
-               $"Seller={EventHelpers.ToBase58(Seller)}, Buyer={EventHelpers.ToBase58(Buyer)}, " +
-               $"Token={EventHelpers.ToBase58(TokenMint)}, Fiat={EventHelpers.Fiat(FiatCode)}, " +
+        return $"EscrowInitialized {{ Escrow={EventHelper.ToBase58(Escrow)}, " +
+               $"Seller={EventHelper.ToBase58(Seller)}, Buyer={EventHelper.ToBase58(Buyer)}, " +
+               $"Token={EventHelper.ToBase58(TokenMint)}, Fiat={EventHelper.Fiat(FiatCode)}, " +
                $"Amount={Amount}, Price={Price}, DealId={DealId}, Ts={Ts} }}";
     }
 }

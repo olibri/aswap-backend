@@ -18,7 +18,7 @@ public class OfferClaimed
 
     public override string ToString()
     {
-        return $"OfferClaimed {{ Escrow={EventHelpers.ToBase58(Escrow)}, " +
-               $"Buyer={EventHelpers.ToBase58(Buyer)}, DealId={DealId} }}";
+        return $"OfferClaimed {{ Escrow={EventHelper.ToBase58(Escrow)}, " +
+               $"Buyer={EventHelper.ToBase58(Buyer)}, DealId={DealId} }}";
     }
 }
