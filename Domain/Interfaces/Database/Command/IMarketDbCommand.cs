@@ -1,8 +1,8 @@
-﻿using Domain.Models.Dtos;
+﻿using Domain.Models.Events;
 
 namespace Domain.Interfaces.Database.Command;
 
 public interface IMarketDbCommand
 {
-    Task<OrderDto> CreateOrderAsync(CreateOrderDto order);
+    Task CreateNewOfferAsync(OfferInitialized offer);
 }

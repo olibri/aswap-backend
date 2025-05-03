@@ -29,6 +29,7 @@ public class RootBuilder
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
 
                 builder.RegisterType<EscrowInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
+                builder.RegisterType<OfferInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
 
                 builder.RegisterType<AnchorAnchorEventParser>().As<IAnchorEventParser>().InstancePerDependency();
 

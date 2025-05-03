@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    [Migration("20250427160521_mgr1")]
+    [Migration("20250503130554_mgr1")]
     partial class mgr1
     {
         /// <inheritdoc />
@@ -29,57 +29,69 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("amount");
 
                     b.Property<string>("Buyer")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("buyer");
 
                     b.Property<DateTime?>("ClosedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at_utc");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
 
                     b.Property<decimal>("DealId")
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("deal_id");
 
                     b.Property<string>("EscrowPda")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("escrow_pda");
 
                     b.Property<string>("FiatCode")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("OnChainAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("text")
+                        .HasColumnName("fiat_code");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("price");
 
                     b.Property<string>("Seller")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seller");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
 
                     b.Property<string>("TokenMint")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("token_mint");
 
                     b.Property<string>("TxInitSig")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("tx_init_sig");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Status");
-
-                    b.ToTable("EscrowOrders");
+                    b.ToTable("escrow_orders");
                 });
 #pragma warning restore 612, 618
         }

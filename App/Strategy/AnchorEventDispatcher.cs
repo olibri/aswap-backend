@@ -3,7 +3,7 @@ using Domain.Interfaces.Strategy;
 
 namespace App.Strategy;
 
-public sealed class AnchorEventDispatcher(IServiceProvider provider, IEnumerable<IAnchorEventHandler> handlers)
+public sealed class AnchorEventDispatcher(IEnumerable<IAnchorEventHandler> handlers)
 {
     public async Task DispatchAsync(IAnchorEvent ev, CancellationToken ct = default)
     {

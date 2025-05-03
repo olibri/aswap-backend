@@ -15,6 +15,6 @@ public class BuyerSigned : IAnchorEvent
 
     public override string ToString()
     {
-        return $"BuyerSigned {{ Escrow={EventHelper.ToBase58(Escrow)}, DealId={DealId} }}";
+        return $"BuyerSigned {{ Escrow={ConvertHelper.ToBase58(Escrow)}, DealId={DealId} }}";
     }
 }

@@ -1,9 +1,8 @@
 ﻿using Domain.Interfaces.Hooks.Parsing;
 using Domain.Models.Events.Helper;
 using Hexarc.Borsh.Serialization;
+
 namespace Domain.Models.Events;
-
-
 
 [BorshObject]
 public class OfferInitialized : IAnchorEvent
@@ -21,7 +20,7 @@ public class OfferInitialized : IAnchorEvent
     public byte[] TokenMint { get; set; } = new byte[32];
 
     [BorshPropertyOrder(3)]
-    [BorshFixedArray(8)]                // ← [u8; 8] у Rust
+    [BorshFixedArray(8)] // ← [u8; 8] у Rust
     public byte[] FiatCode { get; set; } = new byte[8];
 
     [BorshPropertyOrder(4)] public ulong Amount { get; set; }
@@ -29,9 +28,12 @@ public class OfferInitialized : IAnchorEvent
     [BorshPropertyOrder(6)] public ulong DealId { get; set; }
     [BorshPropertyOrder(7)] public long Ts { get; set; }
 
-    public override string ToString() =>                     // ← ось!
-        $"OfferInitialized {{ Escrow={EventHelper.ToBase58(Escrow)}, " +
-        $"Seller={EventHelper.ToBase58(Seller)}, Token={EventHelper.ToBase58(TokenMint)}, " +
-        $"Fiat={EventHelper.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
-        $"DealId={DealId}, Ts={Ts} }}";
+    public override string ToString()
+    {
+        // ← ось!
+        return $"OfferInitialized {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
+               $"Seller={ConvertHelper.ToBase58(Seller)}, Token={ConvertHelper.ToBase58(TokenMint)}, " +
+               $"Fiat={ConvertHelper.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
+               $"DealId={DealId}, Ts={Ts} }}";
+    }
 }

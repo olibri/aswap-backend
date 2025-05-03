@@ -34,9 +34,9 @@ public class EscrowInitialized : IAnchorEvent
 
     public override string ToString()
     {
-        return $"EscrowInitialized {{ Escrow={EventHelper.ToBase58(Escrow)}, " +
-               $"Seller={EventHelper.ToBase58(Seller)}, Buyer={EventHelper.ToBase58(Buyer)}, " +
-               $"Token={EventHelper.ToBase58(TokenMint)}, Fiat={EventHelper.Fiat(FiatCode)}, " +
+        return $"EscrowInitialized {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
+               $"Seller={ConvertHelper.ToBase58(Seller)}, Buyer={ConvertHelper.ToBase58(Buyer)}, " +
+               $"Token={ConvertHelper.ToBase58(TokenMint)}, Fiat={ConvertHelper.Fiat(FiatCode)}, " +
                $"Amount={Amount}, Price={Price}, DealId={DealId}, Ts={Ts} }}";
     }
 }

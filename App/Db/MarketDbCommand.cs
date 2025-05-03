@@ -1,9 +1,25 @@
-﻿namespace App.Db;
+﻿using App.Mapper;
+using Domain.Models.Events;
+using Infrastructure;
 
-public class MarketDbCommand : Domain.Interfaces.Database.Command.IMarketDbCommand
+namespace App.Db;
+
+public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Database.Command.IMarketDbCommand
 {
-    public Task<Domain.Models.Dtos.OrderDto> CreateOrderAsync(Domain.Models.Dtos.CreateOrderDto order)
+    public async Task CreateNewOfferAsync(OfferInitialized offer)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var mappedEntity = EscrowOrderMapper.ToEntity(offer);
+            Console.WriteLine("Entity --> " + mappedEntity.EscrowPda);
+
+            await dbContext.EscrowOrders.AddAsync(mappedEntity);
+            await dbContext.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
