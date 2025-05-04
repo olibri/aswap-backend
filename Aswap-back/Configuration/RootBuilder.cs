@@ -61,6 +61,7 @@ public class RootBuilder
                     app.UseSwaggerUI();
 
                     app.UseRouting();
+                    app.UseCors("AllowReactLocalhost8080");
 
                     //app.UseHttpsRedirection();
 
@@ -75,6 +76,18 @@ public class RootBuilder
                 var cfg = ctx.Configuration;
 
                 services.AddControllers();
+
+                services.AddCors(options =>
+                {
+                    options.AddPolicy("AllowReactLocalhost8080", builder =>
+                    {
+                        builder
+                            .AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    });
+                });
+
                 services.AddEndpointsApiExplorer();
                 services.AddSwaggerGen(c =>
                 {
@@ -125,18 +138,18 @@ public class RootBuilder
 
             .Build();
 
-        //using var scope = host.Services.CreateScope();
-        //try
-        //{
-        //    var dbContext = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
-        //    dbContext.Database.Migrate();
-        //    //Log.Information("Database migrated successfully.");
-        //}
-        //catch (Exception e)
-        //{
-        //    //Log.Error(e, "An error occurred while migrating the database.");
-        //    throw;
-        //}
+        using var scope = host.Services.CreateScope();
+        try
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
+            dbContext.Database.Migrate();
+            //Log.Information("Database migrated successfully.");
+        }
+        catch (Exception e)
+        {
+            //Log.Error(e, "An error occurred while migrating the database.");
+            throw;
+        }
 
         return host;
     }
