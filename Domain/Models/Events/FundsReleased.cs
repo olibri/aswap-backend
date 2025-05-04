@@ -22,7 +22,7 @@ public class FundsReleased : IAnchorEvent
     public override string ToString()
     {
         return $"FundsReleased {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
-               $"Buyer={ConvertHelper.ToBase58(Buyer)}, Amount={Amount}, " +
+               $"BuyerFiat={ConvertHelper.ToBase58(Buyer)}, Amount={Amount}, " +
                $"DealId={DealId}, Ts={Ts} }}";
     }
 }

@@ -4,5 +4,10 @@ namespace Domain.Interfaces.Database.Queries;
 
 public interface IMarketDbQueries
 {
-    //Task<OrderDto> GetOrderAsync(CreateOrderDto order);
+    //TODO: delete it 
+    Task<EscrowOrderDto> GetNewOfferAsync(ulong dealId);
+
+    Task<EscrowOrderDto[]> GetAllNewOffersAsync();
+
+    Task<EscrowOrderDto[]> GetAllUsersOffersAsync(string userId);
 }

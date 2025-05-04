@@ -21,6 +21,7 @@ public class TestFixture : IDisposable
     public void Dispose()
     {
         Host.StopAsync().GetAwaiter().GetResult();
+        PostgresDatabase.ResetState("escrow_orders");
         Host.Dispose();
     }
 }

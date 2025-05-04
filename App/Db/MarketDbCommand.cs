@@ -11,8 +11,6 @@ public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Databas
         try
         {
             var mappedEntity = EscrowOrderMapper.ToEntity(offer);
-            Console.WriteLine("Entity --> " + mappedEntity.EscrowPda);
-
             await dbContext.EscrowOrders.AddAsync(mappedEntity);
             await dbContext.SaveChangesAsync();
         }

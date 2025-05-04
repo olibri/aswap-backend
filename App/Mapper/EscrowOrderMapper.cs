@@ -13,7 +13,7 @@ public static partial class EscrowOrderMapper
 {
     [MapProperty(nameof(OfferInitialized.Escrow), nameof(EscrowOrderEntity.EscrowPda),
         Use = nameof(ConvertHelper.ToBase58))]
-    [MapProperty(nameof(OfferInitialized.Seller), nameof(EscrowOrderEntity.Seller),
+    [MapProperty(nameof(OfferInitialized.Seller), nameof(EscrowOrderEntity.SellerCrypto),
         Use = nameof(ConvertHelper.ToBase58))]
     [MapProperty(nameof(OfferInitialized.TokenMint), nameof(EscrowOrderEntity.TokenMint),
         Use = nameof(ConvertHelper.ToBase58))]
@@ -27,7 +27,7 @@ public static partial class EscrowOrderMapper
     {
         dest.Id = Guid.NewGuid();
         dest.Status = EscrowStatus.PendingOnChain;
-        dest.Buyer = null;
+        dest.BuyerFiat = null;
     }
 
     //Trash because I use it in ConvertHelper

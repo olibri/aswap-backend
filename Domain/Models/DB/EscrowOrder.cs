@@ -19,9 +19,9 @@ public class EscrowOrderEntity
 
     // on-chain state
 
-    [Column("seller")] public string Seller { get; set; }
+    [Column("seller_crypto")] public string SellerCrypto { get; set; }
 
-    [Column("buyer")] public string? Buyer { get; set; }
+    [Column("buyer_fiat")] public string? BuyerFiat { get; set; }
 
     [Column("token_mint")] public string TokenMint { get; set; }
 

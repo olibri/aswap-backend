@@ -30,9 +30,8 @@ public class OfferInitialized : IAnchorEvent
 
     public override string ToString()
     {
-        // ← ось!
         return $"OfferInitialized {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
-               $"Seller={ConvertHelper.ToBase58(Seller)}, Token={ConvertHelper.ToBase58(TokenMint)}, " +
+               $"SellerCrypto={ConvertHelper.ToBase58(Seller)}, Token={ConvertHelper.ToBase58(TokenMint)}, " +
                $"Fiat={ConvertHelper.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
                $"DealId={DealId}, Ts={Ts} }}";
     }

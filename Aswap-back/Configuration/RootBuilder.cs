@@ -50,6 +50,7 @@ public class RootBuilder
                     .InstancePerLifetimeScope();
 
                 builder.RegisterType<WebHookController>().InstancePerDependency();
+                builder.RegisterType<PlatformController>().InstancePerDependency();
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {
