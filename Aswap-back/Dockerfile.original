@@ -13,9 +13,6 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Aswap-back/Aswap-back.csproj", "Aswap-back/"]
-COPY ["App/App.csproj", "App/"]
-COPY ["Domain/Domain.csproj", "Domain/"]
-COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "./Aswap-back/Aswap-back.csproj"
 COPY . .
 WORKDIR "/src/Aswap-back"
