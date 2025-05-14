@@ -2,22 +2,26 @@ name: Deploy Back
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
 
 jobs:
   deploy-back:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Deploy back via SSH
-      uses: appleboy/ssh-action@v1
-      with:
-        host:     ${{ secrets.HOST }}
-        username: ${{ secrets.USER }}
-        key:      ${{ secrets.SSH_PRIVATE_KEY }}
-        port:     ${{ secrets.SSH_PORT }}
-        script: |
-          mkdir -p ${{ secrets.BACK_DIR }}
-          bash ${{ secrets.BACK_SCRIPT }} ${{ secrets.BACK_DIR }}
+      - name: Deploy back via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host:     ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          port:     ${{ secrets.SSH_PORT }}
+          script: |
+            echo "=== BACK_DIR='${{ secrets.BACK_DIR }}'"
+            echo "=== BACK_SCRIPT='${{ secrets.BACK_SCRIPT }}'"
+            mkdir -p "${{ secrets.BACK_DIR }}"
+            cd       "${{ secrets.BACK_DIR }}"
+            bash "${{ secrets.BACK_SCRIPT }}" "${{ secrets.BACK_DIR }}"
