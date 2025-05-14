@@ -1,1 +1,1 @@
-web: dotnet aswap-backend.dll
+web: dotnet Aswap.Backend.dll
