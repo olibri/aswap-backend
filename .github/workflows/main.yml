@@ -1,0 +1,29 @@
+name: Deploy P2P Front
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run remote deploy script over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}                # 65.109.86.205
+          username: ${{ secrets.USER }}            # p2p_user
+          key: ${{ secrets.SSH_PRIVATE_KEY }}      # ваш приватний ключ
+          port: 22                                 # або інший, якщо не дефолтний
+          script: |
+            # створимо цільову папку, якщо її ще нема
+            mkdir -p ${{ secrets.TARGET_DIR }}
+            # перейдемо в неї
+            cd ${{ secrets.TARGET_DIR }}
+            # виконаємо ваш скрипт, який робить git pull + docker build/run
+            ${{ secrets.DEPLOY_SCRIPT }} ${{ secrets.TARGET_DIR }}
