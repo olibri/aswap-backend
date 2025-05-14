@@ -54,22 +54,25 @@ public class RootBuilder
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {
-                webBuilder.Configure(app =>
-                {
-                    //app.UseMiddleware<ErrorHandlingMiddleware>();
-                    app.UseSwagger();
-                    app.UseSwaggerUI();
+                var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+                webBuilder
+                    .UseUrls($"http://*:{port}")
+                    .Configure(app =>
+                    {
+                        //app.UseMiddleware<ErrorHandlingMiddleware>();
+                        app.UseSwagger();
+                        app.UseSwaggerUI();
 
-                    app.UseRouting();
-                    app.UseCors("AllowReactLocalhost8080");
+                        app.UseRouting();
+                        app.UseCors("AllowReactLocalhost8080");
 
-                    //app.UseHttpsRedirection();
+                        //app.UseHttpsRedirection();
 
-                    app.UseAuthentication();
-                    app.UseAuthorization();
+                        app.UseAuthentication();
+                        app.UseAuthorization();
 
-                    app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-                });
+                        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+                    });
             })
             .ConfigureServices((ctx, services) =>
             {
@@ -135,7 +138,6 @@ public class RootBuilder
                     });
                 services.AddAuthorization();
             })
-
             .Build();
 
         using var scope = host.Services.CreateScope();
