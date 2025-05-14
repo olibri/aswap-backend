@@ -4,7 +4,7 @@ namespace Tests_back.Extensions;
 
 public static class PostgresDatabase
 {
-    private const string ConnectionString = "Host=localhost;Port=5432;Database=p2p_db;Username=postgres;Password=postgres";
+    private const string ConnectionString = "Host=65.109.86.205;Port=5434;Database=aswap_db;Username=aswap_user;Password=i6oDTaswap2pY9v2WqN7Dl6j0B0V8";
 
     public static void ResetState(string tableName)
     {
