@@ -3,6 +3,7 @@ using Domain.Models.Events.Helper;
 using Hexarc.Borsh.Serialization;
 
 namespace Domain.Models.Events;
+public enum OfferKind : byte { Sell = 0, Buy = 1 }
 
 [BorshObject]
 public class OfferInitialized : IAnchorEvent
@@ -28,11 +29,12 @@ public class OfferInitialized : IAnchorEvent
     [BorshPropertyOrder(6)] public ulong DealId { get; set; }
     [BorshPropertyOrder(7)] public long Ts { get; set; }
 
-    public override string ToString()
-    {
-        return $"OfferInitialized {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
-               $"SellerCrypto={ConvertHelper.ToBase58(Seller)}, Token={ConvertHelper.ToBase58(TokenMint)}, " +
-               $"Fiat={ConvertHelper.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
-               $"DealId={DealId}, Ts={Ts} }}";
-    }
+    [BorshPropertyOrder(8)] public byte OfferType { get; set; }
+
+    public override string ToString() =>
+        $"OfferInitialized {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
+        $"Seller={ConvertHelper.ToBase58(Seller)}, Token={ConvertHelper.ToBase58(TokenMint)}, " +
+        $"Fiat={ConvertHelper.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
+        $"DealId={DealId}, Ts={Ts}, OfferType={(OfferType == 0 ? "Sell" : "Buy")} }}";
+
 }

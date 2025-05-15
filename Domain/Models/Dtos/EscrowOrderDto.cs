@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Models.DB;
+using Domain.Models.Enums;
 
 namespace Domain.Models.Dtos;
 
@@ -22,6 +23,8 @@ public class EscrowOrderDto
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? ClosedAtUtc { get; set; }
 
+    public OrderSide OfferSide { get; set; }
+
     public static EscrowOrderDto FromEntity(EscrowOrderEntity entity)
     {
         return new EscrowOrderDto
@@ -37,7 +40,8 @@ public class EscrowOrderDto
             Price = entity.Price / 100m,
             Status = entity.Status,
             CreatedAtUtc = entity.CreatedAtUtc,
-            ClosedAtUtc = entity.ClosedAtUtc
+            ClosedAtUtc = entity.ClosedAtUtc,
+            OfferSide = entity.OfferSide
         };
     }
 }

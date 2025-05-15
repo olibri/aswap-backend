@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Models.DB;
+using Domain.Models.Enums;
 using Domain.Models.Events;
 using Domain.Models.Events.Helper;
 using Riok.Mapperly.Abstractions;
@@ -11,6 +12,12 @@ namespace App.Mapper;
 [Mapper]
 public static partial class EscrowOrderMapper
 {
+
+    [MapProperty(
+        nameof(OfferInitialized.OfferType),
+        nameof(EscrowOrderEntity.OfferSide),
+        Use = nameof(ToOrderSide)
+    )]
     [MapProperty(nameof(OfferInitialized.Escrow), nameof(EscrowOrderEntity.EscrowPda),
         Use = nameof(ConvertHelper.ToBase58))]
     [MapProperty(nameof(OfferInitialized.Seller), nameof(EscrowOrderEntity.SellerCrypto),
@@ -34,6 +41,7 @@ public static partial class EscrowOrderMapper
     private static string ToBase58(byte[] bytes) =>
         Base58.Bitcoin.Encode(bytes);
 
+    private static OrderSide ToOrderSide(byte raw) => (OrderSide)raw;
 
     private static long ToUnixSeconds(DateTime dt) =>
         new DateTimeOffset(dt).ToUnixTimeSeconds();

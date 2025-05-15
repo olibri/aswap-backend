@@ -2,6 +2,7 @@
 using Domain.Enums;
 using Domain.Interfaces.Database.Queries;
 using Domain.Models.Dtos;
+using Domain.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using Tests_back.Extensions;
@@ -20,17 +21,18 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         var result = await OffersExtensions.CreateFakeOrder(fixture);
 
         //act
-        var offer = await db.GetNewOfferAsync(1745946178127);
+        var offer = await db.GetNewOfferAsync(1747314431853);
 
         //assert
         result.ShouldBeOfType<OkResult>();
         offer.ShouldNotBeNull();
-        offer.DealId.ShouldBe(1745946178127UL);
-        offer.FiatCode.ShouldBe("UAH");
+        offer.DealId.ShouldBe(1747314431853UL);
+        offer.FiatCode.ShouldBe("USD");
         offer.Amount.ShouldBe(1UL);
-        offer.Price.ShouldBe(433m);
+        offer.Price.ShouldBe(3m);
         offer.Status.ShouldBe(EscrowStatus.PendingOnChain);
         offer.BuyerFiat.ShouldBeNull();
+        offer.OfferSide.ShouldBe(OrderSide.Sell);
     }
 
     [Fact]

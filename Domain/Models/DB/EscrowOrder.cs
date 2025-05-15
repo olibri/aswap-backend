@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using Domain.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -34,11 +35,12 @@ public class EscrowOrderEntity
     [Column("price", TypeName = "numeric(20,0)")]
     public ulong Price { get; set; }
 
-    [Column("status")]
-    public EscrowStatus Status { get; set; }
+    [Column("status")] public EscrowStatus Status { get; set; }
 
     [Column("created_at_utc")] public DateTime CreatedAtUtc { get; set; }
 
 
     [Column("closed_at_utc")] public DateTime? ClosedAtUtc { get; set; }
+
+    [Column("offer_side")] public OrderSide OfferSide { get; set; }
 }
