@@ -2,26 +2,21 @@ name: Deploy Back
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]        # міняйте, якщо треба
 
 jobs:
-  deploy-back:
+  deploy-server:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
 
-      - name: Deploy back via SSH
+    steps:
+      - name: SSH & run deploy script
         uses: appleboy/ssh-action@v1
         with:
-          host:     ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          port:     ${{ secrets.SSH_PORT }}
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}      # p2p_user
+          key:      ${{ secrets.SSH_KEY }}       # приватний ключ
+          port:     ${{ secrets.SSH_PORT }}      # 22 якщо стандарт
           script: |
-            echo "=== BACK_DIR='${{ secrets.BACK_DIR }}'"
-            echo "=== BACK_SCRIPT='${{ secrets.BACK_SCRIPT }}'"
-            mkdir -p "${{ secrets.BACK_DIR }}"
-            cd       "${{ secrets.BACK_DIR }}"
-            bash "${{ secrets.BACK_SCRIPT }}" "${{ secrets.BACK_DIR }}"
+            set -e
+            echo "== Deploy $(date)"
+            bash /opt/p2p_back/scripts/deploy_p2p_back.sh main
