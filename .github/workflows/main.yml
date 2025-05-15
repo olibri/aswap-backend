@@ -12,10 +12,10 @@ jobs:
       - name: SSH & run deploy script
         uses: appleboy/ssh-action@v1
         with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}      # p2p_user
-          key:      ${{ secrets.SSH_KEY }}       # приватний ключ
-          port:     ${{ secrets.SSH_PORT }}      # 22 якщо стандарт
+          host:     ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}      # p2p_user
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}       # приватний ключ
+          port:     22      # 22 якщо стандарт
           script: |
             set -e
             echo "== Deploy $(date)"
