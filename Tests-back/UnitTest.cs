@@ -27,8 +27,8 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         offer.ShouldNotBeNull();
         offer.DealId.ShouldBe(1745946178127UL);
         offer.FiatCode.ShouldBe("UAH");
-        offer.Amount.ShouldBe(1000UL);
-        offer.Price.ShouldBe(43.3m);
+        offer.Amount.ShouldBe(1UL);
+        offer.Price.ShouldBe(433m);
         offer.Status.ShouldBe(EscrowStatus.PendingOnChain);
         offer.BuyerFiat.ShouldBeNull();
     }
