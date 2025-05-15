@@ -23,6 +23,12 @@ public class WebHookController(
         var payload = JsonSerializer.Deserialize<SolanaWebhookPayload>(raw,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
+        if (payload?.Data == null || payload.Data.Count == 0)
+        {
+            log.LogWarning("Received payload with no data: {RawPayload}", raw);
+            return BadRequest("Payload data is empty.");
+        }
+        
         var events = parser.Parse(payload!.Data[0].Logs);
 
         foreach (var ev in events)
