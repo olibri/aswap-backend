@@ -43,4 +43,8 @@ public class EscrowOrderEntity
     [Column("closed_at_utc")] public DateTime? ClosedAtUtc { get; set; }
 
     [Column("offer_side")] public OrderSide OfferSide { get; set; }
+
+    [Column("min_fiat_amount")] public decimal MinFiatAmount { get; set; }
+    [Column("max_fiat_amount")] public decimal MaxFiatAmount { get; set; }
+
 }

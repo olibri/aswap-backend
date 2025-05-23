@@ -24,6 +24,8 @@ public class EscrowOrderDto
     public DateTime? ClosedAtUtc { get; set; }
 
     public OrderSide OfferSide { get; set; }
+    public decimal MinFiatAmount { get; set; }
+    public decimal MaxFiatAmount { get; set; }
 
     public static EscrowOrderDto FromEntity(EscrowOrderEntity entity)
     {
@@ -41,7 +43,9 @@ public class EscrowOrderDto
             Status = entity.Status,
             CreatedAtUtc = entity.CreatedAtUtc,
             ClosedAtUtc = entity.ClosedAtUtc,
-            OfferSide = entity.OfferSide
+            OfferSide = entity.OfferSide,
+            MinFiatAmount = entity.MinFiatAmount,
+            MaxFiatAmount = entity.MaxFiatAmount
         };
     }
 }

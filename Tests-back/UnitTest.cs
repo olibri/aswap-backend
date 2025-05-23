@@ -54,4 +54,30 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         var offers = okResult.Value as EscrowOrderDto[];
         offers.Length.ShouldBe(ordersCount);
     }
+
+    [Fact]
+    public async Task PartialUpdateOffer()
+    {
+        PostgresDatabase.ResetState("escrow_orders");
+        var controller = fixture.GetService<PlatformController>();
+        var marketDbQueries = fixture.GetService<IMarketDbQueries>();
+        await OffersExtensions.CreateFakeOrder(fixture);
+
+        var updateOrderDto = new UpdateOrderDto()
+        {
+            OrderId = 1747314431853UL,
+            MaxFiatAmount = 10000,
+            MinFiatAmount = 10
+        };
+
+        var result = await controller.UpdateOffers(updateOrderDto);
+        result.ShouldNotBeNull();
+        result.ShouldBeOfType<OkResult>();
+
+        var updatedOrder = await marketDbQueries.GetAllNewOffersAsync();
+
+        updatedOrder.ShouldNotBeNull();
+        updatedOrder[0].MinFiatAmount.ShouldBe(10);
+        updatedOrder[0].MaxFiatAmount.ShouldBe(10000);
+    }
 }
