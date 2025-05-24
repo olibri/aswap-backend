@@ -9,4 +9,6 @@ public interface IMarketDbQueries
     Task<EscrowOrderDto[]> GetAllNewOffersAsync();
 
     Task<EscrowOrderDto[]> GetAllUsersOffersAsync(string userId);
+
+    Task<EscrowOrderDto?> CheckOrderStatusAsync(ulong orderId);
 }

@@ -25,8 +25,15 @@ public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Databas
 
     public async Task UpdateCurrentOfferAsync(UpdateOrderDto updateOrder)
     {
+        await Task.Delay(4000);
         var entity = await dbContext.EscrowOrders
             .FirstOrDefaultAsync(x => x.DealId == updateOrder.OrderId);
+
+        var allEntitiesInDb = await dbContext.EscrowOrders.ToListAsync();
+
+        Console.WriteLine($"Updating order with DealId: {updateOrder.OrderId}");
+        Console.WriteLine($"Found {allEntitiesInDb.Count} orders in the database.");
+
 
         if (entity == null)
         {

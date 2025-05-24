@@ -2,6 +2,7 @@
 using Domain.Interfaces.Database.Queries;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Aswap_back.Controllers;
 
@@ -19,6 +20,17 @@ public class PlatformController(
         log.LogInformation("Update order request");
         await marketDbCommand.UpdateCurrentOfferAsync(orderUpdateDto);
         return Ok();
+    }
+
+    [HttpGet("check-order-status/{orderId}")]
+    public async Task<IActionResult> CheckOrderStatus(ulong orderId)
+    {
+        var order = await marketDbQueries.CheckOrderStatusAsync(orderId);
+
+        if (order is null)
+            return NotFound();
+
+        return Ok(new { isConfirmed = order.DealId });
     }
 
 

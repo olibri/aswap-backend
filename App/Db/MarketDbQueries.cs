@@ -32,4 +32,12 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
             .Select(o => EscrowOrderDto.FromEntity(o))
             .ToArrayAsync();
     }
+
+    public async Task<EscrowOrderDto?> CheckOrderStatusAsync(ulong orderId)
+    {
+        return await dbContext.EscrowOrders
+            .Where(x => x.DealId == orderId)
+            .Select(o => EscrowOrderDto.FromEntity(o))
+            .FirstOrDefaultAsync();
+    }
 }
