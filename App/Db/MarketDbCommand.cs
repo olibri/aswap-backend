@@ -1,4 +1,5 @@
 ﻿using App.Mapper;
+using Domain.Enums;
 using Domain.Models.Dtos;
 using Domain.Models.Events;
 using Infrastructure;
@@ -25,7 +26,9 @@ public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Databas
 
     public async Task UpdateCurrentOfferAsync(UpdateOrderDto updateOrder)
     {
+        //TODO: remove this delay, it's just for testing purposes
         await Task.Delay(4000);
+
         var entity = await dbContext.EscrowOrders
             .FirstOrDefaultAsync(x => x.DealId == updateOrder.OrderId);
 
@@ -36,12 +39,16 @@ public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Databas
 
 
         if (entity == null)
-        {
             throw new InvalidOperationException($"EscrowOrderEntity with DealId {updateOrder.OrderId} was not found.");
-        }
 
-        entity.MaxFiatAmount = updateOrder.MaxFiatAmount;
-        entity.MinFiatAmount = updateOrder.MinFiatAmount;
+        entity.MaxFiatAmount = updateOrder.MaxFiatAmount ?? entity.MaxFiatAmount;
+        entity.MinFiatAmount = updateOrder.MinFiatAmount ?? entity.MinFiatAmount;
+        entity.Status = updateOrder.Status.HasValue
+            ? (EscrowStatus)updateOrder.Status.Value
+            : entity.Status;
+        entity.BuyerFiat = updateOrder.BuyerFiat ?? entity.BuyerFiat;
+        entity.SellerCrypto = updateOrder.SellerCrypto ?? entity.SellerCrypto;
+
 
         dbContext.EscrowOrders.Update(entity);
         await dbContext.SaveChangesAsync();

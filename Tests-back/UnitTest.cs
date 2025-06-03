@@ -67,7 +67,9 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         {
             OrderId = 1747314431853UL,
             MaxFiatAmount = 10000,
-            MinFiatAmount = 10
+            MinFiatAmount = 10,
+            Status = EscrowStatus.OnChain,
+            BuyerFiat = "wallet0xzzzz"
         };
 
         var result = await controller.UpdateOffers(updateOrderDto);
@@ -79,5 +81,7 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         updatedOrder.ShouldNotBeNull();
         updatedOrder[0].MinFiatAmount.ShouldBe(10);
         updatedOrder[0].MaxFiatAmount.ShouldBe(10000);
+        updatedOrder[0].Status.ShouldBe(EscrowStatus.OnChain);
+        updatedOrder[0].BuyerFiat.ShouldBe("wallet0xzzzz");
     }
 }
