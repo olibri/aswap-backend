@@ -11,4 +11,7 @@ public class UpdateOrderDto
     public EscrowStatus? Status { get; set; }
     public string? BuyerFiat { get; set; }
     public string? SellerCrypto { get; set; }
+
+    public decimal? FilledQuantity { get; set; }
+
 }

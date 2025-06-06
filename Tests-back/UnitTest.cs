@@ -1,5 +1,6 @@
 ﻿using Aswap_back.Controllers;
 using Domain.Enums;
+using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Models.Dtos;
 using Domain.Models.Enums;
@@ -69,7 +70,8 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
             MaxFiatAmount = 10000,
             MinFiatAmount = 10,
             Status = EscrowStatus.OnChain,
-            BuyerFiat = "wallet0xzzzz"
+            BuyerFiat = "wallet0xzzzz",
+            FilledQuantity = 0.1m,
         };
 
         var result = await controller.UpdateOffers(updateOrderDto);
@@ -77,11 +79,46 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         result.ShouldBeOfType<OkResult>();
 
         var updatedOrder = await marketDbQueries.GetAllNewOffersAsync();
-
+        Console.WriteLine($"Updated order: {updatedOrder[0].Amount}, { updatedOrder[0].FilledQuantity}");
         updatedOrder.ShouldNotBeNull();
         updatedOrder[0].MinFiatAmount.ShouldBe(10);
         updatedOrder[0].MaxFiatAmount.ShouldBe(10000);
         updatedOrder[0].Status.ShouldBe(EscrowStatus.OnChain);
         updatedOrder[0].BuyerFiat.ShouldBe("wallet0xzzzz");
+        updatedOrder[0].FilledQuantity.ShouldBe(0.1m);
+    }
+
+    [Fact]
+    public async Task QuantityUpdateOffer()
+    {
+        PostgresDatabase.ResetState("escrow_orders");
+        var marketDbCommand = fixture.GetService<IMarketDbCommand>();
+        var marketDbQuery = fixture.GetService<IMarketDbQueries>();
+        await OffersExtensions.CreateFakeOrder(fixture);
+
+        var updateOrderDto1 = new UpdateOrderDto()
+        {
+            OrderId = 1747314431853UL,
+            MaxFiatAmount = 10000,
+            MinFiatAmount = 10,
+            Status = EscrowStatus.OnChain,
+            BuyerFiat = "wallet0xzzzz",
+            FilledQuantity = 0.1m,
+        };
+
+        await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto1);
+        var updatedOrder1 = await marketDbQuery.GetAllNewOffersAsync();
+        Console.WriteLine($"Updated order: {updatedOrder1[0].Amount}, {updatedOrder1[0].FilledQuantity}");
+        updatedOrder1[0].FilledQuantity.ShouldBe(0.1m);
+
+
+        var updateOrderDto2 = new UpdateOrderDto()
+        {
+            OrderId = 1747314431853UL,
+            FilledQuantity = 0.9m,
+        };
+        await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
+        var updatedOrder2 = await marketDbQuery.GetAllNewOffersAsync();
+        updatedOrder2.ShouldBeEmpty();
     }
 }

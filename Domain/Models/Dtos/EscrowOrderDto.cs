@@ -16,6 +16,7 @@ public class EscrowOrderDto
     public string FiatCode { get; set; }
 
     public decimal Amount { get; set; } 
+    public decimal FilledQuantity { get; set; }
     public decimal Price { get; set; }  
 
     public EscrowStatus Status { get; set; }
@@ -45,7 +46,8 @@ public class EscrowOrderDto
             ClosedAtUtc = entity.ClosedAtUtc,
             OfferSide = entity.OfferSide,
             MinFiatAmount = entity.MinFiatAmount,
-            MaxFiatAmount = entity.MaxFiatAmount
+            MaxFiatAmount = entity.MaxFiatAmount,
+            FilledQuantity = entity.FilledQuantity
         };
     }
 }

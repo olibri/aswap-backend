@@ -1,4 +1,5 @@
-﻿using Domain.Models.Dtos;
+﻿using Domain.Enums;
+using Domain.Models.Dtos;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,8 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
     public async Task<EscrowOrderDto[]> GetAllNewOffersAsync()
     {
         return await dbContext.EscrowOrders
+            .Where(o => o.Status == EscrowStatus.PendingOnChain
+                        || o.Status == EscrowStatus.OnChain || o.Status == EscrowStatus.PartiallyOnChain)
             .OrderByDescending(o => o.CreatedAtUtc)
             .Select(o => EscrowOrderDto.FromEntity(o))
             .ToArrayAsync();

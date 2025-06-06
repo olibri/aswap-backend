@@ -1,5 +1,6 @@
 ﻿using App.Mapper;
 using Domain.Enums;
+using Domain.Models.DB;
 using Domain.Models.Dtos;
 using Domain.Models.Events;
 using Infrastructure;
@@ -48,9 +49,22 @@ public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Databas
             : entity.Status;
         entity.BuyerFiat = updateOrder.BuyerFiat ?? entity.BuyerFiat;
         entity.SellerCrypto = updateOrder.SellerCrypto ?? entity.SellerCrypto;
-
+        if (updateOrder.FilledQuantity is not null)
+        {
+            entity.Status = MoveToSignedStatus(entity, (decimal)updateOrder.FilledQuantity);
+            entity.FilledQuantity += (decimal)updateOrder.FilledQuantity;
+        }
 
         dbContext.EscrowOrders.Update(entity);
         await dbContext.SaveChangesAsync();
+    }
+
+    private EscrowStatus MoveToSignedStatus(EscrowOrderEntity orderEntity, decimal newFilledQ)
+    {
+        var fromEntity = EscrowOrderDto.FromEntity(orderEntity);
+        if (fromEntity.FilledQuantity + newFilledQ >= fromEntity.Amount)
+            return EscrowStatus.Signed;
+
+        return orderEntity.Status;
     }
 }

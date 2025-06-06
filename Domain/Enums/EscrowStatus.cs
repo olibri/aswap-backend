@@ -6,7 +6,7 @@ public enum EscrowStatus
     OnChain,
 
     PartiallyOnChain,
-    Singing,
+    Signed,
     SignedByOneSide,
 
     Released,

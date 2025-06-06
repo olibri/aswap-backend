@@ -47,4 +47,5 @@ public class EscrowOrderEntity
     [Column("min_fiat_amount")] public decimal MinFiatAmount { get; set; }
     [Column("max_fiat_amount")] public decimal MaxFiatAmount { get; set; }
 
+    [Column("filled_quantity")] public decimal FilledQuantity { get; set; }
 }
