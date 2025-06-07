@@ -15,7 +15,7 @@ public sealed class OfferInitializedHandler(IMarketDbCommand marketDbCommand)
             throw new ArgumentException("Invalid event type", nameof(ev));
         try
         {
-            await marketDbCommand.CreateNewOfferAsync(offerInitialized);
+            await marketDbCommand.CreateSellerOfferAsync(offerInitialized);
         }
         catch (Exception e)
         {

@@ -5,6 +5,8 @@ namespace Domain.Interfaces.Database.Command;
 
 public interface IMarketDbCommand
 {
-    Task CreateNewOfferAsync(OfferInitialized offer);
-    Task UpdateCurrentOfferAsync(UpdateOrderDto  updateOrder);
+    Task CreateSellerOfferAsync(OfferInitialized offer);
+
+    Task<ulong> CreateBuyerOfferAsync(UpsertOrderDto upsertOrderDto);
+    Task UpdateCurrentOfferAsync(UpsertOrderDto  upsertOrder);
 }

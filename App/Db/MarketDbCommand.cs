@@ -1,16 +1,18 @@
 ﻿using App.Mapper;
 using Domain.Enums;
+using Domain.Interfaces.Database.Command;
 using Domain.Models.DB;
 using Domain.Models.Dtos;
 using Domain.Models.Events;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace App.Db;
 
-public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Database.Command.IMarketDbCommand
+public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
 {
-    public async Task CreateNewOfferAsync(OfferInitialized offer)
+    public async Task CreateSellerOfferAsync(OfferInitialized offer)
     {
         try
         {
@@ -25,34 +27,44 @@ public class MarketDbCommand(P2PDbContext dbContext) : Domain.Interfaces.Databas
         }
     }
 
-    public async Task UpdateCurrentOfferAsync(UpdateOrderDto updateOrder)
+    public async Task<ulong> CreateBuyerOfferAsync(UpsertOrderDto upsertOrderDto)
+    {
+        var mappedEntity = EscrowOrderMapper.ToEntity(upsertOrderDto);
+        Console.WriteLine($"Creating buyer offer with DealId: {mappedEntity.DealId}");
+
+        await dbContext.EscrowOrders.AddAsync(mappedEntity);
+        await dbContext.SaveChangesAsync();
+        return mappedEntity.DealId;
+    }
+
+    public async Task UpdateCurrentOfferAsync(UpsertOrderDto upsertOrder)
     {
         //TODO: remove this delay, it's just for testing purposes
         await Task.Delay(4000);
 
         var entity = await dbContext.EscrowOrders
-            .FirstOrDefaultAsync(x => x.DealId == updateOrder.OrderId);
+            .FirstOrDefaultAsync(x => x.DealId == upsertOrder.OrderId);
 
         var allEntitiesInDb = await dbContext.EscrowOrders.ToListAsync();
 
-        Console.WriteLine($"Updating order with DealId: {updateOrder.OrderId}");
+        Console.WriteLine($"Updating order with DealId: {upsertOrder.OrderId}");
         Console.WriteLine($"Found {allEntitiesInDb.Count} orders in the database.");
 
 
         if (entity == null)
-            throw new InvalidOperationException($"EscrowOrderEntity with DealId {updateOrder.OrderId} was not found.");
+            throw new InvalidOperationException($"EscrowOrderEntity with DealId {upsertOrder.OrderId} was not found.");
 
-        entity.MaxFiatAmount = updateOrder.MaxFiatAmount ?? entity.MaxFiatAmount;
-        entity.MinFiatAmount = updateOrder.MinFiatAmount ?? entity.MinFiatAmount;
-        entity.Status = updateOrder.Status.HasValue
-            ? (EscrowStatus)updateOrder.Status.Value
+        entity.MaxFiatAmount = upsertOrder.MaxFiatAmount ?? entity.MaxFiatAmount;
+        entity.MinFiatAmount = upsertOrder.MinFiatAmount ?? entity.MinFiatAmount;
+        entity.Status = upsertOrder.Status.HasValue
+            ? (EscrowStatus)upsertOrder.Status.Value
             : entity.Status;
-        entity.BuyerFiat = updateOrder.BuyerFiat ?? entity.BuyerFiat;
-        entity.SellerCrypto = updateOrder.SellerCrypto ?? entity.SellerCrypto;
-        if (updateOrder.FilledQuantity is not null)
+        entity.BuyerFiat = upsertOrder.Buyer ?? entity.BuyerFiat;
+        entity.SellerCrypto = upsertOrder.Seller ?? entity.SellerCrypto;
+        if (upsertOrder.FilledQuantity is not null)
         {
-            entity.Status = MoveToSignedStatus(entity, (decimal)updateOrder.FilledQuantity);
-            entity.FilledQuantity += (decimal)updateOrder.FilledQuantity;
+            entity.Status = MoveToSignedStatus(entity, (decimal)upsertOrder.FilledQuantity);
+            entity.FilledQuantity += (decimal)upsertOrder.FilledQuantity;
         }
 
         dbContext.EscrowOrders.Update(entity);

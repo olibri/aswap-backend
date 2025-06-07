@@ -64,13 +64,13 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         var marketDbQueries = fixture.GetService<IMarketDbQueries>();
         await OffersExtensions.CreateFakeOrder(fixture);
 
-        var updateOrderDto = new UpdateOrderDto()
+        var updateOrderDto = new UpsertOrderDto()
         {
             OrderId = 1747314431853UL,
             MaxFiatAmount = 10000,
             MinFiatAmount = 10,
             Status = EscrowStatus.OnChain,
-            BuyerFiat = "wallet0xzzzz",
+            Buyer = "wallet0xzzzz",
             FilledQuantity = 0.1m,
         };
 
@@ -96,13 +96,13 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         var marketDbQuery = fixture.GetService<IMarketDbQueries>();
         await OffersExtensions.CreateFakeOrder(fixture);
 
-        var updateOrderDto1 = new UpdateOrderDto()
+        var updateOrderDto1 = new UpsertOrderDto()
         {
             OrderId = 1747314431853UL,
             MaxFiatAmount = 10000,
             MinFiatAmount = 10,
             Status = EscrowStatus.OnChain,
-            BuyerFiat = "wallet0xzzzz",
+            Buyer = "wallet0xzzzz",
             FilledQuantity = 0.1m,
         };
 
@@ -112,7 +112,7 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         updatedOrder1[0].FilledQuantity.ShouldBe(0.1m);
 
 
-        var updateOrderDto2 = new UpdateOrderDto()
+        var updateOrderDto2 = new UpsertOrderDto()
         {
             OrderId = 1747314431853UL,
             FilledQuantity = 0.9m,
@@ -120,5 +120,30 @@ public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
         await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
         var updatedOrder2 = await marketDbQuery.GetAllNewOffersAsync();
         updatedOrder2.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateBuyerOrderTest()
+    {
+        PostgresDatabase.ResetState("escrow_orders");
+        var marketDbCommand = fixture.GetService<IMarketDbCommand>();
+        var dealId = 1747314411853UL;
+        
+        var updateOrderDto = new UpsertOrderDto()
+        {
+            OrderId = dealId,
+            MaxFiatAmount = 10000,
+            MinFiatAmount = 10,
+            FiatCode = "USD",
+            Status = EscrowStatus.OnChain,
+            Buyer = "wallet0xzzzz",
+            FilledQuantity = 0.1m,
+            OrderType = OrderSide.Buy,
+            TokenMint = "tokenMintExample",
+            Amount = 32m,
+        };
+
+        var createdDealId = await marketDbCommand.CreateBuyerOfferAsync(updateOrderDto);
+        createdDealId.ShouldBe(dealId);
     }
 }

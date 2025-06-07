@@ -7,16 +7,16 @@ namespace Domain.Models.Dtos;
 public class EscrowOrderDto
 {
     public Guid Id { get; set; }
-    public string EscrowPda { get; set; }
+    public string? EscrowPda { get; set; }
     public ulong DealId { get; set; }
 
-    public string SellerCrypto { get; set; }
+    public string? SellerCrypto { get; set; }
     public string? BuyerFiat { get; set; }
-    public string TokenMint { get; set; }
+    public string? TokenMint { get; set; }
     public string FiatCode { get; set; }
 
-    public decimal Amount { get; set; } 
-    public decimal FilledQuantity { get; set; }
+    public decimal? Amount { get; set; } 
+    public decimal? FilledQuantity { get; set; }
     public decimal Price { get; set; }  
 
     public EscrowStatus Status { get; set; }
@@ -39,7 +39,7 @@ public class EscrowOrderDto
             BuyerFiat = entity.BuyerFiat,
             TokenMint = entity.TokenMint,
             FiatCode = entity.FiatCode,
-            Amount = entity.Amount / 1000000m,
+            Amount = (entity.Amount / 1000000m),
             Price = entity.Price / 100m,
             Status = entity.Status,
             CreatedAtUtc = entity.CreatedAtUtc,

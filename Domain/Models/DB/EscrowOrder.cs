@@ -10,26 +10,25 @@ public class EscrowOrderEntity
 {
     [Key] [Column("id")] public Guid Id { get; set; }
 
-    [Required]
     [MaxLength(60)]
     [Column("escrow_pda")]
-    public string EscrowPda { get; set; }
+    public string? EscrowPda { get; set; }
 
 
     [Column("deal_id")] public ulong DealId { get; set; }
 
     // on-chain state
 
-    [Column("seller_crypto")] public string SellerCrypto { get; set; }
+    [Column("seller_crypto")] public string? SellerCrypto { get; set; }
 
     [Column("buyer_fiat")] public string? BuyerFiat { get; set; }
 
-    [Column("token_mint")] public string TokenMint { get; set; }
+    [Column("token_mint")] public string? TokenMint { get; set; }
 
     [Column("fiat_code")] public string FiatCode { get; set; }
 
     [Column("amount", TypeName = "numeric(20,0)")]
-    public ulong Amount { get; set; }
+    public ulong? Amount { get; set; }
 
 
     [Column("price", TypeName = "numeric(20,0)")]

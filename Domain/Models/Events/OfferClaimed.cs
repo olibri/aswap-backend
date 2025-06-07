@@ -20,6 +20,6 @@ public class OfferClaimed : IAnchorEvent
     public override string ToString()
     {
         return $"OfferClaimed {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
-               $"BuyerFiat={ConvertHelper.ToBase58(Buyer)}, DealId={DealId} }}";
+               $"Buyer={ConvertHelper.ToBase58(Buyer)}, DealId={DealId} }}";
     }
 }

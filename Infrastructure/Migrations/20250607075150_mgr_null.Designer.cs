@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250607075150_mgr_null")]
+    partial class mgr_null
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,7 +36,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("amount");
 
-                    b.Property<string>("Buyer")
+                    b.Property<string>("BuyerFiat")
                         .HasColumnType("text")
                         .HasColumnName("buyer_fiat");
 
@@ -52,6 +55,7 @@ namespace Infrastructure.Migrations
                         .HasColumnName("deal_id");
 
                     b.Property<string>("EscrowPda")
+                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)")
                         .HasColumnName("escrow_pda");
@@ -81,7 +85,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("price");
 
-                    b.Property<string>("Seller")
+                    b.Property<string>("SellerCrypto")
                         .HasColumnType("text")
                         .HasColumnName("seller_crypto");
 

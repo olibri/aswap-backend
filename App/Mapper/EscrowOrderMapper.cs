@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Models.DB;
+using Domain.Models.Dtos;
 using Domain.Models.Enums;
 using Domain.Models.Events;
 using Domain.Models.Events.Helper;
@@ -52,5 +53,29 @@ public static partial class EscrowOrderMapper
 
     private static string Fiat(byte[] code) =>
         Encoding.ASCII.GetString(code).TrimEnd('\0');
+
+
+    [MapProperty(nameof(UpsertOrderDto.OrderId), nameof(EscrowOrderEntity.DealId))]
+    [MapProperty(nameof(UpsertOrderDto.Seller), nameof(EscrowOrderEntity.SellerCrypto))]
+    [MapProperty(nameof(UpsertOrderDto.Buyer), nameof(EscrowOrderEntity.BuyerFiat))]
+    [MapProperty(nameof(UpsertOrderDto.Status), nameof(EscrowOrderEntity.Status))]
+    [MapProperty(nameof(UpsertOrderDto.OrderType), nameof(EscrowOrderEntity.OfferSide))]
+    [MapProperty(nameof(UpsertOrderDto.MinFiatAmount), nameof(EscrowOrderEntity.MinFiatAmount))]
+    [MapProperty(nameof(UpsertOrderDto.MaxFiatAmount), nameof(EscrowOrderEntity.MaxFiatAmount))]
+    [MapProperty(nameof(UpsertOrderDto.FiatCode), nameof(EscrowOrderEntity.FiatCode))]
+    [MapProperty(nameof(UpsertOrderDto.TokenMint), nameof(EscrowOrderEntity.TokenMint))]
+    [MapProperty(nameof(UpsertOrderDto.Amount), nameof(EscrowOrderEntity.Amount))]
+    [MapProperty(nameof(UpsertOrderDto.Price), nameof(EscrowOrderEntity.Price))]
+
+    public static partial EscrowOrderEntity ToEntity(UpsertOrderDto dto);
+
+    private static void OnAfterToEntity(UpsertOrderDto dto, EscrowOrderEntity entity)
+    {
+        if (entity.Id == Guid.Empty)
+        {
+            entity.Id = Guid.NewGuid();
+            entity.CreatedAtUtc = DateTime.UtcNow;
+        }
+    }
 
 }

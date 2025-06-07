@@ -15,10 +15,19 @@ public class PlatformController(
 {
     [HttpPut]
     [Route("update-offers")]
-    public async Task<IActionResult> UpdateOffers(UpdateOrderDto orderUpdateDto)
+    public async Task<IActionResult> UpdateOffers(UpsertOrderDto orderUpdate)
     {
         log.LogInformation("Update order request");
-        await marketDbCommand.UpdateCurrentOfferAsync(orderUpdateDto);
+        await marketDbCommand.UpdateCurrentOfferAsync(orderUpdate);
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route("create-buyer-createOrder")]
+    public async Task<IActionResult> CreateBuyerOffer(UpsertOrderDto createOrder)
+    {
+        log.LogInformation("Buyer createOrder request");
+        await marketDbCommand.CreateBuyerOfferAsync(createOrder);
         return Ok();
     }
 
