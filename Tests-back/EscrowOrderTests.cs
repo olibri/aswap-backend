@@ -10,7 +10,7 @@ using Tests_back.Extensions;
 
 namespace Tests_back;
 
-public class UnitTest(TestFixture fixture) : IClassFixture<TestFixture>
+public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 {
     [Fact]
     public async Task QuickNodeCallback_ReturnsOk()

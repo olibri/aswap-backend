@@ -1,10 +1,12 @@
-﻿using App.Db;
+﻿using App.Chat;
+using App.Db;
 using App.Parsing;
 using App.Strategy;
 using App.Strategy.EventsHandler;
 using Aswap_back.Controllers;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Domain.Interfaces.Chat;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
@@ -27,6 +29,7 @@ public class RootBuilder
             {
                 builder.RegisterType<MarketDbCommand>().As<IMarketDbCommand>().InstancePerDependency();
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
+                builder.RegisterType<ChatDbCommand>().As<IChatDbCommand>().InstancePerDependency();
 
                 builder.RegisterType<EscrowInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
                 builder.RegisterType<OfferInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
@@ -51,6 +54,7 @@ public class RootBuilder
 
                 builder.RegisterType<WebHookController>().InstancePerDependency();
                 builder.RegisterType<PlatformController>().InstancePerDependency();
+                builder.RegisterType<ChatController>().InstancePerDependency();
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {

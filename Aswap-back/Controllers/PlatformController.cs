@@ -2,7 +2,6 @@
 using Domain.Interfaces.Database.Queries;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Aswap_back.Controllers;
 

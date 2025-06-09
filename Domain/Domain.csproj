@@ -9,9 +9,14 @@
   <ItemGroup>
     <PackageReference Include="Hexarc.Borsh" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.4" />
     <PackageReference Include="SimpleBase" Version="4.2.0" />
     <PackageReference Include="Solnet.Programs" Version="6.1.0" />
     <PackageReference Include="Solnet.Wallet" Version="6.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Interfaces\Account\" />
   </ItemGroup>
 
 </Project>
