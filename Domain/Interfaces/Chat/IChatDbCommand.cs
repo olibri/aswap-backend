@@ -6,4 +6,6 @@ public interface IChatDbCommand
 {
     Task<Guid> CreateMessageAsync(MessageDto message);
     Task<MessageDto[]> GetMessagesAsync(ulong roomId);
+
+    Task UpdateAccountInfo(string userName, long id);
 }

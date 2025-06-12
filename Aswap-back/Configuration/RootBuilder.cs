@@ -3,6 +3,7 @@ using App.Db;
 using App.Parsing;
 using App.Strategy;
 using App.Strategy.EventsHandler;
+using App.Telegram;
 using Aswap_back.Controllers;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -11,11 +12,13 @@ using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
 using Domain.Interfaces.Strategy;
+using Domain.Interfaces.TelegramBot;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Telegram.Bot;
 
 namespace Aswap_back.Configuration;
 
@@ -25,8 +28,9 @@ public class RootBuilder
     {
         var host = Host.CreateDefaultBuilder()
             .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-            .ConfigureContainer<ContainerBuilder>(builder =>
+            .ConfigureContainer<ContainerBuilder>((hostContext, builder) =>
             {
+                var cfg = hostContext.Configuration;
                 builder.RegisterType<MarketDbCommand>().As<IMarketDbCommand>().InstancePerDependency();
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
                 builder.RegisterType<ChatDbCommand>().As<IChatDbCommand>().InstancePerDependency();
@@ -35,6 +39,30 @@ public class RootBuilder
                 builder.RegisterType<OfferInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
 
                 builder.RegisterType<AnchorAnchorEventParser>().As<IAnchorEventParser>().InstancePerDependency();
+
+                //Tg bot
+                builder.RegisterInstance(cfg).As<IConfiguration>();
+                builder.Register(c =>
+                    {
+                        var token = cfg["Telegram:BotToken"]
+                                    ?? throw new ArgumentNullException("Telegram:BotToken");
+
+                        return new TelegramBotClient(token);
+                    })
+                    .As<ITelegramBotClient>()
+                    .SingleInstance();
+
+                builder.Register(c =>
+                    {
+                        var bot = c.Resolve<ITelegramBotClient>();
+                        var chatId = long.Parse(cfg["Telegram:AdminChatId"]!);
+
+
+                        return new TgBotHandler(bot, chatId);
+                    })
+                    .As<ITgBotHandler>()
+                    .SingleInstance();
+                //end
 
                 builder.RegisterType<AnchorEventDispatcher>()
                     .AsSelf()

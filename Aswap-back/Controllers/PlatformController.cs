@@ -1,5 +1,6 @@
 ﻿using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.TelegramBot;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,7 @@ namespace Aswap_back.Controllers;
 [Route("api/platform")]
 public class PlatformController(
     IMarketDbQueries marketDbQueries,
+    ITgBotHandler tgBotHandler,
     IMarketDbCommand marketDbCommand,
     ILogger<PlatformController> log) : Controller
 {
@@ -28,6 +30,15 @@ public class PlatformController(
         log.LogInformation("Buyer createOrder request");
         await marketDbCommand.CreateBuyerOfferAsync(createOrder);
         return Ok();
+    }
+
+    [HttpPost]
+    [Route("call-tg-bot")]
+    public async Task<IActionResult> CallTgBot(TgBotDto tgBot)
+    {
+        log.LogInformation("Call admin request");
+        await tgBotHandler.NotifyMessageAsync(tgBot);
+        return Ok("Admin on the way");
     }
 
     [HttpGet("check-order-status/{orderId}")]

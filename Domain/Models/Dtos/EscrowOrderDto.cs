@@ -1,9 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Models.DB;
 using Domain.Models.Enums;
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models.Dtos;
 

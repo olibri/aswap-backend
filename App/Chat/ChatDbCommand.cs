@@ -36,6 +36,11 @@ public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
         return entity.Select(MessageDto.ToDto).ToArray();
     }
 
+    public Task UpdateAccountInfo(string userName, long id)
+    {
+        throw new NotImplementedException();
+    }
+
     private async Task UpsertAccountAsync(string accountWallet)
     {
         var existingAccount = await dbContext.Account
