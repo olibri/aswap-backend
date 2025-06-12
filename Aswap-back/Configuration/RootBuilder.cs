@@ -81,6 +81,7 @@ public class RootBuilder
                     .InstancePerLifetimeScope();
 
                 builder.RegisterType<WebHookController>().InstancePerDependency();
+                builder.RegisterType<TelegramHookController>().InstancePerDependency();
                 builder.RegisterType<PlatformController>().InstancePerDependency();
                 builder.RegisterType<ChatController>().InstancePerDependency();
             })
