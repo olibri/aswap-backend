@@ -41,10 +41,13 @@ public class TgBotTests(TestFixture fixture) : IClassFixture<TestFixture>
     {
         var user = "user_0xZalupa123";
         var res = await platformController.PostCode(user);
-        var okResult = res as OkObjectResult;
-        okResult.Value.ShouldBeOfType<string>();
-        var code = okResult.Value as string;
-        code.ShouldNotBeNullOrEmpty();
+        res.ShouldBeOfType<OkObjectResult>()
+            .Value                   
+            .ShouldSatisfyAllConditions(
+                _ => _.ShouldNotBeNull(),
+                _ => (_.GetType().GetProperty("code")!.GetValue(_) as string)
+                    .ShouldNotBeNullOrWhiteSpace()
+            );
     }
 
     [Fact(Skip = "Non deterministic")]
