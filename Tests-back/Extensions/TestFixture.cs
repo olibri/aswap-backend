@@ -22,7 +22,7 @@ public class TestFixture : IDisposable
     {
         Host.StopAsync().GetAwaiter().GetResult();
         PostgresDatabase.ResetState("escrow_orders");
-        //PostgresDatabase.ResetState("account");
+        PostgresDatabase.ResetState("account");
         PostgresDatabase.ResetState("rooms");
         PostgresDatabase.ResetState("messages");
         PostgresDatabase.ResetState("telegram_link");
