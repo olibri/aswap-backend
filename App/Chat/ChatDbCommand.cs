@@ -49,7 +49,7 @@ public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
             .FirstOrDefaultAsync(a => a.WalletAddress == link.WalletAddress);
 
         if (acc is null)
-            return;
+            await UpsertAccountAsync(link.WalletAddress);
 
         acc.TelegramId = chatId.ToString();
         acc.Telegram = userName;
