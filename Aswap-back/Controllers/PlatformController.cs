@@ -48,7 +48,7 @@ public class PlatformController(
     public async Task<IActionResult> PostCode([FromQuery] string wallet)
     {
         var code = await chatDbCommand.GenerateCode(wallet);
-        return Ok(code);
+        return Ok(new {code});
     }
 
 
