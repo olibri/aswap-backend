@@ -9,7 +9,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     public DbSet<RoomEntity> Rooms { get; set; }
     public DbSet<MessageEntity> Messages { get; set; }
     public DbSet<AccountEntity> Account { get; set; }
-    
+    public DbSet<TelegramLinkEntity> TelegramLinks { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +52,12 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
         {
             entity.Property(e => e.CreatedAtUtc)
                 .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+        });
+
+        modelBuilder.Entity<TelegramLinkEntity>(entity =>
+        {
+            entity.Property(e => e.ExpiredAt)
+                .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC' + INTERVAL '1 day'");
         });
     }
 }

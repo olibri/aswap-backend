@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250614140852_tegId")]
+    partial class tegId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -193,28 +196,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("rooms");
-                });
-
-            modelBuilder.Entity("Domain.Models.DB.TelegramLinkEntity", b =>
-                {
-                    b.Property<string>("Code")
-                        .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<DateTime>("ExpiredAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expired_at")
-                        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC' + INTERVAL '1 day'");
-
-                    b.Property<string>("WalletAddress")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("wallet_address");
-
-                    b.HasKey("Code");
-
-                    b.ToTable("telegram_link");
                 });
 
             modelBuilder.Entity("Domain.Models.DB.MessageEntity", b =>

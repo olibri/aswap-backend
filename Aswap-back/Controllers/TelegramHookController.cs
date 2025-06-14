@@ -1,6 +1,4 @@
-﻿using App.Strategy;
-using Domain.Interfaces.Hooks.Parsing;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using Domain.Interfaces.Chat;
@@ -18,20 +16,29 @@ public class TelegramHookController(
     [HttpPost("telegram-webhook")]
     public async Task<IActionResult> Post([FromBody] Update upd)
     {
-        if (upd.Message is { Text: { } text } msg)
-        {
-            if (text.StartsWith("/start"))
-            {
-                var token = text.Length > 6 ? text.Substring(7) : null;
-                if (!string.IsNullOrWhiteSpace(token))
-                {
-                    await chatDbCommand.UpdateAccountInfo(token, msg.Chat.Id);
-                    await bot.SendMessage(msg.Chat.Id,
-                        "✅ Telegram notifications enabled",
-                        parseMode: ParseMode.Html);
-                }
-            }
-        }
+        if (upd.Message?.Text is not string text) return Ok();
+
+        var cmdEntity = upd.Message.Entities?
+            .FirstOrDefault(e => e.Type == MessageEntityType.BotCommand && e.Offset == 0);
+
+        if (cmdEntity is null || !text.StartsWith("/start", StringComparison.OrdinalIgnoreCase))
+            return Ok();
+
+        var parts = text.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2) 
+            return Ok();
+
+        var token = parts[1];
+        var chatId = upd.Message.Chat.Id;
+        var tgUser = upd.Message.From?.Username;
+
+        await chatDbCommand.UpdateAccountInfoAsync(token, chatId, tgUser);
+
+        var res = await bot.SendMessage(chatId,
+            "✅ Telegram notifications enabled",
+            parseMode: ParseMode.Html);
+
+        Console.WriteLine(res);
         return Ok();
     }
 }

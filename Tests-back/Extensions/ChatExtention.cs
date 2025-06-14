@@ -5,7 +5,7 @@ namespace Tests_back.Extensions;
 
 public static class ChatExtention
 {
-    private static string fakeUser = GenerateFakeUser();
+    private static string fakeUser = AccountExtention.GenerateFakeUser();
 
     public static async Task CreateFakeMessageAsync(IChatDbCommand chatDbCommand,
      ulong dealId)
@@ -19,11 +19,4 @@ public static class ChatExtention
         };
         await chatDbCommand.CreateMessageAsync(messageDto);
     }
-
-   
-    private static string GenerateFakeUser()
-    {
-        return "test_user_" + Guid.NewGuid().ToString("N").Substring(0, 8);
-    }
-
 }

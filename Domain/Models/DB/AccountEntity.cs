@@ -8,6 +8,8 @@ public class AccountEntity
 {
     [Key][Column("wallet_address")] public string WalletAddress { get; set; }
     [Column("telegram")] public string? Telegram { get; set; }
+    [Column("telegram_chat_id")] public string? TelegramId { get; set; }
+    
     [Column("orders_count")] public int? OrdersCount{ get; set; }
     [Column("created_at_utc")] public DateTime CreatedAtUtc { get; set; }
     [Column("last_active_time")] public DateTime? LastActiveTime { get; set; }

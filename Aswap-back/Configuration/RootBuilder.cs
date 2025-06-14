@@ -33,6 +33,7 @@ public class RootBuilder
                 var cfg = hostContext.Configuration;
                 builder.RegisterType<MarketDbCommand>().As<IMarketDbCommand>().InstancePerDependency();
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
+                builder.RegisterType<AccountDbQueries>().As<IAccountDbQueries>().InstancePerDependency();
                 builder.RegisterType<ChatDbCommand>().As<IChatDbCommand>().InstancePerDependency();
 
                 builder.RegisterType<EscrowInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();

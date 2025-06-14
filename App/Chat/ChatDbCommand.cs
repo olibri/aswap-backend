@@ -4,7 +4,8 @@ using Domain.Models.DB;
 using Domain.Models.Dtos;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-
+using System.Security.Cryptography;
+using Microsoft.IdentityModel.Tokens;
 namespace App.Chat;
 
 public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
@@ -36,12 +37,47 @@ public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
         return entity.Select(MessageDto.ToDto).ToArray();
     }
 
-    public Task UpdateAccountInfo(string userName, long id)
+    public async Task UpdateAccountInfoAsync(string token, long chatId, string userName)
     {
-        throw new NotImplementedException();
+        var link = await dbContext.TelegramLinks
+            .FirstOrDefaultAsync(l => l.Code == token);
+
+        if (link is null || link.ExpiredAt < DateTime.UtcNow)
+            return;
+
+        var acc = await dbContext.Account
+            .FirstOrDefaultAsync(a => a.WalletAddress == link.WalletAddress);
+
+        if (acc is null)
+            return;
+
+        acc.TelegramId = chatId.ToString();
+        acc.Telegram = userName;
+        acc.LastActiveTime = DateTime.UtcNow;
+
+        dbContext.TelegramLinks.Remove(link);
+
+        await dbContext.SaveChangesAsync();
     }
 
-    private async Task UpsertAccountAsync(string accountWallet)
+    public async Task<string> GenerateCode(string wallet)
+    {
+        var code = CreateSecureToken(32);
+        var entity = new TelegramLinkEntity
+        {
+            Code = code,
+            WalletAddress = wallet,
+            ExpiredAt = DateTime.UtcNow.AddDays(1)
+        };
+        dbContext.TelegramLinks.Add(entity);
+        
+        await dbContext.SaveChangesAsync();
+     
+        //return $"https://t.me/a_swap_bot?start={code}";
+        return code;
+    }
+
+    public async Task UpsertAccountAsync(string accountWallet)
     {
         var existingAccount = await dbContext.Account
             .FirstOrDefaultAsync(a => a.WalletAddress == accountWallet);
@@ -85,5 +121,12 @@ public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
         });
 
         await dbContext.SaveChangesAsync();
+    }
+
+    private static string CreateSecureToken(int byteLength)
+    {
+        byte[] bytes = new byte[byteLength];
+        RandomNumberGenerator.Fill(bytes);
+        return Base64UrlEncoder.Encode(bytes);
     }
 }

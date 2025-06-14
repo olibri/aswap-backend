@@ -53,7 +53,6 @@ public class TgBotHandler(ITelegramBotClient bot, long adminId) : ITgBotHandler
 
     private async Task<Message> NotifyAccountAsync()
     {
-
         throw new NotImplementedException("NotifyAccountAsync is not implemented yet.");
     }
 }

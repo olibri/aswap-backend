@@ -1,4 +1,6 @@
-﻿using Domain.Interfaces.Database.Command;
+﻿using App.Chat;
+using Domain.Interfaces.Chat;
+using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Dtos;
@@ -12,6 +14,7 @@ public class PlatformController(
     IMarketDbQueries marketDbQueries,
     ITgBotHandler tgBotHandler,
     IMarketDbCommand marketDbCommand,
+    IChatDbCommand chatDbCommand,
     ILogger<PlatformController> log) : Controller
 {
     [HttpPut]
@@ -40,6 +43,14 @@ public class PlatformController(
         await tgBotHandler.NotifyMessageAsync(tgBot);
         return Ok("Admin on the way");
     }
+
+    [HttpGet("telegram-code")]
+    public async Task<IActionResult> PostCode([FromQuery] string wallet)
+    {
+        var code = await chatDbCommand.GenerateCode(wallet);
+        return Ok(code);
+    }
+
 
     [HttpGet("check-order-status/{orderId}")]
     public async Task<IActionResult> CheckOrderStatus(ulong orderId)
