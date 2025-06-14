@@ -1,4 +1,5 @@
 using Domain.Interfaces.Chat;
+using Domain.Interfaces.Database.Command;
 
 namespace Tests_back.Extensions;
 
@@ -9,9 +10,9 @@ public static class AccountExtention
         return "test_user_" + Guid.NewGuid().ToString("N").Substring(0, 8);
     }
 
-    public static async Task SaveFakeUserToDbAsync(string userName, IChatDbCommand chatDbCommand)
+    public static async Task SaveFakeUserToDbAsync(string userName, IAccountDbCommand accountDbCommand)
     {
-        await chatDbCommand.UpsertAccountAsync(userName);
+        await accountDbCommand.UpsertAccountAsync(userName);
     }
 
 }

@@ -5,16 +5,17 @@ using Domain.Models.Dtos;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using Domain.Interfaces.Database.Command;
 using Microsoft.IdentityModel.Tokens;
 namespace App.Chat;
 
-public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
+public class ChatDbCommand(P2PDbContext dbContext, IAccountDbCommand accountDbCommand): IChatDbCommand
 {
     public async Task<Guid> CreateMessageAsync(MessageDto message)
     {
         try
         {
-            await UpsertAccountAsync(message.AccountId);
+            await accountDbCommand.UpsertAccountAsync(message.AccountId);
             await UpsertRoomAsync(message);
             var res = await dbContext.Messages.AddAsync(ChatMapper.ToEntity(message));
             await dbContext.SaveChangesAsync();
@@ -37,29 +38,6 @@ public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
         return entity.Select(MessageDto.ToDto).ToArray();
     }
 
-    public async Task UpdateAccountInfoAsync(string token, long chatId, string userName)
-    {
-        var link = await dbContext.TelegramLinks
-            .FirstOrDefaultAsync(l => l.Code == token);
-
-        if (link is null || link.ExpiredAt < DateTime.UtcNow)
-            return;
-
-        var acc = await dbContext.Account
-            .FirstOrDefaultAsync(a => a.WalletAddress == link.WalletAddress);
-
-        if (acc is null)
-            await UpsertAccountAsync(link.WalletAddress);
-
-        acc.TelegramId = chatId.ToString();
-        acc.Telegram = userName;
-        acc.LastActiveTime = DateTime.UtcNow;
-
-        dbContext.TelegramLinks.Remove(link);
-
-        await dbContext.SaveChangesAsync();
-    }
-
     public async Task<string> GenerateCode(string wallet)
     {
         var code = CreateSecureToken(32);
@@ -73,31 +51,9 @@ public class ChatDbCommand(P2PDbContext dbContext): IChatDbCommand
         
         await dbContext.SaveChangesAsync();
      
-        //return $"https://t.me/a_swap_bot?start={code}";
         return code;
     }
 
-    public async Task UpsertAccountAsync(string accountWallet)
-    {
-        var existingAccount = await dbContext.Account
-            .FirstOrDefaultAsync(a => a.WalletAddress == accountWallet);
-
-        if (existingAccount == null)
-        {
-            await dbContext.Account.AddAsync(new AccountEntity
-            {
-                WalletAddress = accountWallet
-            });
-            await dbContext.SaveChangesAsync();
-        }
-        //TODO: create function to update account LastActiveTime
-        else
-        {
-            existingAccount.LastActiveTime = DateTime.UtcNow;
-            dbContext.Account.Update(existingAccount);
-            await dbContext.SaveChangesAsync();
-        }
-    }
     private async Task UpsertRoomAsync(MessageDto message)
     {
         var existingRoom = await dbContext.Rooms

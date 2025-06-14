@@ -13,7 +13,7 @@ public static class TgBotExtention
         {
             BuyerWallet = "FakeBuyerWallet",
             SellerWallet = "FakeSellerWallet",
-            OrderId = 1234567890UL,
+            DealId = 1234567890UL,
             OrderUrl = "https://fakeorder.url",
             MessageType = message,
         };

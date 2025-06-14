@@ -4,7 +4,7 @@ namespace Domain.Models.Dtos;
 
 public class TgBotDto
 {
-    public ulong OrderId { get; set; }
+    public ulong DealId { get; set; }
     public string? BuyerWallet { get; set; }
     public string? SellerWallet { get; set; }
 

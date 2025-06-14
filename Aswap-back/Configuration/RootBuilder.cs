@@ -35,6 +35,7 @@ public class RootBuilder
                 builder.RegisterType<MarketDbQueries>().As<IMarketDbQueries>().InstancePerDependency();
                 builder.RegisterType<AccountDbQueries>().As<IAccountDbQueries>().InstancePerDependency();
                 builder.RegisterType<ChatDbCommand>().As<IChatDbCommand>().InstancePerDependency();
+                builder.RegisterType<AccountDbCommand>().As<IAccountDbCommand>().InstancePerDependency();
 
                 builder.RegisterType<EscrowInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
                 builder.RegisterType<OfferInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
@@ -56,10 +57,11 @@ public class RootBuilder
                 builder.Register(c =>
                     {
                         var bot = c.Resolve<ITelegramBotClient>();
+                        var accountQuery = c.Resolve<IAccountDbQueries>();
                         var chatId = long.Parse(cfg["Telegram:AdminChatId"]!);
 
 
-                        return new TgBotHandler(bot, chatId);
+                        return new TgBotHandler(bot, chatId, accountQuery);
                     })
                     .As<ITgBotHandler>()
                     .SingleInstance();

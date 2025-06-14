@@ -5,5 +5,5 @@ namespace Domain.Interfaces.TelegramBot;
 
 public interface ITgBotHandler
 {
-    Task<Message> NotifyMessageAsync(TgBotDto tgBotDto);
+    Task<IReadOnlyList<Message>> NotifyMessageAsync(TgBotDto tgBotDto);
 }

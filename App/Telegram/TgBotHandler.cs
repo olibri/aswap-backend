@@ -1,58 +1,74 @@
-﻿using Domain.Interfaces.TelegramBot;
+﻿using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.TelegramBot;
 using Domain.Models.Dtos;
 using Domain.Models.Enums;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+
 namespace App.Telegram;
 
-public class TgBotHandler(ITelegramBotClient bot, long adminId) : ITgBotHandler
+public class TgBotHandler(ITelegramBotClient bot, long adminId, IAccountDbQueries accountDbQueries) : ITgBotHandler
 {
-    public async Task<Message> NotifyMessageAsync(TgBotDto dto)
+    public async Task<IReadOnlyList<Message>> NotifyMessageAsync(TgBotDto dto)
     {
-        switch (dto.MessageType)
+        return dto.MessageType switch
         {
-            case TgMessageType.OrderCreated:
-                Console.WriteLine($"[TG] Order created: {dto.OrderId}");
-                return await NotifyAccountAsync();
-            case TgMessageType.AdminNotification:
-                Console.WriteLine($"[TG] Order updated: {dto.OrderId}");
-                return await AdminCallAsync(dto);
-            default:
-                Console.WriteLine($"[TG] Unknown message type: {dto.MessageType}");
-                return new Message();
-        }
+            TgMessageType.OrderCreated => await NotifyParticipantsAsync(dto),
+            TgMessageType.AdminNotification => await NotifyAdminAsync(dto),
+            _ => Array.Empty<Message>()
+        };
     }
 
-    private async Task<Message> AdminCallAsync(TgBotDto dto)
+    private async Task<IReadOnlyList<Message>> NotifyAdminAsync(TgBotDto dto)
     {
         var text =
             $"<b>🚨 Потрібно втручання адміна</b>\n\n" +
-            $"<b>Order ID:</b> <code>{dto.OrderId}</code>\n" +
+            $"<b>Order ID:</b> <code>{dto.DealId}</code>\n" +
             $"<b>Buyer wallet:</b> <code>{dto.BuyerWallet}</code>\n" +
             $"<b>Seller wallet:</b> <code>{dto.SellerWallet}</code>\n\n" +
             $"<a href=\"{dto.OrderUrl}\">🔗 Click</a>";
-        try
-        {
-            var message = await bot.SendMessage(
-                chatId: adminId,
-                text: text,
-                parseMode: ParseMode.Html
-            );
 
-            Console.WriteLine($"[TG] Message {message.Dump()}");
-
-            return message;
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"[TG] send failed: {ex.Message}");
-            return new Message();
-        }
+        return await SendSafeAsync(adminId, text);
     }
 
-    private async Task<Message> NotifyAccountAsync()
+    private async Task<IReadOnlyList<Message>> NotifyParticipantsAsync(TgBotDto botDto)
     {
-        throw new NotImplementedException("NotifyAccountAsync is not implemented yet.");
+        var text =
+            $"<b>✅ Order created</b>\n\n" +
+            $"<b>Order ID:</b> <code>{botDto.DealId}</code>\n" +
+            $"<b>Buyer wallet:</b> <code>{botDto.BuyerWallet}</code>\n" +
+            $"<b>Seller wallet:</b> <code>{botDto.SellerWallet}</code>\n\n" +
+            $"<a href=\"{botDto.OrderUrl}\">🔗 Click</a>";
+
+        var chatIds = await accountDbQueries.CheckIdAsync(botDto.BuyerWallet, botDto.SellerWallet);
+
+        return await SendSafeAsync(chatIds, text);
+    }
+
+    private async Task<IReadOnlyList<Message>> SendSafeAsync(
+        IEnumerable<long> chatIds, string text)
+    {
+        var tasks = chatIds.Select(async id =>
+        {
+            try
+            {
+                return await bot.SendMessage(id, text, ParseMode.Html);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[TG] send to {id} failed: {ex.Message}");
+                return null;
+            }
+        });
+
+        return (await Task.WhenAll(tasks))
+            .Where(m => m != null)
+            .ToArray()!;
+    }
+
+    private Task<IReadOnlyList<Message>> SendSafeAsync(long id, string text)
+    {
+        return SendSafeAsync(new[] { id }, text);
     }
 }

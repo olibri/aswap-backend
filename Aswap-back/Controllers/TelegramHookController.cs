@@ -2,6 +2,7 @@
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using Domain.Interfaces.Chat;
+using Domain.Interfaces.Database.Command;
 using Telegram.Bot;
 
 namespace Aswap_back.Controllers;
@@ -10,9 +11,11 @@ namespace Aswap_back.Controllers;
 public class TelegramHookController(
     IChatDbCommand chatDbCommand,
     ITelegramBotClient bot,
+    IAccountDbCommand accountDbCommand,
     ILogger<WebHookController> log)
     : Controller
 {
+    //TODO: add stop command, help command, etc.
     [HttpPost("api/telegram-webhook")]
     public async Task<IActionResult> Post([FromBody] Update upd)
     {
@@ -32,7 +35,7 @@ public class TelegramHookController(
         var chatId = upd.Message.Chat.Id;
         var tgUser = upd.Message.From?.Username;
 
-        await chatDbCommand.UpdateAccountInfoAsync(token, chatId, tgUser);
+        await accountDbCommand.UpdateAccountInfoAsync(token, chatId, tgUser);
 
         var res = await bot.SendMessage(chatId,
             "✅ Telegram notifications enabled",
