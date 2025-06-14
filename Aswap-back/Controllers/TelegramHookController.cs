@@ -13,7 +13,7 @@ public class TelegramHookController(
     ILogger<WebHookController> log)
     : Controller
 {
-    [HttpPost("telegram-webhook")]
+    [HttpPost("api/telegram-webhook")]
     public async Task<IActionResult> Post([FromBody] Update upd)
     {
         if (upd.Message?.Text is not string text) return Ok();
