@@ -41,9 +41,19 @@ public class TgBotHandler(ITelegramBotClient bot, long adminId, IAccountDbQuerie
             $"<b>Seller wallet:</b> <code>{botDto.SellerWallet}</code>\n\n" +
             $"<a href=\"{botDto.OrderUrl}\">🔗 Click</a>";
 
-        var chatIds = await accountDbQueries.CheckIdAsync(botDto.BuyerWallet, botDto.SellerWallet);
+        IEnumerable<string?> wallets = botDto.Receiver switch
+        {
+            NotificationReceiver.Buyer => new[] { botDto.BuyerWallet },
+            NotificationReceiver.Seller => new[] { botDto.SellerWallet },
+            _ => new[] { botDto.BuyerWallet, botDto.SellerWallet }
+        };
 
-        return await SendSafeAsync(chatIds, text);
+        var chatIds = await accountDbQueries.GetChatIdsAsync(wallets!
+            .Where(w => !string.IsNullOrWhiteSpace(w))!);
+
+        return chatIds.Count == 0
+            ? Array.Empty<Message>()
+            : await SendSafeAsync(chatIds, text);
     }
 
     private async Task<IReadOnlyList<Message>> SendSafeAsync(

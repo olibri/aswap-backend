@@ -10,5 +10,6 @@ public class TgBotDto
 
     public string? OrderUrl { get; set; }
 
+    public NotificationReceiver? Receiver { get; set; }
     public TgMessageType MessageType { get; set; }
 }
