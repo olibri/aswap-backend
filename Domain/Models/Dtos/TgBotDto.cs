@@ -12,7 +12,7 @@ public class TgBotDto
     public string? OrderUrl { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public NotificationReceiver? Receiver { get; set; }
+    public NotificationReceiver Receiver { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TgMessageType MessageType { get; set; }

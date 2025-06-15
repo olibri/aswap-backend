@@ -4,4 +4,5 @@ public enum NotificationReceiver
 {
     Buyer,
     Seller,
+    Admin
 }
