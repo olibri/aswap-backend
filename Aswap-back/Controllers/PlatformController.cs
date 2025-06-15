@@ -39,7 +39,7 @@ public class PlatformController(
     [Route("call-tg-bot")]
     public async Task<IActionResult> CallTgBot(TgBotDto tgBot)
     {
-        log.LogInformation("Call admin request");
+        log.LogInformation("Call bot request");
         await tgBotHandler.NotifyMessageAsync(tgBot);
         return Ok("Admin on the way");
     }
