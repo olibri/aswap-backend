@@ -15,4 +15,9 @@ public static class AccountExtention
         await accountDbCommand.UpsertAccountAsync(userName);
     }
 
+    public static async Task UpdateFakeUserAsync(string token, long id, string userName,
+        IAccountDbCommand accountDbCommand)
+    {
+        await accountDbCommand.UpdateAccountInfoAsync(token, id, userName);
+    }
 }

@@ -18,6 +18,7 @@ public class AccountDbCommand(P2PDbContext dbContext) : IAccountDbCommand
             await dbContext.Account.AddAsync(new AccountEntity
             {
                 WalletAddress = accountWallet
+
             });
             await dbContext.SaveChangesAsync();
         }
@@ -53,5 +54,4 @@ public class AccountDbCommand(P2PDbContext dbContext) : IAccountDbCommand
 
         await dbContext.SaveChangesAsync();
     }
-
 }

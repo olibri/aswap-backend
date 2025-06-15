@@ -3,6 +3,7 @@ using Domain.Interfaces.Chat;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.TelegramBot;
+using Domain.Models.Dtos;
 using Domain.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -71,10 +72,27 @@ public class TgBotTests(TestFixture fixture) : IClassFixture<TestFixture>
         account.Telegram.ShouldNotBeNullOrEmpty();
     }
 
-    [Fact]
+    [Fact(Skip = "Non deterministic")]
     public async Task NotifyUsersInTgTest()
     {
-        throw new NotImplementedException("This test is not implemented yet. " +
-            "You can implement it by using the NotifyUsersInTg method from ITgBotHandler interface.");
+        var user = "user_0xZalupa12355";
+        var res = await _dbChat.GenerateCode(user);
+        await AccountExtention.SaveFakeUserToDbAsync(user, _dbAccount);
+        await AccountExtention.UpdateFakeUserAsync(res, 5001098171, user, _dbAccount);
+
+        var messageDto = new TgBotDto
+        {
+            BuyerWallet = user,
+            DealId = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            MessageType = TgMessageType.OrderCreated,
+            OrderUrl = "https://example.com/order/12345",
+        };
+        var messages = await _tgBot.NotifyMessageAsync(messageDto);
+
+        messages.ShouldSatisfyAllConditions(
+            () => messages.ShouldHaveSingleItem(),                
+            () => messages[0].Chat.Id.ShouldBe(5001098171),
+            () => messages[0].Text.ShouldContain(user)
+        );
     }
 }
