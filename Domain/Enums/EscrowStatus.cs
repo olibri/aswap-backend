@@ -10,5 +10,6 @@ public enum EscrowStatus
     SignedByOneSide,
 
     Released,
-    Cancelled
+    Cancelled,
+    AdminResolving
 }

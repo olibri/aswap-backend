@@ -59,9 +59,10 @@ public class RootBuilder
                         var bot = c.Resolve<ITelegramBotClient>();
                         var accountQuery = c.Resolve<IAccountDbQueries>();
                         var chatId = long.Parse(cfg["Telegram:AdminChatId"]!);
+                        var marketDbCommand = c.Resolve<IMarketDbCommand>();
 
 
-                        return new TgBotHandler(bot, chatId, accountQuery);
+                        return new TgBotHandler(bot, chatId, accountQuery, marketDbCommand);
                     })
                     .As<ITgBotHandler>()
                     .SingleInstance();

@@ -47,4 +47,6 @@ public class EscrowOrderEntity
     [Column("max_fiat_amount")] public decimal MaxFiatAmount { get; set; }
 
     [Column("filled_quantity")] public decimal FilledQuantity { get; set; }
+
+    [Column("admin_call")] public bool? AdminCall { get; set; }
 }

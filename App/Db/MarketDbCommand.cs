@@ -66,6 +66,7 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
             entity.Status = MoveToSignedStatus(entity, (decimal)upsertOrder.FilledQuantity);
             entity.FilledQuantity += (decimal)upsertOrder.FilledQuantity;
         }
+        entity.AdminCall = upsertOrder.AdminCall ?? entity.AdminCall;
 
         dbContext.EscrowOrders.Update(entity);
         await dbContext.SaveChangesAsync();

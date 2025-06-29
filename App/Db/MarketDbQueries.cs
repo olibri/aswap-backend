@@ -27,6 +27,16 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
             .ToArrayAsync();
     }
 
+
+    public Task<EscrowOrderDto[]> GetAllAdminOffersAsync()
+    {
+        return dbContext.EscrowOrders
+            .Where(o => o.Status == EscrowStatus.AdminResolving)
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .Select(o => EscrowOrderDto.FromEntity(o))
+            .ToArrayAsync();
+    }
+
     public async Task<EscrowOrderDto[]> GetAllUsersOffersAsync(string userId)
     {
         return await dbContext.EscrowOrders

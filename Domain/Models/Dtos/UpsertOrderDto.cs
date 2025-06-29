@@ -20,4 +20,6 @@ public class UpsertOrderDto
     public string? TokenMint { get; set; }
     public decimal? Amount { get; set; }
     public decimal? Price { get; set; }
+
+    public bool? AdminCall { get; set; }
 }

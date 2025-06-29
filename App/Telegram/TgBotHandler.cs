@@ -1,4 +1,6 @@
-﻿using Domain.Interfaces.Database.Queries;
+﻿using Domain.Enums;
+using Domain.Interfaces.Database.Command;
+using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Dtos;
 using Domain.Models.Enums;
@@ -8,7 +10,11 @@ using Telegram.Bot.Types.Enums;
 
 namespace App.Telegram;
 
-public class TgBotHandler(ITelegramBotClient bot, long adminId, IAccountDbQueries accountDbQueries) : ITgBotHandler
+public class TgBotHandler(
+    ITelegramBotClient bot,
+    long adminId,
+    IAccountDbQueries accountDbQueries,
+    IMarketDbCommand marketDbCommand) : ITgBotHandler
 {
     public async Task<IReadOnlyList<Message>> NotifyMessageAsync(TgBotDto dto)
     {
@@ -29,6 +35,12 @@ public class TgBotHandler(ITelegramBotClient bot, long adminId, IAccountDbQuerie
             $"<b>Seller wallet:</b> <code>{dto.SellerWallet}</code>\n\n" +
             $"<a href=\"{dto.OrderUrl}\">🔗 Click</a>";
 
+        await marketDbCommand.UpdateCurrentOfferAsync(new UpsertOrderDto
+        {
+            OrderId = dto.DealId,
+            AdminCall = true,
+            Status = EscrowStatus.AdminResolving
+        });
         return await SendSafeAsync(adminId, text);
     }
 
