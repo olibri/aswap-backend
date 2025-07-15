@@ -74,17 +74,6 @@ public class PlatformController(
         return Ok(res);
     }
 
-    //TODO: add jwt checker to this method 
-    [HttpGet]
-    [Route("all-admin-offers")]
-    [ProducesResponseType(typeof(List<EscrowOrderDto>), 200)]
-    public async Task<IActionResult> GetAllAdminOffers()
-    {
-        log.LogInformation("New offers requested");
-        var res = await marketDbQueries.GetAllAdminOffersAsync();
-        return Ok(res);
-    }
-
 
 
     [HttpGet]

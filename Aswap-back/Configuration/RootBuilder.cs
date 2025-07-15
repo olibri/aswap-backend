@@ -86,6 +86,8 @@ public class RootBuilder
 
                 builder.RegisterType<WebHookController>().InstancePerDependency();
                 builder.RegisterType<TelegramHookController>().InstancePerDependency();
+                builder.RegisterType<AdminController>().InstancePerDependency();
+
                 builder.RegisterType<PlatformController>().InstancePerDependency();
                 builder.RegisterType<ChatController>().InstancePerDependency();
             })

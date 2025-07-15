@@ -1,15 +1,29 @@
 ﻿using Domain.Models.DB;
+using Domain.Models.DB.Metrics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
 
 public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 {
+    /* ─────────── Core tables ─────────── */
     public DbSet<EscrowOrderEntity> EscrowOrders { get; set; }
     public DbSet<RoomEntity> Rooms { get; set; }
     public DbSet<MessageEntity> Messages { get; set; }
     public DbSet<AccountEntity> Account { get; set; }
     public DbSet<TelegramLinkEntity> TelegramLinks { get; set; }
+
+    /* ─────────── Metrics tables ─────────── */
+    public DbSet<EventEntity> Events { get; set; }
+    public DbSet<TvlSnapshotEntity> TvlSnapshots { get; set; }
+    public DbSet<AssetVolumeDailyEntity> AssetVolumeDaily { get; set; }
+    public DbSet<OrderStatusDailyEntity> OrderStatusDaily { get; set; }
+    public DbSet<UserMetricsDailyEntity> UserMetricsDaily { get; set; }
+    public DbSet<SessionEntity> Sessions { get; set; }
+    public DbSet<FunnelMetricsDailyEntity> FunnelMetricsDaily { get; set; }
+    public DbSet<RatingEntity> Ratings { get; set; }
+    public DbSet<TxHistoryEntity> TxHistory { get; set; }
+    public DbSet<BanEntity> Bans { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -59,5 +73,28 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
             entity.Property(e => e.ExpiredAt)
                 .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC' + INTERVAL '1 day'");
         });
+
+        modelBuilder.Entity<TvlSnapshotEntity>()
+            .HasKey(x => new { x.TakenAt, x.TokenMint });
+
+        modelBuilder.Entity<AssetVolumeDailyEntity>()
+            .HasKey(x => new { x.Day, x.TokenMint });
+
+        modelBuilder.Entity<OrderStatusDailyEntity>()
+            .HasKey(x => x.Day);
+
+        modelBuilder.Entity<UserMetricsDailyEntity>()
+            .HasKey(x => x.Day);
+
+        modelBuilder.Entity<FunnelMetricsDailyEntity>()
+            .HasKey(x => x.Day);
+
+        modelBuilder.Entity<EventEntity>()
+            .Property(x => x.Payload)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<SessionEntity>()
+            .HasIndex(x => x.LastSeenAt);
+
     }
 }
