@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
+namespace Domain.Models.DB.Metrics;
+
 [Table("tvl_snapshots")]
 public class TvlSnapshotEntity
 {

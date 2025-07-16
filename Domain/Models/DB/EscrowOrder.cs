@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using Domain.Interfaces;
 using Domain.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Domain.Models.DB;
 
 [Table("escrow_orders")]
-public class EscrowOrderEntity
+public class EscrowOrderEntity: IHasDomainEvents
 {
     [Key] [Column("id")] public Guid Id { get; set; }
 
@@ -49,4 +50,7 @@ public class EscrowOrderEntity
     [Column("filled_quantity")] public decimal FilledQuantity { get; set; }
 
     [Column("admin_call")] public bool? AdminCall { get; set; }
+
+    [NotMapped] public List<DomainEvent> DomainEvents { get; } = new();
+
 }

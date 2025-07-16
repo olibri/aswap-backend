@@ -7,6 +7,7 @@ using Domain.Models.Events;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System;
+using Domain.Models.Enums;
 
 namespace App.Db;
 
@@ -17,6 +18,11 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
         try
         {
             var mappedEntity = EscrowOrderMapper.ToEntity(offer);
+
+            mappedEntity.DomainEvents.Add(new OfferCreated(
+                Guid.NewGuid(), mappedEntity.Id, mappedEntity.DealId,
+                mappedEntity.SellerCrypto, OrderSide.Sell));
+
             await dbContext.EscrowOrders.AddAsync(mappedEntity);
             await dbContext.SaveChangesAsync();
         }
@@ -31,6 +37,14 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
     {
         var mappedEntity = EscrowOrderMapper.ToEntity(upsertOrderDto);
         Console.WriteLine($"Creating buyer offer with DealId: {mappedEntity.DealId}");
+
+        mappedEntity.DomainEvents.Add(new OfferCreated(
+            Guid.NewGuid(),
+            mappedEntity.Id,
+            mappedEntity.DealId,
+            mappedEntity.BuyerFiat,
+            OrderSide.Buy));
+
 
         await dbContext.EscrowOrders.AddAsync(mappedEntity);
         await dbContext.SaveChangesAsync();

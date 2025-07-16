@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+namespace Domain.Models.DB.Metrics;
+
 [Table("funnel_metrics_daily")]
 public class FunnelMetricsDailyEntity
 {

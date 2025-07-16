@@ -15,6 +15,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
     /* ─────────── Metrics tables ─────────── */
     public DbSet<EventEntity> Events { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
+
     public DbSet<TvlSnapshotEntity> TvlSnapshots { get; set; }
     public DbSet<AssetVolumeDailyEntity> AssetVolumeDaily { get; set; }
     public DbSet<OrderStatusDailyEntity> OrderStatusDaily { get; set; }
@@ -92,6 +94,13 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
         modelBuilder.Entity<EventEntity>()
             .Property(x => x.Payload)
             .HasColumnType("jsonb");
+
+        modelBuilder.Entity<OutboxMessage>(e =>
+        {
+            e.Property(x => x.Payload).HasColumnType("jsonb");
+            e.HasIndex(x => x.ProcessedAt);
+        });
+
 
         modelBuilder.Entity<SessionEntity>()
             .HasIndex(x => x.LastSeenAt);
