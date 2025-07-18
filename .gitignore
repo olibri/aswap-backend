@@ -367,3 +367,4 @@ data
 *.ncrunchproject
 *.ncrunchsolution
 .idea
+.NCrunch_Aswap-back
