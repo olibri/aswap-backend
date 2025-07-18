@@ -26,6 +26,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     public DbSet<RatingEntity> Ratings { get; set; }
     public DbSet<TxHistoryEntity> TxHistory { get; set; }
     public DbSet<BanEntity> Bans { get; set; }
+    public DbSet<AggregatorState> AggregatorStates { get; set; }
+    public DbSet<OrderCreatedDailyEntity> OrderCreatedDaily { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -104,6 +106,12 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
         modelBuilder.Entity<SessionEntity>()
             .HasIndex(x => x.LastSeenAt);
+
+        modelBuilder.Entity<OrderCreatedDailyEntity>()
+            .HasKey(x => new { x.Day, x.Side });
+
+        modelBuilder.Entity<AggregatorState>()
+            .HasKey(x => new { x.Key });
 
     }
 }

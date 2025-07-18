@@ -1,6 +1,7 @@
-﻿using App.BackgroundWorkers;
-using App.Chat;
+﻿using App.Chat;
 using App.Db;
+using App.Metrics;
+using App.Metrics.BackgroundWorker;
 using App.Parsing;
 using App.Strategy;
 using App.Strategy.EventsHandler;
@@ -14,6 +15,7 @@ using Domain.Interfaces.Chat;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
+using Domain.Interfaces.Metrics;
 using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models;
@@ -46,6 +48,10 @@ public class RootBuilder
 
         builder.RegisterType<AnchorAnchorEventParser>().As<IAnchorEventParser>().InstancePerDependency();
 
+        builder.RegisterType<OrderMetricsTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+        builder.RegisterType<OutboxProcessorTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+        builder.RegisterType<TvlSnapshotTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+
 
         builder.RegisterType<SystemTextJsonSerializer>()
           .As<IJsonSerializer>()
@@ -54,10 +60,9 @@ public class RootBuilder
         builder.RegisterType<OutboxSaveChangesInterceptor>()
           .InstancePerLifetimeScope();
 
-        builder.RegisterType<OutboxProcessor>()
+        builder.RegisterType<SchedulerService>()
           .As<IHostedService>()         
           .SingleInstance();
-
 
         //Tg bot
         builder.RegisterInstance(cfg).As<IConfiguration>();
@@ -89,17 +94,17 @@ public class RootBuilder
           .AsSelf()
           .InstancePerDependency();
 
-        builder.Register(ctx =>
-          {
-            var config = ctx.Resolve<IConfiguration>();
+        //builder.Register(ctx =>
+        //  {
+        //    var config = ctx.Resolve<IConfiguration>();
 
-            var opt = new DbContextOptionsBuilder<P2PDbContext>()
-              .UseNpgsql(config.GetConnectionString("PgDatabase"))
-              .Options;
+        //    var opt = new DbContextOptionsBuilder<P2PDbContext>()
+        //      .UseNpgsql(config.GetConnectionString("PgDatabase"))
+        //      .Options;
 
-            return new P2PDbContext(opt);
-          }).AsSelf()
-          .InstancePerLifetimeScope();
+        //    return new P2PDbContext(opt);
+        //  }).AsSelf()
+        //  .InstancePerLifetimeScope();
 
         builder.RegisterType<WebHookController>().InstancePerDependency();
         builder.RegisterType<TelegramHookController>().InstancePerDependency();
@@ -174,6 +179,9 @@ public class RootBuilder
             }
           });
         });
+
+        services.AddSingleton<IJsonSerializer, SystemTextJsonSerializer>();
+        services.AddSingleton<OutboxSaveChangesInterceptor>();
 
         services.AddDbContext<P2PDbContext>((sp, opt) =>
           opt.UseNpgsql(cfg.GetConnectionString("PgDatabase"))

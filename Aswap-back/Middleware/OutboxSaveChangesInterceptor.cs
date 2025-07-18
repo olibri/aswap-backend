@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces;
+using Domain.Interfaces.Metrics;
 using Domain.Models.DB.Metrics;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 

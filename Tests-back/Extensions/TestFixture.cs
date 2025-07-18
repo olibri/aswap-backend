@@ -26,6 +26,9 @@ public class TestFixture : IDisposable
         PostgresDatabase.ResetState("rooms");
         PostgresDatabase.ResetState("messages");
         PostgresDatabase.ResetState("telegram_link");
+        PostgresDatabase.ResetState("outbox_messages");
+        PostgresDatabase.ResetState("events");
+        PostgresDatabase.ResetState("order_created_daily");
 
         Host.Dispose();
     }

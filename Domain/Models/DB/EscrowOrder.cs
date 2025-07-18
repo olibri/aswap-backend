@@ -1,5 +1,5 @@
 ﻿using Domain.Enums;
-using Domain.Interfaces;
+using Domain.Interfaces.Metrics;
 using Domain.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
