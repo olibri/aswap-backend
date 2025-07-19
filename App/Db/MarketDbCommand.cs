@@ -21,7 +21,7 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
 
             mappedEntity.DomainEvents.Add(new OfferCreated(
                 Guid.NewGuid(), mappedEntity.Id, mappedEntity.DealId,
-                mappedEntity.SellerCrypto, OrderSide.Sell));
+                mappedEntity.SellerCrypto, OrderSide.Sell, EventType.OfferCreated));
 
             await dbContext.EscrowOrders.AddAsync(mappedEntity);
             await dbContext.SaveChangesAsync();
@@ -43,7 +43,7 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
             mappedEntity.Id,
             mappedEntity.DealId,
             mappedEntity.BuyerFiat,
-            OrderSide.Buy));
+            OrderSide.Buy, EventType.OfferCreated));
 
 
         await dbContext.EscrowOrders.AddAsync(mappedEntity);

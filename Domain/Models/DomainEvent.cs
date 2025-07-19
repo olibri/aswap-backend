@@ -1,3 +1,5 @@
-﻿namespace Domain.Models;
+﻿using Domain.Enums;
 
-public abstract record DomainEvent(Guid Id, DateTime OccurredAt);
+namespace Domain.Models;
+
+public abstract record DomainEvent(Guid Id, DateTime OccurredAt, EventType Type);

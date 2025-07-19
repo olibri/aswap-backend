@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Domain.Enums;
 using Domain.Interfaces.Metrics;
 using Domain.Models.DB.Metrics;
 using Domain.Models.Dtos;
@@ -7,7 +8,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace App.Metrics;
+namespace App.Metrics.TaskMetrics;
 
 public sealed class OrderMetricsTask(IServiceScopeFactory scopes) : IPeriodicTask
 {
@@ -36,7 +37,7 @@ public sealed class OrderMetricsTask(IServiceScopeFactory scopes) : IPeriodicTas
 
   private Task<List<EventEntity>> LoadBatchAsync(DateTime since, CancellationToken ct)
   {
-    return db.Events.Where(e => e.EventType == "OfferCreated" && e.Ts > since)
+    return db.Events.Where(e => e.EventType == EventType.OfferCreated && e.Ts > since)
       .OrderBy(e => e.Ts)
       .Take(1_000)
       .ToListAsync(ct);

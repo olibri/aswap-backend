@@ -1,7 +1,7 @@
 ﻿using App.Chat;
 using App.Db;
-using App.Metrics;
 using App.Metrics.BackgroundWorker;
+using App.Metrics.TaskMetrics;
 using App.Parsing;
 using App.Strategy;
 using App.Strategy.EventsHandler;
@@ -51,6 +51,8 @@ public class RootBuilder
         builder.RegisterType<OrderMetricsTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<OutboxProcessorTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<TvlSnapshotTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+        builder.RegisterType<OrderStatusSnapshotTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+        builder.RegisterType<TradeMetricsTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
 
 
         builder.RegisterType<SystemTextJsonSerializer>()

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Models.DB.Metrics;
@@ -7,7 +8,7 @@ namespace Domain.Models.DB.Metrics;
 public class OutboxMessage
 {
   [Key] public Guid Id { get; set; }
-  [Column("type")] public string Type { get; set; } 
+  [Column("type")] public EventType Type { get; set; } 
   [Column("occurred_at")] public DateTime OccurredAt { get; set; }
   [Column("payload", TypeName = "jsonb")]
   public string Payload { get; set; }

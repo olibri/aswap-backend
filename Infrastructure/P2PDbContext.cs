@@ -19,6 +19,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
     public DbSet<TvlSnapshotEntity> TvlSnapshots { get; set; }
     public DbSet<AssetVolumeDailyEntity> AssetVolumeDaily { get; set; }
+    public DbSet<DealTimeDailyEntity> DealTimeDailyEntity { get; set; }
+
     public DbSet<OrderStatusDailyEntity> OrderStatusDaily { get; set; }
     public DbSet<UserMetricsDailyEntity> UserMetricsDaily { get; set; }
     public DbSet<SessionEntity> Sessions { get; set; }
@@ -85,7 +87,10 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
             .HasKey(x => new { x.Day, x.TokenMint });
 
         modelBuilder.Entity<OrderStatusDailyEntity>()
-            .HasKey(x => x.Day);
+            .HasKey(e => new { e.Day, e.Status });
+        
+        modelBuilder.Entity<DealTimeDailyEntity>()
+            .HasKey(e => new { e.Day, e.TokenMint });
 
         modelBuilder.Entity<UserMetricsDailyEntity>()
             .HasKey(x => x.Day);
@@ -93,14 +98,24 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
         modelBuilder.Entity<FunnelMetricsDailyEntity>()
             .HasKey(x => x.Day);
 
-        modelBuilder.Entity<EventEntity>()
-            .Property(x => x.Payload)
-            .HasColumnType("jsonb");
+        modelBuilder.Entity<EventEntity>(b =>
+        {
+            b.Property(x => x.Payload).HasColumnType("jsonb");
+
+            b.Property(x => x.EventType)  
+                .HasConversion<string>()            
+                .HasColumnName("event_type")        
+                .HasMaxLength(40);                  
+        });
 
         modelBuilder.Entity<OutboxMessage>(e =>
         {
-            e.Property(x => x.Payload).HasColumnType("jsonb");
+            e.Property(x => x.Payload).HasColumnType("jsonb");  
             e.HasIndex(x => x.ProcessedAt);
+
+            e.Property(x => x.Type)
+                .HasConversion<string>()           
+                .HasColumnName("type");
         });
 
 

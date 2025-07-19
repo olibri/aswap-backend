@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250719104148_mgr2333")]
+    partial class mgr2333
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -239,25 +242,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("bans");
-                });
-
-            modelBuilder.Entity("Domain.Models.DB.Metrics.DealTimeDailyEntity", b =>
-                {
-                    b.Property<DateTime>("Day")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TokenMint")
-                        .HasColumnType("text");
-
-                    b.Property<double>("AvgSeconds")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("TradeCnt")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Day", "TokenMint");
-
-                    b.ToTable("deal_time_daily");
                 });
 
             modelBuilder.Entity("Domain.Models.DB.Metrics.EventEntity", b =>

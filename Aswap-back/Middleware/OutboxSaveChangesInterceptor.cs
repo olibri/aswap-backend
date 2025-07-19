@@ -26,7 +26,7 @@ public sealed class OutboxSaveChangesInterceptor(IJsonSerializer json)
         box.Add(new OutboxMessage
         {
           Id = ev.Id,
-          Type = ev.GetType().Name,
+          Type = ev.Type,
           OccurredAt = ev.OccurredAt,
           Payload = json.ToJson(ev)
         });

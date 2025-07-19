@@ -5,7 +5,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace App.Metrics;
+namespace App.Metrics.TaskMetrics;
 
 public class OutboxProcessorTask(IServiceScopeFactory scopes, IJsonSerializer json) : IPeriodicTask
 {
