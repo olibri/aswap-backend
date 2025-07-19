@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+﻿using App.Utils;
 using Domain.Interfaces.Metrics;
 using Domain.Models.DB.Metrics;
 using Infrastructure;
@@ -20,19 +20,14 @@ public class TvlSnapshotTask(IServiceScopeFactory scopes) : IPeriodicTask
       .AddSeconds(-DateTime.UtcNow.Second)
       .AddMilliseconds(-DateTime.UtcNow.Millisecond);
 
-    var tvl = await db.EscrowOrders
-      .Where(o => o.Status == EscrowStatus.OnChain ||
-                  o.Status == EscrowStatus.PartiallyOnChain)
-      .GroupBy(o => o.TokenMint)
-      .Select(g => new { g.Key, Locked = g.Sum(x => (x.Amount ?? 0) - x.FilledQuantity) })
-      .ToListAsync(ct);
+    var tvl = TvlUtils.Calculate(await db.EscrowOrders.ToListAsync(ct));
 
-    foreach (var row in tvl)
+    foreach (var (mint, balance) in tvl)
       db.TvlSnapshots.Add(new TvlSnapshotEntity
       {
         TakenAt = now,
-        TokenMint = row.Key!,
-        Balance = row.Locked
+        TokenMint = mint,
+        Balance = balance
       });
 
     await db.SaveChangesAsync(ct);

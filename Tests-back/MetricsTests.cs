@@ -1,6 +1,7 @@
 ﻿using App.Metrics;
+using App.Utils;
 using Domain.Enums;
-using Domain.Interfaces.Metrics;
+using Domain.Models.DB;
 using Domain.Models.Enums;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -13,29 +14,48 @@ namespace Tests_back;
 public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
 {
   [Fact]
+  public void TvlUtils_Calculates_Correctly()
+  {
+    var expectedTvl = 130m;
+    var orders = new[]
+    {
+      new EscrowOrderEntity { TokenMint = "USDc", Status = EscrowStatus.OnChain, Amount = 100, FilledQuantity = 0 },
+      new EscrowOrderEntity
+        { TokenMint = "USDc", Status = EscrowStatus.PartiallyOnChain, Amount = 50, FilledQuantity = 20 },
+      new EscrowOrderEntity { TokenMint = "BONK", Status = EscrowStatus.Cancelled, Amount = 99 }
+    };
+
+    var tvl = TvlUtils.Calculate(orders);
+
+    tvl["USDc"].ShouldBe(expectedTvl);
+    tvl.ContainsKey("BONK").ShouldBeFalse();
+  }
+
+  [Fact]
   public async Task Tvl_Is_Saved_To_Snapshot()
   {
     await using var scope = fixture.Host.Services.CreateAsyncScope();
-
     var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
 
-    await db.SeedAsync(
-      count: 50,
-      status: EscrowStatus.OnChain,
-      tokenMint: "USDc",
-      side: OrderSide.Sell);
 
-    var tvlTask = scope.ServiceProvider             
-      .GetServices<IPeriodicTask>()
-      .OfType<TvlSnapshotTask>()
-      .Single();
+    var seeded = await db.SeedAsync(
+      50,
+      EscrowStatus.OnChain,
+      "USDc",
+      OrderSide.Sell,
+      fixedAmount: 100);
 
+    var factory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+    var task = new TvlSnapshotTask(factory);
 
-    await tvlTask.ExecuteAsync(CancellationToken.None);
+    await task.ExecuteAsync(CancellationToken.None);
 
     var snap = await db.TvlSnapshots
-      .SingleAsync(s => s.TokenMint == "USDc");
+      .Where(s => s.TokenMint == "USDc")
+      .OrderByDescending(s => s.TakenAt)
+      .FirstAsync();
 
-    snap.Balance.ShouldBe(50 * 100);
+    var expected = seeded.ExpectedTvl("USDc");
+    snap.Balance.ShouldBe(expected);
   }
 }

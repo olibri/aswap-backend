@@ -4,7 +4,6 @@ using Domain.Models.DB;
 using Domain.Models.Enums;
 using Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.X500;
 
 namespace Tests_back.Extensions;
 
@@ -34,12 +33,13 @@ public static class OffersExtensions
     EscrowStatus? status = null,
     string? tokenMint = null,
     OrderSide? side = null,
-    bool partialFill = false)
+    bool partialFill = false,
+    int? fixedAmount = null)
   {
     var list = new List<EscrowOrderEntity>(count);
     for (var i = 0; i < count; i++)
     {
-      var amt = Rnd.Next(1, 1000); // 1 … 999
+      var amt = fixedAmount ?? Rnd.Next(1, 1000);
       var filled = partialFill ? Rnd.Next(0, amt) : 0;
 
       list.Add(new EscrowOrderEntity
@@ -72,11 +72,22 @@ public static class OffersExtensions
     string? tokenMint = null,
     OrderSide? side = null,
     bool partialFill = false,
-    CancellationToken ct = default)
+    CancellationToken ct = default,
+    int? fixedAmount = null)
   {
-    var list = Generate(count, status, tokenMint, side, partialFill);
+    var list = Generate(count, status, tokenMint, side, partialFill, fixedAmount);
     await db.EscrowOrders.AddRangeAsync(list, ct);
     await db.SaveChangesAsync(ct);
     return list;
+  }
+
+  public static decimal ExpectedTvl(
+    this IEnumerable<EscrowOrderEntity> orders,
+    string tokenMint)
+  {
+    return orders
+      .Where(o => o.TokenMint == tokenMint &&
+                  (o.Status is EscrowStatus.OnChain or EscrowStatus.PartiallyOnChain))
+      .Sum(o => (o.Amount ?? 0m) - o.FilledQuantity);
   }
 }
