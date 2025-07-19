@@ -4,7 +4,8 @@ using Microsoft.Extensions.Logging;
 
 namespace App.Metrics.BackgroundWorker;
 
-public class SchedulerService(IEnumerable<IPeriodicTask> tasks,
+public class SchedulerService(
+  IEnumerable<IPeriodicTask> tasks,
   ILogger<SchedulerService> log)
   : BackgroundService
 {
@@ -33,12 +34,19 @@ public class SchedulerService(IEnumerable<IPeriodicTask> tasks,
         list[i] = state;
       }
 
-      await Task.Delay(1000, ct);        
+      await Task.Delay(1000, ct);
     }
   }
+
   private async Task RunTask(TaskState state, CancellationToken ct)
   {
-    try { await state.Task.ExecuteAsync(ct); }
-    catch (Exception ex) { log.LogError(ex, "Task {T} failed", state.Task.GetType().Name); }
+    try
+    {
+      await state.Task.ExecuteAsync(ct);
+    }
+    catch (Exception ex)
+    {
+      log.LogError(ex, "Task {T} failed", state.Task.GetType().Name);
+    }
   }
 }
