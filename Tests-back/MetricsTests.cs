@@ -117,4 +117,32 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     dtd.AvgSeconds.ShouldBe(exp.AvgSec, 0.1);
     vol.Volume.ShouldBe(exp.Volume);
   }
+
+  [Fact]
+  public async Task UserMetricsDailyTask_Writes_Correct_Snapshot()
+  {
+    await using var scope = fixture.Host.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
+
+    PostgresDatabase.ResetState("account");
+    PostgresDatabase.ResetState("sessions");
+    PostgresDatabase.ResetState("user_metrics_daily");
+
+    var exp = await db.SeedUserMetricsScenarioAsync(
+      5,
+      3,
+      2,
+      4);
+
+    var task = new UserMetricsDailyTask(scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>());
+    await task.ExecuteAsync(CancellationToken.None);
+
+    var today = DateTime.UtcNow.Date;
+    var snap = await db.UserMetricsDaily.FirstAsync(x => x.Day == today);
+
+    snap.DauUsers.ShouldBe(exp.DauUsers);
+    snap.DauIps.ShouldBe(exp.DauIps);
+    snap.WauUsers.ShouldBe(exp.WauUsers);
+    snap.MauUsers.ShouldBe(exp.MauUsers);
+  }
 }

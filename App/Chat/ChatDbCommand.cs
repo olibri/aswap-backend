@@ -81,7 +81,7 @@ public class ChatDbCommand(P2PDbContext dbContext, IAccountDbCommand accountDbCo
 
     private static string CreateSecureToken(int byteLength)
     {
-        byte[] bytes = new byte[byteLength];
+        var bytes = new byte[byteLength];
         RandomNumberGenerator.Fill(bytes);
         return Base64UrlEncoder.Encode(bytes);
     }

@@ -90,7 +90,7 @@ public static class OffersExtensions
   {
     return orders
       .Where(o => o.TokenMint == tokenMint &&
-                  (o.Status is EscrowStatus.OnChain or EscrowStatus.PartiallyOnChain))
+                  o.Status is EscrowStatus.OnChain or EscrowStatus.PartiallyOnChain)
       .Sum(o => (o.Amount ?? 0m) - o.FilledQuantity);
   }
 
@@ -101,25 +101,25 @@ public static class OffersExtensions
   /// ???????? ???????? ?????? — ? ??? ?????? ??????????? ????????? ???????.
   /// </summary>
   public static async Task<List<EscrowOrderEntity>> SeedTradesAsync(
-      this P2PDbContext db,
-      int count,
-      DateTime settledTs,
-      string tokenMint = "USDc",
-      decimal qtyEach = 100m,
-      decimal priceFiat = 1m,
-      CancellationToken ct = default)
+    this P2PDbContext db,
+    int count,
+    DateTime settledTs,
+    string tokenMint = "USDc",
+    decimal qtyEach = 100m,
+    decimal priceFiat = 1m,
+    CancellationToken ct = default)
   {
     var orders = Generate(
-        count,
-        EscrowStatus.Released,
-        tokenMint,
-        OrderSide.Sell,
-        partialFill: false,
-        fixedAmount: (int)qtyEach);
+      count,
+      EscrowStatus.Released,
+      tokenMint,
+      OrderSide.Sell,
+      false,
+      (int)qtyEach);
 
     foreach (var o in orders)
     {
-      o.CreatedAtUtc = settledTs.AddMinutes(-Rnd.Next(5, 60)); // 5?60 ?? ?? ?????
+      o.CreatedAtUtc = settledTs.AddMinutes(-Rnd.Next(5, 60));
       o.FilledQuantity = qtyEach;
       o.Price = (ulong)priceFiat;
     }
@@ -129,7 +129,7 @@ public static class OffersExtensions
       Ts = settledTs,
       EventType = EventType.TradeSettled,
       Payload = JsonSerializer.Serialize(
-            new TradeSettledPayload(o.DealId, tokenMint, qtyEach, priceFiat))
+        new TradeSettledPayload(o.DealId, tokenMint, qtyEach, priceFiat))
     });
 
     await db.EscrowOrders.AddRangeAsync(orders, ct);
@@ -138,14 +138,12 @@ public static class OffersExtensions
     return orders;
   }
 
-  /// <summary>????????? ???????? (avg ? ???, volume, trades) ??? ????? ???????.</summary>
   public static (double AvgSec, decimal Volume, int Trades) ExpectedTradeMetrics(
-      this IEnumerable<EscrowOrderEntity> orders,
-      DateTime settledTs)
+    this IEnumerable<EscrowOrderEntity> orders,
+    DateTime settledTs)
   {
     var deltas = orders.Select(o => (settledTs - o.CreatedAtUtc).TotalSeconds).ToArray();
     var volume = orders.Sum(o => o.FilledQuantity * (decimal)o.Price);
     return (deltas.Average(), volume, deltas.Length);
   }
-
 }

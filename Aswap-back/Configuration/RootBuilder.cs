@@ -53,6 +53,7 @@ public class RootBuilder
         builder.RegisterType<TvlSnapshotTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<OrderStatusSnapshotTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<TradeMetricsTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+        builder.RegisterType<UserMetricsDailyTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
 
 
         builder.RegisterType<SystemTextJsonSerializer>()
