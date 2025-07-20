@@ -35,7 +35,6 @@ public static class UserMetricsExtensions
     foreach (var i in Enumerable.Range(dauUsers + wauExtra + 1, mauExtra))
       db.Account.Add(new AccountEntity { WalletAddress = $"w{i}", LastActiveTime = monthAgo });
 
-    // Сесії з унікальними IP
     var now = DateTime.UtcNow;
     foreach (var i in Enumerable.Range(1, dauIps))
       db.Sessions.Add(new SessionEntity

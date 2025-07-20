@@ -3,9 +3,12 @@ using App.Db;
 using App.Metrics.BackgroundWorker;
 using App.Metrics.TaskMetrics;
 using App.Parsing;
+using App.Services.Accounts;
+using App.Services.Sessions;
 using App.Strategy;
 using App.Strategy.EventsHandler;
 using App.Telegram;
+using App.Utils.Web.IP;
 using Aswap_back.Controllers;
 using Aswap_back.Middleware;
 using Autofac;
@@ -16,6 +19,7 @@ using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
 using Domain.Interfaces.Metrics;
+using Domain.Interfaces.Services;
 using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models;
@@ -54,7 +58,15 @@ public class RootBuilder
         builder.RegisterType<OrderStatusSnapshotTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<TradeMetricsTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<UserMetricsDailyTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+        builder.RegisterType<SessionCleanupTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
 
+
+        builder.RegisterType<AccountService>().As<IAccountService>().InstancePerLifetimeScope();
+        builder.RegisterType<SessionService>().As<ISessionService>().InstancePerLifetimeScope();
+
+        builder.RegisterType<HttpContextIpAccessor>()
+          .As<IClientIpAccessor>()
+          .SingleInstance();
 
         builder.RegisterType<SystemTextJsonSerializer>()
           .As<IJsonSerializer>()
@@ -64,7 +76,7 @@ public class RootBuilder
           .InstancePerLifetimeScope();
 
         builder.RegisterType<SchedulerService>()
-          .As<IHostedService>()         
+          .As<IHostedService>()
           .SingleInstance();
 
         //Tg bot
@@ -112,6 +124,7 @@ public class RootBuilder
         builder.RegisterType<WebHookController>().InstancePerDependency();
         builder.RegisterType<TelegramHookController>().InstancePerDependency();
         builder.RegisterType<AdminController>().InstancePerDependency();
+        builder.RegisterType<SessionPingController>().InstancePerDependency();
 
         builder.RegisterType<PlatformController>().InstancePerDependency();
         builder.RegisterType<ChatController>().InstancePerDependency();
@@ -141,6 +154,8 @@ public class RootBuilder
       .ConfigureServices((ctx, services) =>
       {
         var cfg = ctx.Configuration;
+
+        services.AddHttpContextAccessor();
 
         services.AddControllers();
 

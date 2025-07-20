@@ -1,6 +1,8 @@
 ﻿using App.Metrics.TaskMetrics;
 using App.Utils;
+using Aswap_back.Controllers;
 using Domain.Enums;
+using Domain.Interfaces.Database.Queries;
 using Domain.Models.DB;
 using Domain.Models.DB.Metrics;
 using Domain.Models.Enums;
@@ -92,10 +94,18 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
   public async Task TradeMetricsTask_Writes_Correct_Metrics()
   {
     PostgresDatabase.ResetState("escrow_orders");
+    PostgresDatabase.ResetState("tvl_snapshots");
+    PostgresDatabase.ResetState("account");
+    PostgresDatabase.ResetState("rooms");
+    PostgresDatabase.ResetState("messages");
+    PostgresDatabase.ResetState("telegram_link");
+    PostgresDatabase.ResetState("outbox_messages");
     PostgresDatabase.ResetState("events");
-    PostgresDatabase.ResetState("deal_time_daily");
+    PostgresDatabase.ResetState("order_created_daily");
+    PostgresDatabase.ResetState("order_status_daily");
     PostgresDatabase.ResetState("asset_volume_daily");
-    PostgresDatabase.ResetState("aggregator_state");
+    PostgresDatabase.ResetState("deal_time_daily");
+    PostgresDatabase.ResetState("user_metrics_daily");
 
     await using var scope = fixture.Host.Services.CreateAsyncScope();
 
@@ -145,4 +155,58 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     snap.WauUsers.ShouldBe(exp.WauUsers);
     snap.MauUsers.ShouldBe(exp.MauUsers);
   }
+
+
+  [Fact]
+  public async Task Session_Start_creates_row_and_updates_account()
+  {
+    PostgresDatabase.ResetState("sessions");
+    PostgresDatabase.ResetState("account");
+
+    await using var scope = fixture.Host.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
+    var pingController = fixture.GetService<SessionPingController>();
+
+    var dto = await db.SeedAccountAsync("w1");
+    var before = DateTime.UtcNow;
+    await pingController.Start(dto, CancellationToken.None);
+
+    var sess = await db.Sessions.FirstAsync();
+    sess.SessionId.ShouldBe(dto.SessionId);
+    sess.Wallet.ShouldBe("w1");
+
+    var acc = await db.Account.AsNoTracking().FirstAsync();
+    var diff = acc.LastActiveTime!.Value - before;
+
+    diff.ShouldBeLessThan(TimeSpan.FromHours(1));
+  }
+
+  [Fact]
+  public async Task Session_Ping_updates_last_seen_only()
+  {
+    PostgresDatabase.ResetState("sessions");
+    PostgresDatabase.ResetState("account");
+
+    var pingController = fixture.GetService<SessionPingController>();
+
+    await using var scope = fixture.Host.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
+
+    var dto = await db.SeedAccountAsync("w2");
+    await pingController.Start(dto, CancellationToken.None);
+
+
+    var createdAt = await db.Sessions
+      .Where(s => s.SessionId == dto.SessionId)
+      .Select(s => s.StartedAt)
+      .FirstAsync();
+
+    await Task.Delay(1000);
+    await pingController.Ping(dto, CancellationToken.None);
+
+    var sess = await db.Sessions.FirstAsync();
+    sess.StartedAt.ShouldBe(createdAt);                   
+    sess.LastSeenAt.ShouldBeGreaterThan(createdAt);        
+  }
+
 }
