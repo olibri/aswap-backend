@@ -13,7 +13,7 @@ public class AdminTest(TestFixture fixture) : IClassFixture<TestFixture>
     var wallet = WalletTestExtensions.CreateWallet().Address;
     var until = DateTime.UtcNow.AddDays(3);
 
-    var id = await fixture.BanUserAsync(wallet, "spam", until);
+    _ = await fixture.BanUserAsync(wallet, "spam", until);
     await fixture.AssertBannedUntilAsync(wallet, until);
   }
 }
