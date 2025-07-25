@@ -39,12 +39,12 @@ public static class AuthTestExtensions
     jwt.Claims.First(c => c.Type == "role").Value.ShouldBe(expectedRole);
   }
 
-  public static T WithAdminUser<T>(this T ctrl) where T : ControllerBase
+  public static T WithUser<T>(this T ctrl, string wallet, string role = "user") where T : ControllerBase
   {
     var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
     {
-      new Claim("sub", "admin_wallet"),
-      new Claim("role", "admin")
+      new Claim("sub",  wallet),
+      new Claim("role", role)
     }, "TestAuth"));
 
     ctrl.ControllerContext = new ControllerContext
@@ -53,4 +53,8 @@ public static class AuthTestExtensions
     };
     return ctrl;
   }
+
+  public static T WithAdminUser<T>(this T ctrl) where T : ControllerBase
+    => ctrl.WithUser("admin_wallet", "admin");
+
 }

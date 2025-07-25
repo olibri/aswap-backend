@@ -1,4 +1,5 @@
 using Aswap_back.Configuration;
+using Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -34,8 +35,22 @@ public class TestFixture : IDisposable
     PostgresDatabase.ResetState("asset_volume_daily");
     PostgresDatabase.ResetState("deal_time_daily");
     PostgresDatabase.ResetState("user_metrics_daily");
+    PostgresDatabase.ResetState("rating_reviews");
 
 
     Host.Dispose();
+  }
+}
+
+public static class TestFixtureExtensions
+{
+  public static void ResetDb(this TestFixture f, params string[] tables)
+  {
+    foreach (var table in tables)
+    {
+      PostgresDatabase.ResetState(table);
+    }
+    var db = f.GetService<P2PDbContext>();
+    db.ChangeTracker.Clear();
   }
 }

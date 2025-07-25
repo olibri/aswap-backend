@@ -23,6 +23,7 @@ using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
 using Domain.Interfaces.Metrics;
 using Domain.Interfaces.Services;
+using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.Services.Auth;
 using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
@@ -66,6 +67,7 @@ public class RootBuilder
         builder.RegisterType<TradeMetricsTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<UserMetricsDailyTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<SessionCleanupTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+        builder.RegisterType<RatingService>().As<IRatingService>().InstancePerLifetimeScope();
 
 
         builder.RegisterType<SolSignatureVerifier>()
@@ -142,6 +144,7 @@ public class RootBuilder
         builder.RegisterType<AdminController>().InstancePerDependency();
         builder.RegisterType<SessionPingController>().InstancePerDependency();
         builder.RegisterType<AuthController>().InstancePerDependency();
+        builder.RegisterType<RatingController>().InstancePerDependency();
 
         builder.RegisterType<PlatformController>().InstancePerDependency();
         builder.RegisterType<ChatController>().InstancePerDependency();

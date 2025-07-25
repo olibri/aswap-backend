@@ -25,7 +25,7 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     public DbSet<UserMetricsDailyEntity> UserMetricsDaily { get; set; }
     public DbSet<SessionEntity> Sessions { get; set; }
     public DbSet<FunnelMetricsDailyEntity> FunnelMetricsDaily { get; set; }
-    public DbSet<RatingEntity> Ratings { get; set; }
+    public DbSet<RatingReviewEntity> Ratings { get; set; }
     public DbSet<TxHistoryEntity> TxHistory { get; set; }
     public DbSet<BanEntity> Bans { get; set; }
     public DbSet<AggregatorState> AggregatorStates { get; set; }
@@ -127,6 +127,9 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
         modelBuilder.Entity<AggregatorState>()
             .HasKey(x => new { x.Key });
+
+        modelBuilder.Entity<RatingReviewEntity>()
+            .HasKey(x => new { x.Id });
 
     }
 }

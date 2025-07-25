@@ -16,9 +16,9 @@ public class AuthTest(TestFixture fixture) : IClassFixture<TestFixture>
     var nonce = ctrl.GetNonce(w.Address).OkProp<string>("nonce");
     var pair = await ctrl.AuthenticateOk(
       new WalletAuthDto(
-        "sol", 
-        w.Address, 
-        nonce, 
+        "sol",
+        w.Address,
+        nonce,
         w.Sign(nonce)));
 
     pair.AssertJwt(w.Address, "user");
