@@ -8,6 +8,8 @@ public class TxHistoryEntity
 {
   [Key] [Column("tx_hash")] public string TxHash { get; set; }
   [Column("wallet")] public string? Wallet { get; set; }
+  [Column("counterparty_wallet")] public string? Counterparty { get; set; }
+
   [Column("token_mint")] public string? TokenMint { get; set; }
 
   [Column("amount", TypeName = "numeric(38,0)")]

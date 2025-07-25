@@ -1,9 +1,12 @@
-﻿using App.Chat;
+﻿using System.Text;
+using App.Chat;
 using App.Db;
 using App.Metrics.BackgroundWorker;
 using App.Metrics.TaskMetrics;
 using App.Parsing;
 using App.Services.Accounts;
+using App.Services.Auth;
+using App.Services.Auth.NetworkVerifier;
 using App.Services.Sessions;
 using App.Strategy;
 using App.Strategy.EventsHandler;
@@ -20,9 +23,11 @@ using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
 using Domain.Interfaces.Metrics;
 using Domain.Interfaces.Services;
+using Domain.Interfaces.Services.Auth;
 using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models;
+using Domain.Models.Api.Auth;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +51,8 @@ public class RootBuilder
         builder.RegisterType<AccountDbQueries>().As<IAccountDbQueries>().InstancePerDependency();
         builder.RegisterType<ChatDbCommand>().As<IChatDbCommand>().InstancePerDependency();
         builder.RegisterType<AccountDbCommand>().As<IAccountDbCommand>().InstancePerDependency();
+        builder.RegisterType<NonceService>().As<INonceService>().InstancePerDependency();
+        builder.RegisterType<SignatureVerifier>().As<ISignatureVerifier>().InstancePerDependency();
 
         builder.RegisterType<EscrowInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
         builder.RegisterType<OfferInitializedHandler>().As<IAnchorEventHandler>().InstancePerDependency();
@@ -59,6 +66,15 @@ public class RootBuilder
         builder.RegisterType<TradeMetricsTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<UserMetricsDailyTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<SessionCleanupTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
+
+
+        builder.RegisterType<SolSignatureVerifier>()
+          .As<INetworkVerifier>()
+          .SingleInstance();
+
+        builder.RegisterType<EthSignatureVerifier>()
+          .As<INetworkVerifier>()
+          .SingleInstance();
 
 
         builder.RegisterType<AccountService>().As<IAccountService>().InstancePerLifetimeScope();
@@ -125,6 +141,7 @@ public class RootBuilder
         builder.RegisterType<TelegramHookController>().InstancePerDependency();
         builder.RegisterType<AdminController>().InstancePerDependency();
         builder.RegisterType<SessionPingController>().InstancePerDependency();
+        builder.RegisterType<AuthController>().InstancePerDependency();
 
         builder.RegisterType<PlatformController>().InstancePerDependency();
         builder.RegisterType<ChatController>().InstancePerDependency();
@@ -154,6 +171,9 @@ public class RootBuilder
       .ConfigureServices((ctx, services) =>
       {
         var cfg = ctx.Configuration;
+        services.AddMemoryCache();
+        services.Configure<TokenOptions>(cfg.GetSection("Jwt"));
+        services.AddSingleton<ITokenService, TokenService>();
 
         services.AddHttpContextAccessor();
 
@@ -208,15 +228,18 @@ public class RootBuilder
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
           .AddJwtBearer(options =>
           {
+            var jwtOpt = cfg.GetSection("Jwt").Get<TokenOptions>()!;
             options.TokenValidationParameters = new TokenValidationParameters
             {
+              ValidIssuer = jwtOpt.Issuer,
+              ValidAudience = jwtOpt.Audience,
+              IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOpt.SymmetricKey)),
               ValidateIssuer = true,
               ValidateAudience = true,
               ValidateLifetime = true,
               ValidateIssuerSigningKey = true,
-              //ValidIssuer = issuer,
-              //ValidAudience = audience,
-              NameClaimType = "userName"
+              ClockSkew = TimeSpan.FromSeconds(30)
             };
           });
         services.AddAuthorization();
