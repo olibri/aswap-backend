@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces.Services;
+﻿using App.Utils;
+using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Auth;
 using Domain.Models.Api.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -38,8 +39,8 @@ public class AuthController(
   [HttpGet("nonce")]
   public IActionResult GetNonce([FromQuery] string wallet)
   {
-    if (string.IsNullOrWhiteSpace(wallet))
-      return BadRequest("Wallet is required");
+    if (!AddressValidator.IsValidSolanaAddress(wallet))
+      return BadRequest("Invalid wallet");
 
     var nonce = nonces.Issue(wallet);
     return Ok(new { nonce });
