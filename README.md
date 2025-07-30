@@ -1,1 +1,1 @@
-Delpoyed back -> https://a-swap.xyz/api/swagger/index.html
+Deployed back -> https://a-swap.xyz/api/swagger/index.html
