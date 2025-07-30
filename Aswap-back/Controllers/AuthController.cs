@@ -16,7 +16,6 @@ public class AuthController(
   ISignatureVerifier verifier,
   IAccountService accounts) : Controller
 {
-  [Authorize]
   [HttpPost]
   public async Task<IActionResult> Authenticate([FromBody] WalletAuthDto dto,
     CancellationToken ct)
