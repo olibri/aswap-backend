@@ -27,7 +27,7 @@ public static class WalletTestExtensions
   {
     var bytes = Encoding.UTF8.GetBytes(message);
     var sig = Ed25519.Sign(bytes, wallet.PrivateKey);
-    return Convert.ToBase64String(sig);
+    return Encoders.Base58.EncodeData(sig);
   }
 
 
