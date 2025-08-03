@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using Aswap_back.Controllers;
 using Domain.Models.Api.Auth;
@@ -19,6 +20,21 @@ public static class AuthTestExtensions
     var prop = ok.Value!.GetType().GetProperty(propName);
     prop.ShouldNotBeNull($"Property '{propName}' not found.");
     return (TProp)prop!.GetValue(ok.Value)!;
+  }
+
+  public static T WithHttp<T>(this T ctrl, TestFixture f, string ua = "Tests/1.0", string ip = "127.0.0.1")
+    where T : ControllerBase
+  {
+    var http = new DefaultHttpContext();
+    http.Request.Headers["User-Agent"] = ua;
+    http.Connection.RemoteIpAddress = IPAddress.Parse(ip);
+
+    ctrl.ControllerContext = new ControllerContext { HttpContext = http };
+
+    var accessor = f.GetService<IHttpContextAccessor>();
+    accessor.HttpContext = http;
+
+    return ctrl;
   }
 
   public static async Task<TokenPair> AuthenticateOk(
@@ -43,7 +59,7 @@ public static class AuthTestExtensions
   {
     var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
     {
-      new Claim("sub",  wallet),
+      new Claim("sub", wallet),
       new Claim("role", role)
     }, "TestAuth"));
 
@@ -55,6 +71,7 @@ public static class AuthTestExtensions
   }
 
   public static T WithAdminUser<T>(this T ctrl) where T : ControllerBase
-    => ctrl.WithUser("admin_wallet", "admin");
-
+  {
+    return ctrl.WithUser("admin_wallet", "admin");
+  }
 }

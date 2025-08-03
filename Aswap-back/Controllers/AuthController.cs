@@ -1,12 +1,11 @@
-﻿using App.Utils;
+﻿using App.Services.Auth;
+using App.Utils;
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Auth;
 using Domain.Models.Api.Auth;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aswap_back.Controllers;
-
 
 [ApiController]
 [Route("api/auth")]
@@ -14,6 +13,8 @@ public class AuthController(
   ITokenService tokens,
   INonceService nonces,
   ISignatureVerifier verifier,
+  IRefreshTokenService refreshStore,
+  IClientIpAccessor ipAccessor,
   IAccountService accounts) : Controller
 {
   [HttpPost]
@@ -30,7 +31,14 @@ public class AuthController(
     if (banUntil is not null && banUntil > DateTime.UtcNow)
       return StatusCode(403, "User is banned");
 
-    var pair = tokens.Generate(dto.Wallet, role: "user", banUntil);
+    var pair = tokens.Generate(dto.Wallet, "user", banUntil);
+
+    if (!RefreshTokenService.TryParseRefresh(pair.RefreshToken, out var exp))
+      return StatusCode(500, "Invalid refresh format");
+
+    var ua = Request.Headers.UserAgent.ToString();
+    var ip = ipAccessor.GetClientIp();
+    await refreshStore.SaveAsync(dto.Wallet, pair.RefreshToken, ua, ip, exp, ct);
 
     return Ok(pair);
   }
@@ -44,5 +52,27 @@ public class AuthController(
     var nonce = nonces.Issue(wallet);
     return Ok(new { nonce });
   }
-}
 
+  [HttpPost("refresh")]
+  public async Task<IActionResult> Refresh([FromBody] RefreshRequest req, CancellationToken ct)
+  {
+    var session = await refreshStore.ValidateAsync(req.RefreshToken, ct);
+    if (session is null) return Unauthorized("Invalid refresh");
+
+    var (id, wallet) = session.Value;
+
+    var banUntil = await accounts.GetBanUntilAsync(wallet, ct);
+    if (banUntil is not null && banUntil > DateTime.UtcNow)
+      return StatusCode(403, "User is banned");
+
+    var pair = tokens.Generate(wallet, "user", banUntil);
+    if (!RefreshTokenService.TryParseRefresh(pair.RefreshToken, out var newExp))
+      return StatusCode(500, "Invalid refresh format");
+
+    var ua = Request.Headers.UserAgent.ToString();
+    var ip = ipAccessor.GetClientIp();
+    await refreshStore.RotateAsync(id, req.RefreshToken, pair.RefreshToken, newExp, ua, ip, ct);
+
+    return Ok(pair);
+  }
+}

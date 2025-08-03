@@ -69,6 +69,10 @@ public class RootBuilder
         builder.RegisterType<SessionCleanupTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<RatingService>().As<IRatingService>().InstancePerLifetimeScope();
 
+        builder.RegisterType<RefreshTokenService>()
+          .As<IRefreshTokenService>()
+          .InstancePerLifetimeScope();
+
 
         builder.RegisterType<SolSignatureVerifier>()
           .As<INetworkVerifier>()
