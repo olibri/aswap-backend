@@ -36,9 +36,25 @@ public class AuthController(
     if (!RefreshTokenService.TryParseRefresh(pair.RefreshToken, out var exp))
       return StatusCode(500, "Invalid refresh format");
 
+    Response.Cookies.Append("refresh_token", pair.RefreshToken, new CookieOptions
+    {
+      HttpOnly = true,
+      Secure = true,
+      SameSite = SameSiteMode.Strict,
+      Expires = exp
+    });
+
     var ua = Request.Headers.UserAgent.ToString();
     var ip = ipAccessor.GetClientIp();
-    await refreshStore.SaveAsync(dto.Wallet, pair.RefreshToken, ua, ip, exp, ct);
+
+    await refreshStore.SaveAsync(new SaveRefreshDto
+    (
+      dto.Wallet,
+      pair.RefreshToken,
+      exp,
+      ua,
+      ip
+    ), ct);
 
     return Ok(pair);
   }
@@ -54,12 +70,15 @@ public class AuthController(
   }
 
   [HttpPost("refresh")]
-  public async Task<IActionResult> Refresh([FromBody] RefreshRequest req, CancellationToken ct)
+  public async Task<IActionResult> Refresh(CancellationToken ct)
   {
-    var session = await refreshStore.ValidateAsync(req.RefreshToken, ct);
-    if (session is null) return Unauthorized("Invalid refresh");
+    var refresh = Request.Cookies["refresh_token"];
+    if (string.IsNullOrEmpty(refresh)) return Unauthorized("No refresh cookie");
 
-    var (id, wallet) = session.Value;
+    var s = await refreshStore.ValidateAsync(refresh, ct);
+    if (s is null) return Unauthorized("Invalid refresh");
+
+    var (id, wallet) = s.Value;
 
     var banUntil = await accounts.GetBanUntilAsync(wallet, ct);
     if (banUntil is not null && banUntil > DateTime.UtcNow)
@@ -70,9 +89,39 @@ public class AuthController(
       return StatusCode(500, "Invalid refresh format");
 
     var ua = Request.Headers.UserAgent.ToString();
-    var ip = ipAccessor.GetClientIp();
-    await refreshStore.RotateAsync(id, req.RefreshToken, pair.RefreshToken, newExp, ua, ip, ct);
+    var ip = ipAccessor.GetClientIp(); 
+
+    await refreshStore.RotateAsync(
+      new RotateRefreshDto(id, refresh, pair.RefreshToken, newExp, ua, ip),
+      ct);
+
+    Response.Cookies.Append("refresh_token", pair.RefreshToken, new CookieOptions
+    {
+      HttpOnly = true,
+      Secure = true,
+      SameSite = SameSiteMode.Strict,
+      Expires = newExp,
+      Path = "/"
+    });
 
     return Ok(pair);
+  }
+
+
+  [HttpPost("logout")]
+  public async Task<IActionResult> Logout(CancellationToken ct)
+  {
+    var refresh = Request.Cookies["refresh_token"];
+    if (string.IsNullOrEmpty(refresh))
+    {
+      Response.Cookies.Delete("refresh_token");
+      return Ok();
+    }
+
+    var s = await refreshStore.ValidateAsync(refresh, ct);
+    if (s is not null) await refreshStore.RevokeAsync(s.Value.Id, ct);
+
+    Response.Cookies.Delete("refresh_token");
+    return Ok();
   }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using Domain.Interfaces.Services.Auth;
+using Domain.Models.Api.Auth;
 using Domain.Models.DB;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -9,17 +10,17 @@ namespace App.Services.Auth;
 
 public sealed class RefreshTokenService(P2PDbContext db) : IRefreshTokenService
 {
-  public async Task SaveAsync(string wallet, string refresh, string? ua, string? ip, DateTime expiresUtc,
-    CancellationToken ct)
+  public async Task SaveAsync(SaveRefreshDto dto, CancellationToken ct)
+
   {
     db.Set<RefreshTokenEntity>().Add(new RefreshTokenEntity
     {
-      Wallet = wallet,
-      RefreshHash = Hash(refresh),
-      ExpiresAtUtc = expiresUtc,
+      Wallet = dto.Wallet,
+      RefreshHash = Hash(dto.RefreshToken),
+      ExpiresAtUtc = dto.ExpiresUtc,
       CreatedAtUtc = DateTime.UtcNow,
-      UserAgent = ua,
-      Ip = ip
+      UserAgent = dto.UserAgent,
+      Ip = dto.Ip
     });
     await db.SaveChangesAsync(ct);
   }
@@ -36,30 +37,32 @@ public sealed class RefreshTokenService(P2PDbContext db) : IRefreshTokenService
     return row is null ? null : (row.Id, row.Wallet);
   }
 
-  public async Task RotateAsync(long id, string oldRefresh, string newRefresh, DateTime newExpiresUtc, string? ua,
-    string? ip, CancellationToken ct)
+  public async Task RotateAsync(RotateRefreshDto dto, CancellationToken ct)
   {
     await db.Set<RefreshTokenEntity>()
-      .Where(x => x.Id == id && x.RefreshHash == Hash(oldRefresh))
+      .Where(x => x.Id == dto.SessionId && x.RefreshHash == Hash(dto.OldRefreshToken))
       .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevokedAtUtc, DateTime.UtcNow), ct);
 
     db.Set<RefreshTokenEntity>().Add(new RefreshTokenEntity
     {
-      Wallet = await db.Set<RefreshTokenEntity>().Where(x => x.Id == id).Select(x => x.Wallet).FirstAsync(ct),
-      RefreshHash = Hash(newRefresh),
-      ExpiresAtUtc = newExpiresUtc,
+      Wallet =
+        await db.Set<RefreshTokenEntity>().Where(x => x.Id == dto.SessionId)
+          .Select(x => x.Wallet).FirstAsync(ct),
+      RefreshHash = Hash(dto.NewRefreshToken),
+      ExpiresAtUtc = dto.NewExpiresUtc,
       CreatedAtUtc = DateTime.UtcNow,
-      UserAgent = ua,
-      Ip = ip
+      UserAgent = dto.UserAgent,
+      Ip = dto.Ip
     });
     await db.SaveChangesAsync(ct);
   }
 
-  public async Task RevokeAsync(long id, CancellationToken ct)
+  public async Task RevokeAsync(long sessionId, CancellationToken ct)
   {
     await db.Set<RefreshTokenEntity>()
-      .Where(x => x.Id == id)
-      .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevokedAtUtc, DateTime.UtcNow), ct);
+      .Where(x => x.Id == sessionId)
+      .ExecuteUpdateAsync(s
+        => s.SetProperty(x => x.RevokedAtUtc, DateTime.UtcNow), ct);
   }
 
   private static string Hash(string token)

@@ -74,4 +74,51 @@ public static class AuthTestExtensions
   {
     return ctrl.WithUser("admin_wallet", "admin");
   }
+
+  public static T WithRequestCookie<T>(this T ctrl, string name, string value) where T : ControllerBase
+  {
+    // Достатньо виставити заголовок Cookie
+    ctrl.HttpContext.Request.Headers.Append("Cookie", $"{name}={value}");
+    return ctrl;
+  }
+
+  public static string? GetCookie(this ControllerBase ctrl, string name)
+  {
+    // Шукаємо у всіх Set-Cookie (може бути кілька)
+    var setCookies = ctrl.HttpContext.Response.Headers["Set-Cookie"].ToArray();
+    if (setCookies.Length == 0) return null;
+
+    foreach (var sc in setCookies)
+    {
+      // формат: name=value; Path=/; HttpOnly; ...
+      var parts = sc.Split(';', 2);
+      var kv = parts[0].Split('=', 2);
+      if (kv.Length == 2 && string.Equals(kv[0].Trim(), name, StringComparison.OrdinalIgnoreCase))
+        return kv[1];
+    }
+
+    return null;
+  }
+
+  public static async Task<TokenPair> RefreshOk(this AuthController ctrl, CancellationToken ct = default)
+  {
+    var res = await ctrl.Refresh(ct);
+    res.ShouldBeOfType<OkObjectResult>();
+    var pair = ((OkObjectResult)res).Value.ShouldBeOfType<TokenPair>();
+    pair.AccessToken.ShouldNotBeNullOrWhiteSpace();
+    pair.RefreshToken.ShouldNotBeNullOrWhiteSpace();
+    return pair;
+  }
+
+  public static async Task LogoutOk(this AuthController ctrl, CancellationToken ct = default)
+  {
+    var res = await ctrl.Logout(ct);
+    res.ShouldBeOfType<OkResult>();
+  }
+
+  public static async Task RefreshUnauthorized(this AuthController ctrl, CancellationToken ct = default)
+  {
+    var res = await ctrl.Refresh(ct);
+    res.ShouldBeOfType<UnauthorizedObjectResult>();
+  }
 }
