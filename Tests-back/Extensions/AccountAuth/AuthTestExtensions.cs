@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Collections;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using Aswap_back.Controllers;
@@ -17,10 +18,20 @@ public static class AuthTestExtensions
     var ok = (OkObjectResult)result;
     ok.Value.ShouldNotBeNull();
 
+    if (ok.Value is IDictionary dict)
+    {
+      dict.Contains(propName).ShouldBeTrue($"Property '{propName}' not found.");
+      return (TProp)dict[propName]!;
+    }
+
     var prop = ok.Value!.GetType().GetProperty(propName);
     prop.ShouldNotBeNull($"Property '{propName}' not found.");
     return (TProp)prop!.GetValue(ok.Value)!;
   }
+
+  public static async Task<TProp> OkPropAsync<TProp>(this Task<IActionResult> task, string propName)
+    => (await task).OkProp<TProp>(propName);
+
 
   public static T WithHttp<T>(this T ctrl, TestFixture f, string ua = "Tests/1.0", string ip = "127.0.0.1")
     where T : ControllerBase

@@ -1,4 +1,4 @@
-﻿using Domain.Interfaces.Services;
+﻿using Domain.Interfaces.Services.IP;
 using Microsoft.AspNetCore.Http;
 
 namespace App.Utils.Web.IP;

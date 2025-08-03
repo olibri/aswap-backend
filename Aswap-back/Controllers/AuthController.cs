@@ -2,6 +2,7 @@
 using App.Utils;
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Auth;
+using Domain.Interfaces.Services.IP;
 using Domain.Models.Api.Auth;
 using Microsoft.AspNetCore.Mvc;
 

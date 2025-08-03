@@ -539,6 +539,94 @@ namespace Infrastructure.Migrations
                     b.ToTable("user_metrics_daily");
                 });
 
+            modelBuilder.Entity("Domain.Models.DB.PaymentMethod.PaymentCategory", b =>
+                {
+                    b.Property<short>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasColumnName("category_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<short>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("payment_categories");
+                });
+
+            modelBuilder.Entity("Domain.Models.DB.PaymentMethod.PaymentMethod", b =>
+                {
+                    b.Property<short>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasColumnName("method_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<short>("Id"));
+
+                    b.Property<short>("CategoryId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("category_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("payment_methods");
+                });
+
+            modelBuilder.Entity("Domain.Models.DB.PaymentMethod.PaymentPopularityDaily", b =>
+                {
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date")
+                        .HasColumnName("day");
+
+                    b.Property<short>("MethodId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("method_id");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("region");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer")
+                        .HasColumnName("cnt");
+
+                    b.HasKey("Day", "MethodId", "Region");
+
+                    b.HasIndex("Region", "Day", "Count");
+
+                    b.ToTable("payment_popularity_daily");
+                });
+
             modelBuilder.Entity("Domain.Models.DB.RefreshTokenEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -651,9 +739,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("Room");
                 });
 
+            modelBuilder.Entity("Domain.Models.DB.PaymentMethod.PaymentMethod", b =>
+                {
+                    b.HasOne("Domain.Models.DB.PaymentMethod.PaymentCategory", "Category")
+                        .WithMany("Methods")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("Domain.Models.DB.AccountEntity", b =>
                 {
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Domain.Models.DB.PaymentMethod.PaymentCategory", b =>
+                {
+                    b.Navigation("Methods");
                 });
 
             modelBuilder.Entity("Domain.Models.DB.RoomEntity", b =>

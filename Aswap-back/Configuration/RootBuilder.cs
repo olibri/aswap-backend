@@ -7,6 +7,7 @@ using App.Parsing;
 using App.Services.Accounts;
 using App.Services.Auth;
 using App.Services.Auth.NetworkVerifier;
+using App.Services.PaymentMethod.BackgroundWorker;
 using App.Services.Sessions;
 using App.Strategy;
 using App.Strategy.EventsHandler;
@@ -25,6 +26,8 @@ using Domain.Interfaces.Metrics;
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.Services.Auth;
+using Domain.Interfaces.Services.IP;
+using Domain.Interfaces.Services.PaymentMethod;
 using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models;
@@ -131,6 +134,20 @@ public class RootBuilder
           .AsSelf()
           .InstancePerDependency();
 
+        builder.RegisterType<GeoIpService>()
+          .As<IGeoIpService>()
+          .SingleInstance();
+
+        builder.RegisterType<PaymentCatalog>()
+          .As<IPaymentCatalog>()
+          .As<IHostedService>()
+          .SingleInstance();
+
+        builder.RegisterType<PopularityCounter>()
+          .As<IPopularityCounter>()
+          .As<IHostedService>()
+          .SingleInstance();
+
         //builder.Register(ctx =>
         //  {
         //    var config = ctx.Resolve<IConfiguration>();
@@ -149,6 +166,7 @@ public class RootBuilder
         builder.RegisterType<SessionPingController>().InstancePerDependency();
         builder.RegisterType<AuthController>().InstancePerDependency();
         builder.RegisterType<RatingController>().InstancePerDependency();
+        builder.RegisterType<PaymentController>().InstancePerDependency();
 
         builder.RegisterType<PlatformController>().InstancePerDependency();
         builder.RegisterType<ChatController>().InstancePerDependency();
@@ -228,9 +246,10 @@ public class RootBuilder
         services.AddSingleton<IJsonSerializer, SystemTextJsonSerializer>();
         services.AddSingleton<OutboxSaveChangesInterceptor>();
 
-        services.AddDbContext<P2PDbContext>((sp, opt) =>
+
+        services.AddDbContextFactory<P2PDbContext>((sp, opt) =>
           opt.UseNpgsql(cfg.GetConnectionString("PgDatabase"))
-            .AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>()));
+               .AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>()));
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
           .AddJwtBearer(options =>
