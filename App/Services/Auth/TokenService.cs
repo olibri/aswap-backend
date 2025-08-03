@@ -42,8 +42,9 @@ public sealed class TokenService(IOptions<TokenOptions> opt) : ITokenService
 
     var access = new JwtSecurityTokenHandler().WriteToken(jwt);
     var refresh = GenerateSecureToken(_opt.RefreshLifetimeDays);
+    var refreshExp = DateTime.UtcNow.AddDays(_opt.RefreshLifetimeDays);
 
-    return new TokenPair(access, refresh, jwt.ValidTo);
+    return new TokenPair(access, refresh, jwt.ValidTo, refreshExp);
   }
 
   private static string GenerateSecureToken(int lifeDays)

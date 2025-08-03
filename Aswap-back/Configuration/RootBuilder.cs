@@ -167,6 +167,7 @@ public class RootBuilder
         builder.RegisterType<AuthController>().InstancePerDependency();
         builder.RegisterType<RatingController>().InstancePerDependency();
         builder.RegisterType<PaymentController>().InstancePerDependency();
+        builder.RegisterType<OrderController>().InstancePerDependency();
 
         builder.RegisterType<PlatformController>().InstancePerDependency();
         builder.RegisterType<ChatController>().InstancePerDependency();

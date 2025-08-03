@@ -1,5 +1,4 @@
-﻿using App.Chat;
-using Domain.Interfaces.Chat;
+﻿using Domain.Interfaces.Chat;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.TelegramBot;
@@ -17,24 +16,6 @@ public class PlatformController(
     IChatDbCommand chatDbCommand,
     ILogger<PlatformController> log) : Controller
 {
-    [HttpPut]
-    [Route("update-offers")]
-    public async Task<IActionResult> UpdateOffers(UpsertOrderDto orderUpdate)
-    {
-        log.LogInformation("Update order request");
-        await marketDbCommand.UpdateCurrentOfferAsync(orderUpdate);
-        return Ok();
-    }
-
-    [HttpPost]
-    [Route("create-buyer-createOrder")]
-    public async Task<IActionResult> CreateBuyerOffer(UpsertOrderDto createOrder)
-    {
-        log.LogInformation("Buyer createOrder request");
-        await marketDbCommand.CreateBuyerOfferAsync(createOrder);
-        return Ok();
-    }
-
     [HttpPost]
     [Route("call-tg-bot")]
     public async Task<IActionResult> CallTgBot(TgBotDto tgBot)

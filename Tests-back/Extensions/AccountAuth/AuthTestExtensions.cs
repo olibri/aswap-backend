@@ -56,6 +56,7 @@ public static class AuthTestExtensions
     var pair = ((OkObjectResult)res).Value.ShouldBeOfType<TokenPair>();
     pair.AccessToken.ShouldNotBeNullOrWhiteSpace();
     pair.RefreshToken.ShouldNotBeNullOrWhiteSpace();
+    pair.RefreshExpiresAt.ShouldNotBe(default(DateTime));
     return pair;
   }
 

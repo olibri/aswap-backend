@@ -60,7 +60,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     public async Task PartialUpdateOffer()
     {
         PostgresDatabase.ResetState("escrow_orders");
-        var controller = fixture.GetService<PlatformController>();
+        var controller = fixture.GetService<OrderController>();
         var marketDbQueries = fixture.GetService<IMarketDbQueries>();
         await OffersExtensions.CreateFakeOrder(fixture);
 
