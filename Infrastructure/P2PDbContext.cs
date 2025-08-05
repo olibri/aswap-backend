@@ -9,6 +9,7 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 {
   /* ─────────── Core tables ─────────── */
   public DbSet<EscrowOrderEntity> EscrowOrders { get; set; }
+  public DbSet<EscrowOrderPaymentMethodEntity> EscrowOrderPaymentMethod { get; set; }
   public DbSet<RoomEntity> Rooms { get; set; }
   public DbSet<MessageEntity> Messages { get; set; }
   public DbSet<AccountEntity> Account { get; set; }
@@ -48,6 +49,25 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
       entity.Property(e => e.Status)
         .HasConversion<string>();
+
+      entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, x.Status, x.Price })
+        .HasDatabaseName("ix_escrow_best_price");
+    });
+
+    modelBuilder.Entity<EscrowOrderPaymentMethodEntity>(entity =>
+    {
+      entity.HasKey(x => new { x.OrderId, x.MethodId });
+      entity.HasIndex(x => new { x.MethodId, x.OrderId });
+
+      entity.HasOne(x => x.Order)
+        .WithMany(o => o.PaymentMethods)
+        .HasForeignKey(x => x.OrderId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      entity.HasOne(x => x.Method)
+        .WithMany()
+        .HasForeignKey(x => x.MethodId)
+        .OnDelete(DeleteBehavior.Restrict);
     });
 
     modelBuilder.Entity<RoomEntity>(entity =>

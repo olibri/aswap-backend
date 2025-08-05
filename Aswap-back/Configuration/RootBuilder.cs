@@ -7,6 +7,7 @@ using App.Parsing;
 using App.Services.Accounts;
 using App.Services.Auth;
 using App.Services.Auth.NetworkVerifier;
+using App.Services.Order;
 using App.Services.PaymentMethod.BackgroundWorker;
 using App.Services.Sessions;
 using App.Strategy;
@@ -27,6 +28,7 @@ using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.Services.Auth;
 using Domain.Interfaces.Services.IP;
+using Domain.Interfaces.Services.Order;
 using Domain.Interfaces.Services.PaymentMethod;
 using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
@@ -71,6 +73,7 @@ public class RootBuilder
         builder.RegisterType<UserMetricsDailyTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<SessionCleanupTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<RatingService>().As<IRatingService>().InstancePerLifetimeScope();
+        builder.RegisterType<BestPriceService>().As<IBestPriceService>().InstancePerLifetimeScope();
 
         builder.RegisterType<RefreshTokenService>()
           .As<IRefreshTokenService>()
@@ -250,7 +253,7 @@ public class RootBuilder
 
         services.AddDbContextFactory<P2PDbContext>((sp, opt) =>
           opt.UseNpgsql(cfg.GetConnectionString("PgDatabase"))
-               .AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>()));
+            .AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>()));
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
           .AddJwtBearer(options =>

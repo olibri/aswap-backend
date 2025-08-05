@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250805115716_paymentMInOrder")]
+    partial class paymentMInOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,6 +117,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("offer_side");
 
+                    b.Property<short?>("PaymentMethodId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("payment_method_id");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("price");
@@ -133,27 +140,12 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TokenMint", "FiatCode", "OfferSide", "Status", "Price")
-                        .HasDatabaseName("ix_escrow_best_price");
+                    b.HasIndex("PaymentMethodId");
+
+                    b.HasIndex("TokenMint", "FiatCode", "OfferSide", "Status", "PaymentMethodId", "Price")
+                        .HasDatabaseName("ix_escrow_best_price_method");
 
                     b.ToTable("escrow_orders");
-                });
-
-            modelBuilder.Entity("Domain.Models.DB.EscrowOrderPaymentMethodEntity", b =>
-                {
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("order_id");
-
-                    b.Property<short>("MethodId")
-                        .HasColumnType("smallint")
-                        .HasColumnName("method_id");
-
-                    b.HasKey("OrderId", "MethodId");
-
-                    b.HasIndex("MethodId", "OrderId");
-
-                    b.ToTable("escrow_order_payment_methods");
                 });
 
             modelBuilder.Entity("Domain.Models.DB.MessageEntity", b =>
@@ -740,23 +732,13 @@ namespace Infrastructure.Migrations
                     b.ToTable("telegram_link");
                 });
 
-            modelBuilder.Entity("Domain.Models.DB.EscrowOrderPaymentMethodEntity", b =>
+            modelBuilder.Entity("Domain.Models.DB.EscrowOrderEntity", b =>
                 {
-                    b.HasOne("Domain.Models.DB.PaymentMethod.PaymentMethod", "Method")
+                    b.HasOne("Domain.Models.DB.PaymentMethod.PaymentMethod", "PaymentMethod")
                         .WithMany()
-                        .HasForeignKey("MethodId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("PaymentMethodId");
 
-                    b.HasOne("Domain.Models.DB.EscrowOrderEntity", "Order")
-                        .WithMany("PaymentMethods")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Method");
-
-                    b.Navigation("Order");
+                    b.Navigation("PaymentMethod");
                 });
 
             modelBuilder.Entity("Domain.Models.DB.MessageEntity", b =>
@@ -792,11 +774,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Models.DB.AccountEntity", b =>
                 {
                     b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("Domain.Models.DB.EscrowOrderEntity", b =>
-                {
-                    b.Navigation("PaymentMethods");
                 });
 
             modelBuilder.Entity("Domain.Models.DB.PaymentMethod.PaymentCategory", b =>

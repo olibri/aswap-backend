@@ -51,6 +51,8 @@ public class EscrowOrderEntity: IHasDomainEvents
 
     [Column("admin_call")] public bool? AdminCall { get; set; }
 
+    public ICollection<EscrowOrderPaymentMethodEntity> PaymentMethods { get; set; } = [];
+
     [NotMapped] public List<DomainEvent> DomainEvents { get; } = new();
 
 }

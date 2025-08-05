@@ -1,0 +1,62 @@
+﻿using Domain.Enums;
+using Domain.Interfaces.Services.Order;
+using Domain.Models.Api.Order;
+using Domain.Models.DB;
+using Domain.Models.Dtos;
+using Domain.Models.Enums;
+using Infrastructure;
+using Microsoft.EntityFrameworkCore;
+
+namespace App.Services.Order;
+
+public sealed class BestPriceService(IDbContextFactory<P2PDbContext> dbf) : IBestPriceService
+{
+  public async Task<BestPriceDto?> GetBestPriceAsync(BestPriceRequest req, CancellationToken ct)
+  {
+    await using var db = await dbf.CreateDbContextAsync(ct);
+
+    var q = BuildInitialQuery(db, req);
+    q = ApplyPaymentMethodFilter(q, req);
+    q = ApplyPriceSorting(q, req.Side);
+
+    return await MapToBestPriceDto(q).FirstOrDefaultAsync(ct);
+  }
+
+  private static IQueryable<EscrowOrderEntity> BuildInitialQuery(P2PDbContext db, BestPriceRequest req)
+  {
+    return db.EscrowOrders
+      .AsNoTracking()
+      .Where(o =>
+        o.TokenMint == req.TokenMint &&
+        o.FiatCode == req.FiatCode &&
+        o.OfferSide == req.Side &&
+        (o.Status == EscrowStatus.OnChain || o.Status == EscrowStatus.PartiallyOnChain));
+  }
+
+  private static IQueryable<EscrowOrderEntity> ApplyPaymentMethodFilter(
+    IQueryable<EscrowOrderEntity> q, BestPriceRequest req)
+  {
+    return req.MethodIds.Count == 0
+      ? q
+      : q.Where(o => o.PaymentMethods.Any(pm => req.MethodIds.Contains(pm.MethodId)));
+  }
+
+  private static IOrderedQueryable<EscrowOrderEntity> ApplyPriceSorting(
+    IQueryable<EscrowOrderEntity> q, OrderSide side)
+  {
+    return side == OrderSide.Sell
+      ? q.OrderBy(o => o.Price)
+      : q.OrderByDescending(o => o.Price);
+  }
+
+  private static IQueryable<BestPriceDto> MapToBestPriceDto(IQueryable<EscrowOrderEntity> q)
+  {
+    return q.Select(o => new BestPriceDto
+    {
+      OrderId = o.Id,
+      Side = o.OfferSide,
+      Price = o.Price,
+      MethodIds = o.PaymentMethods.Select(pm => pm.MethodId).ToArray()
+    });
+  }
+}
