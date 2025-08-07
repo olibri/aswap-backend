@@ -8,6 +8,7 @@ using App.Services.Accounts;
 using App.Services.Auth;
 using App.Services.Auth.NetworkVerifier;
 using App.Services.Order;
+using App.Services.PaymentMethod;
 using App.Services.PaymentMethod.BackgroundWorker;
 using App.Services.Sessions;
 using App.Strategy;
@@ -83,6 +84,8 @@ public class RootBuilder
         builder.RegisterType<SolSignatureVerifier>()
           .As<INetworkVerifier>()
           .SingleInstance();
+
+        builder.RegisterType<CurrencyCatalog>().As<ICurrencyCatalog>().SingleInstance();
 
         builder.RegisterType<EthSignatureVerifier>()
           .As<INetworkVerifier>()

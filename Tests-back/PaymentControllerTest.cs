@@ -1,5 +1,7 @@
 ﻿using Aswap_back.Controllers;
+using Domain.Enums;
 using Domain.Models.Api.PaymentMethod;
+using Infrastructure.Migrations;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using Tests_back.Extensions;
@@ -22,10 +24,10 @@ public sealed class PaymentControllerTest(TestFixture fixture) : IClassFixture<T
     await fixture.ReloadCatalogAsync();
 
     var ctrl = fixture.GetService<PaymentController>()
-                      .WithHttp(fixture);                     
+                      .WithHttp(fixture);
 
     // Act
-    var result = await ctrl.Get(null, GlobalRegion, default);
+    var result = await ctrl.Get(null, CatalogKind.Payments, default);
 
     // Assert
     result.Result.ShouldBeOfType<OkObjectResult>();
@@ -50,7 +52,7 @@ public sealed class PaymentControllerTest(TestFixture fixture) : IClassFixture<T
                       .WithHttp(fixture);
 
     // Act
-    var result = await ctrl.Get(query, GlobalRegion, default);
+    var result = await ctrl.Get(query, CatalogKind.Payments, default);
 
     // Assert
     var list = ((OkObjectResult)result.Result).Value
@@ -74,7 +76,7 @@ public sealed class PaymentControllerTest(TestFixture fixture) : IClassFixture<T
                       .WithHttp(fixture, ip: "95.158.56.120");
 
     // Act
-    var result = await ctrl.Get(null, null, default);
+    var result = await ctrl.Get(null, CatalogKind.Payments, default);
 
     // Assert
     var popular = ((OkObjectResult)result.Result).Value

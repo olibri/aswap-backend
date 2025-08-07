@@ -1,4 +1,5 @@
 ﻿using Domain.Models.DB;
+using Domain.Models.DB.Currency;
 using Domain.Models.DB.Metrics;
 using Domain.Models.DB.PaymentMethod;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
   public DbSet<PaymentCategory> PaymentCategories { get; set; }
   public DbSet<PaymentMethod> PaymentMethods { get; set; }
   public DbSet<PaymentPopularityDaily> PaymentPopularityDaily { get; set; }
+
+  public DbSet<Currency> Currencies { get; set; }
 
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -192,6 +195,21 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
         .WithMany(c => c.Methods)
         .HasForeignKey(m => m.CategoryId)
         .OnDelete(DeleteBehavior.Restrict);
+    });
+
+    modelBuilder.Entity<Currency>(e =>
+    {
+      e.HasKey(x => x.Id);
+
+      e.Property(x => x.Code)
+        .HasMaxLength(32)
+        .IsRequired();
+
+      e.HasIndex(x => x.Code).IsUnique();
+
+      e.Property(x => x.Name)
+        .HasMaxLength(64)
+        .IsRequired();
     });
 
     modelBuilder.Entity<PaymentPopularityDaily>(e =>
