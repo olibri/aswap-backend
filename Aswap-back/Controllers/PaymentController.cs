@@ -26,29 +26,39 @@ public sealed class PaymentController(
     var wantPay = type is CatalogKind.Payments or CatalogKind.All;
     var wantCurr = type is CatalogKind.Currencies or CatalogKind.All;
 
-    IReadOnlyList<PaymentDto> popular = Array.Empty<PaymentDto>();
-    IReadOnlyList<PaymentDto> list = Array.Empty<PaymentDto>();
+    IReadOnlyList<PaymentDto> popularPayment = Array.Empty<PaymentDto>();
+    IReadOnlyList<PaymentDto> listPayments = Array.Empty<PaymentDto>();
+    
+    
+    IReadOnlyList<CurrencyDto> listCurrencies = Array.Empty<CurrencyDto>();
+    IReadOnlyList<CurrencyDto> popularCurrencies = Array.Empty<CurrencyDto>();
+
 
     if (wantPay)
     {
       var country = geo.ResolveCountry(ipAccessor.GetClientIp()) ?? GlobalRegion;
       var popularIds = await counter.Top(country, 8, ct);
 
-      popular = catalog.All.Where(m => popularIds.Contains(m.Id)).ToList();
-      list = string.IsNullOrWhiteSpace(q) ? catalog.All
+      popularPayment = catalog.All.Where(m => popularIds.Contains(m.Id)).ToList();
+      listPayments = string.IsNullOrWhiteSpace(q) ? catalog.All
         : catalog.Search(q);
     }
 
     IReadOnlyList<CurrencyDto> currencies = Array.Empty<CurrencyDto>();
     if (wantCurr)
     {
-      currencies = string.IsNullOrWhiteSpace(q) ? currencyCat.All
+      var popularCodes = new[] { "USD", "EUR", "UAH", "TRY", "PLN", "RUB" };
+      listCurrencies = string.IsNullOrWhiteSpace(q)
+        ? currencyCat.All
         : currencyCat.Search(q);
+      
+      popularCurrencies = currencyCat.All.Where(c => popularCodes.Contains(c.Code))
+        .ToList();
     }
 
     var result = new CatalogResponse(
-      new PaymentResponse(popular, list),
-      currencies);
+      new PaymentResponse(popularPayment, listPayments),
+      new CurrencyResponse(popularCurrencies, listCurrencies));
 
     return Ok(result);
   }

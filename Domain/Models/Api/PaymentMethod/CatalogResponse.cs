@@ -2,4 +2,4 @@
 
 public record CatalogResponse(
   PaymentResponse Payments,
-  IReadOnlyList<CurrencyDto> Currencies);
+  CurrencyResponse Currencies);
