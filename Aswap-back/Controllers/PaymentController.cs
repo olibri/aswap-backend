@@ -50,6 +50,6 @@ public sealed class PaymentController(
       new PaymentResponse(popular, list),
       currencies);
 
-    return Ok(new PaymentResponse(popular, list));
+    return Ok(result);
   }
 }
