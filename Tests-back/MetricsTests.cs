@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Tests_back.Extensions;
+using Tests_back.Extensions.Offers;
 
 namespace Tests_back;
 
@@ -22,10 +23,10 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     var expectedTvl = 130m;
     var orders = new[]
     {
-      new EscrowOrderEntity { TokenMint = "USDc", Status = EscrowStatus.OnChain, Amount = 100, FilledQuantity = 0 },
+      new EscrowOrderEntity { TokenMint = "USDc", EscrowStatus = EscrowStatus.OnChain, Amount = 100, FilledQuantity = 0 },
       new EscrowOrderEntity
-        { TokenMint = "USDc", Status = EscrowStatus.PartiallyOnChain, Amount = 50, FilledQuantity = 20 },
-      new EscrowOrderEntity { TokenMint = "BONK", Status = EscrowStatus.Cancelled, Amount = 99 }
+        { TokenMint = "USDc", EscrowStatus = EscrowStatus.PartiallyOnChain, Amount = 50, FilledQuantity = 20 },
+      new EscrowOrderEntity { TokenMint = "BONK", EscrowStatus = EscrowStatus.Cancelled, Amount = 99 }
     };
 
     var tvl = TvlUtils.Calculate(orders);

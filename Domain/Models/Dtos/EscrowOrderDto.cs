@@ -41,7 +41,7 @@ public class EscrowOrderDto
             FiatCode = entity.FiatCode,
             Amount = (entity.Amount / 1000000m),
             Price = entity.Price / 100m,
-            Status = entity.Status,
+            Status = entity.EscrowStatus,
             CreatedAtUtc = entity.CreatedAtUtc,
             ClosedAtUtc = entity.ClosedAtUtc,
             OfferSide = entity.OfferSide,

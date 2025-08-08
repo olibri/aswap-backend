@@ -17,7 +17,7 @@ public class OrderStatusSnapshotTask(IServiceScopeFactory scopes) : IPeriodicTas
     var today = DateTime.UtcNow.Date;
 
     var counts = await db.EscrowOrders
-      .GroupBy(o => o.Status)
+      .GroupBy(o => o.EscrowStatus)
       .Select(g => new { Status = g.Key, Cnt = g.Count() })
       .ToListAsync(ct);
 

@@ -2,148 +2,150 @@
 using Domain.Enums;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
+using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
 using Domain.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using Tests_back.Extensions;
+using Tests_back.Extensions.Offers;
 
 namespace Tests_back;
 
 public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 {
-    [Fact]
-    public async Task QuickNodeCallback_ReturnsOk()
+  [Fact]
+  public async Task QuickNodeCallback_ReturnsOk()
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+
+    //arrange
+    var db = fixture.GetService<IMarketDbQueries>();
+    var result = await OffersExtensions.CreateFakeOrder(fixture);
+
+    //act
+    var offer = await db.GetNewOfferAsync(1747314431853);
+
+    //assert
+    result.ShouldBeOfType<OkResult>();
+    offer.ShouldNotBeNull();
+    offer.DealId.ShouldBe(1747314431853UL);
+    offer.FiatCode.ShouldBe("USD");
+    offer.Amount.ShouldBe(1UL);
+    offer.Price.ShouldBe(3m);
+    offer.Status.ShouldBe(EscrowStatus.PendingOnChain);
+    offer.BuyerFiat.ShouldBeNull();
+    offer.OfferSide.ShouldBe(OrderSide.Sell);
+  }
+
+  [Fact]
+  public async Task GetAllOffersTest()
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+
+    var ordersCount = 5;
+    var controller = fixture.GetService<PlatformController>();
+    await OffersExtensions.CreateFakeOrders(fixture, ordersCount);
+
+    var result = await controller.GetAllNewOffers(new OffersQuery(), CancellationToken.None);
+
+    result.ShouldNotBeNull();
+    result.ShouldBeOfType<OkObjectResult>();
+
+    var okResult = result as OkObjectResult;
+    okResult.Value.ShouldBeOfType<EscrowOrderDto[]>();
+    var offers = okResult.Value as EscrowOrderDto[];
+    offers.Length.ShouldBe(ordersCount);
+  }
+
+  [Fact]
+  public async Task PartialUpdateOffer()
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+    var controller = fixture.GetService<OrderController>();
+    var marketDbQueries = fixture.GetService<IMarketDbQueries>();
+    await OffersExtensions.CreateFakeOrder(fixture);
+
+    var updateOrderDto = new UpsertOrderDto()
     {
-        PostgresDatabase.ResetState("escrow_orders");
+      OrderId = 1747314431853UL,
+      MaxFiatAmount = 10000,
+      MinFiatAmount = 10,
+      Status = EscrowStatus.OnChain,
+      Buyer = "wallet0xzzzz",
+      FilledQuantity = 0.1m
+    };
 
-        //arrange
-        var db = fixture.GetService<IMarketDbQueries>();
-        var result = await OffersExtensions.CreateFakeOrder(fixture);
+    var result = await controller.UpdateOffers(updateOrderDto);
+    result.ShouldNotBeNull();
+    result.ShouldBeOfType<OkResult>();
 
-        //act
-        var offer = await db.GetNewOfferAsync(1747314431853);
+    var updatedOrder = await marketDbQueries.GetAllNewOffersAsync(new OffersQuery());
+    Console.WriteLine($"Updated order: {updatedOrder[0].Amount}, {updatedOrder[0].FilledQuantity}");
+    updatedOrder.ShouldNotBeNull();
+    updatedOrder[0].MinFiatAmount.ShouldBe(10);
+    updatedOrder[0].MaxFiatAmount.ShouldBe(10000);
+    updatedOrder[0].Status.ShouldBe(EscrowStatus.OnChain);
+    updatedOrder[0].BuyerFiat.ShouldBe("wallet0xzzzz");
+    updatedOrder[0].FilledQuantity.ShouldBe(0.1m);
+  }
 
-        //assert
-        result.ShouldBeOfType<OkResult>();
-        offer.ShouldNotBeNull();
-        offer.DealId.ShouldBe(1747314431853UL);
-        offer.FiatCode.ShouldBe("USD");
-        offer.Amount.ShouldBe(1UL);
-        offer.Price.ShouldBe(3m);
-        offer.Status.ShouldBe(EscrowStatus.PendingOnChain);
-        offer.BuyerFiat.ShouldBeNull();
-        offer.OfferSide.ShouldBe(OrderSide.Sell);
-    }
+  [Fact]
+  public async Task QuantityUpdateOffer()
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+    var marketDbCommand = fixture.GetService<IMarketDbCommand>();
+    var marketDbQuery = fixture.GetService<IMarketDbQueries>();
+    await OffersExtensions.CreateFakeOrder(fixture);
 
-    [Fact]
-    public async Task GetAllOffersTest()
+    var updateOrderDto1 = new UpsertOrderDto()
     {
-        PostgresDatabase.ResetState("escrow_orders");
+      OrderId = 1747314431853UL,
+      MaxFiatAmount = 10000,
+      MinFiatAmount = 10,
+      Status = EscrowStatus.OnChain,
+      Buyer = "wallet0xzzzz",
+      FilledQuantity = 0.1m
+    };
 
-        var ordersCount = 5;
-        var controller = fixture.GetService<PlatformController>();
-        await OffersExtensions.CreateFakeOrders(fixture, ordersCount);
+    await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto1);
+    var updatedOrder1 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
+    Console.WriteLine($"Updated order: {updatedOrder1[0].Amount}, {updatedOrder1[0].FilledQuantity}");
+    updatedOrder1[0].FilledQuantity.ShouldBe(0.1m);
 
-        var result = await controller.GetAllNewOffers();
-        
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<OkObjectResult>();
 
-        var okResult = result as OkObjectResult;
-        okResult.Value.ShouldBeOfType<EscrowOrderDto[]>();
-        var offers = okResult.Value as EscrowOrderDto[];
-        offers.Length.ShouldBe(ordersCount);
-    }
-
-    [Fact]
-    public async Task PartialUpdateOffer()
+    var updateOrderDto2 = new UpsertOrderDto()
     {
-        PostgresDatabase.ResetState("escrow_orders");
-        var controller = fixture.GetService<OrderController>();
-        var marketDbQueries = fixture.GetService<IMarketDbQueries>();
-        await OffersExtensions.CreateFakeOrder(fixture);
+      OrderId = 1747314431853UL,
+      FilledQuantity = 0.9m
+    };
+    await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
+    var updatedOrder2 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
+    updatedOrder2.ShouldBeEmpty();
+  }
 
-        var updateOrderDto = new UpsertOrderDto()
-        {
-            OrderId = 1747314431853UL,
-            MaxFiatAmount = 10000,
-            MinFiatAmount = 10,
-            Status = EscrowStatus.OnChain,
-            Buyer = "wallet0xzzzz",
-            FilledQuantity = 0.1m,
-        };
+  [Fact]
+  public async Task CreateBuyerOrderTest()
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+    var marketDbCommand = fixture.GetService<IMarketDbCommand>();
+    var dealId = 1747314411853UL;
 
-        var result = await controller.UpdateOffers(updateOrderDto);
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<OkResult>();
-
-        var updatedOrder = await marketDbQueries.GetAllNewOffersAsync();
-        Console.WriteLine($"Updated order: {updatedOrder[0].Amount}, { updatedOrder[0].FilledQuantity}");
-        updatedOrder.ShouldNotBeNull();
-        updatedOrder[0].MinFiatAmount.ShouldBe(10);
-        updatedOrder[0].MaxFiatAmount.ShouldBe(10000);
-        updatedOrder[0].Status.ShouldBe(EscrowStatus.OnChain);
-        updatedOrder[0].BuyerFiat.ShouldBe("wallet0xzzzz");
-        updatedOrder[0].FilledQuantity.ShouldBe(0.1m);
-    }
-
-    [Fact]
-    public async Task QuantityUpdateOffer()
+    var updateOrderDto = new UpsertOrderDto()
     {
-        PostgresDatabase.ResetState("escrow_orders");
-        var marketDbCommand = fixture.GetService<IMarketDbCommand>();
-        var marketDbQuery = fixture.GetService<IMarketDbQueries>();
-        await OffersExtensions.CreateFakeOrder(fixture);
+      OrderId = dealId,
+      MaxFiatAmount = 10000,
+      MinFiatAmount = 10,
+      FiatCode = "USD",
+      Status = EscrowStatus.OnChain,
+      Buyer = "wallet0xzzzz",
+      FilledQuantity = 0.1m,
+      OrderType = OrderSide.Buy,
+      TokenMint = "tokenMintExample",
+      Amount = 32m
+    };
 
-        var updateOrderDto1 = new UpsertOrderDto()
-        {
-            OrderId = 1747314431853UL,
-            MaxFiatAmount = 10000,
-            MinFiatAmount = 10,
-            Status = EscrowStatus.OnChain,
-            Buyer = "wallet0xzzzz",
-            FilledQuantity = 0.1m,
-        };
-
-        await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto1);
-        var updatedOrder1 = await marketDbQuery.GetAllNewOffersAsync();
-        Console.WriteLine($"Updated order: {updatedOrder1[0].Amount}, {updatedOrder1[0].FilledQuantity}");
-        updatedOrder1[0].FilledQuantity.ShouldBe(0.1m);
-
-
-        var updateOrderDto2 = new UpsertOrderDto()
-        {
-            OrderId = 1747314431853UL,
-            FilledQuantity = 0.9m,
-        };
-        await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
-        var updatedOrder2 = await marketDbQuery.GetAllNewOffersAsync();
-        updatedOrder2.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task CreateBuyerOrderTest()
-    {
-        PostgresDatabase.ResetState("escrow_orders");
-        var marketDbCommand = fixture.GetService<IMarketDbCommand>();
-        var dealId = 1747314411853UL;
-        
-        var updateOrderDto = new UpsertOrderDto()
-        {
-            OrderId = dealId,
-            MaxFiatAmount = 10000,
-            MinFiatAmount = 10,
-            FiatCode = "USD",
-            Status = EscrowStatus.OnChain,
-            Buyer = "wallet0xzzzz",
-            FilledQuantity = 0.1m,
-            OrderType = OrderSide.Buy,
-            TokenMint = "tokenMintExample",
-            Amount = 32m,
-        };
-
-        var createdDealId = await marketDbCommand.CreateBuyerOfferAsync(updateOrderDto);
-        createdDealId.ShouldBe(dealId);
-    }
+    var createdDealId = await marketDbCommand.CreateBuyerOfferAsync(updateOrderDto);
+    createdDealId.ShouldBe(dealId);
+  }
 }

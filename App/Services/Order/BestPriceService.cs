@@ -30,7 +30,7 @@ public sealed class BestPriceService(IDbContextFactory<P2PDbContext> dbf) : IBes
         o.TokenMint == req.TokenMint &&
         o.FiatCode == req.FiatCode &&
         o.OfferSide == req.Side &&
-        (o.Status == EscrowStatus.OnChain || o.Status == EscrowStatus.PartiallyOnChain));
+        (o.EscrowStatus == EscrowStatus.OnChain || o.EscrowStatus == EscrowStatus.PartiallyOnChain));
   }
 
   private static IQueryable<EscrowOrderEntity> ApplyPaymentMethodFilter(

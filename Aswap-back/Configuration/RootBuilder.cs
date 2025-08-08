@@ -76,6 +76,7 @@ public class RootBuilder
         builder.RegisterType<RatingService>().As<IRatingService>().InstancePerLifetimeScope();
         builder.RegisterType<BestPriceService>().As<IBestPriceService>().InstancePerLifetimeScope();
 
+
         builder.RegisterType<RefreshTokenService>()
           .As<IRefreshTokenService>()
           .InstancePerLifetimeScope();

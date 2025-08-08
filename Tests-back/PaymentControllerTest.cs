@@ -32,11 +32,11 @@ public sealed class PaymentControllerTest(TestFixture fixture) : IClassFixture<T
     // Assert
     result.Result.ShouldBeOfType<OkObjectResult>();
     var payload = ((OkObjectResult)result.Result)
-                  .Value.ShouldBeOfType<PaymentResponse>();
+                  .Value.ShouldBeOfType<CatalogResponse>();
 
-    payload.Popular.ShouldContain(p => p.Id == method.Id);
-    payload.All.ShouldContain(p => p.Id == method.Id);
-    payload.Popular.Count.ShouldBeLessThan(8);
+    payload.Payments.Popular.ShouldContain(p => p.Id == method.Id);
+    payload.Payments.All.ShouldContain(p => p.Id == method.Id);
+    payload.Payments.Popular.Count.ShouldBeLessThan(8);
   }
 
   /// <summary>Search filter returns only matching methods (case-insensitive).</summary>
@@ -56,7 +56,7 @@ public sealed class PaymentControllerTest(TestFixture fixture) : IClassFixture<T
 
     // Assert
     var list = ((OkObjectResult)result.Result).Value
-               .ShouldBeOfType<PaymentResponse>().All;
+               .ShouldBeOfType<CatalogResponse>().Payments.All;
 
     list.ShouldAllBe(p => p.Name.Contains(query,
                        StringComparison.OrdinalIgnoreCase));
@@ -80,7 +80,7 @@ public sealed class PaymentControllerTest(TestFixture fixture) : IClassFixture<T
 
     // Assert
     var popular = ((OkObjectResult)result.Result).Value
-                  .ShouldBeOfType<PaymentResponse>().Popular;
+                  .ShouldBeOfType<CatalogResponse>().Payments.Popular;
 
     popular.ShouldContain(p => p.Id == method.Id);
   }

@@ -1,4 +1,5 @@
-﻿using Domain.Models.DB;
+﻿using Domain.Enums;
+using Domain.Models.DB;
 using Domain.Models.DB.Currency;
 using Domain.Models.DB.Metrics;
 using Domain.Models.DB.PaymentMethod;
@@ -49,11 +50,11 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     {
       entity.Property(e => e.CreatedAtUtc)
         .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
-
-      entity.Property(e => e.Status)
-        .HasConversion<string>();
-
-      entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, x.Status, x.Price })
+      entity.Property(x => x.EscrowStatus)
+        .HasConversion<int>()          // або .HasConversion<short>() якщо хочеш smallint
+        .HasColumnType("integer")      // "smallint" якщо <short>
+        .HasColumnName("escrow_status");
+      entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, Status = x.EscrowStatus, x.Price })
         .HasDatabaseName("ix_escrow_best_price");
     });
 

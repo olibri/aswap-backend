@@ -34,7 +34,7 @@ public static partial class EscrowOrderMapper
     private static void OnAfterToEntity(OfferInitialized src, EscrowOrderEntity dest)
     {
         dest.Id = Guid.NewGuid();
-        dest.Status = EscrowStatus.PendingOnChain;
+        dest.EscrowStatus = EscrowStatus.PendingOnChain;
         dest.BuyerFiat = null;
     }
 
@@ -58,7 +58,7 @@ public static partial class EscrowOrderMapper
     [MapProperty(nameof(UpsertOrderDto.OrderId), nameof(EscrowOrderEntity.DealId))]
     [MapProperty(nameof(UpsertOrderDto.Seller), nameof(EscrowOrderEntity.SellerCrypto))]
     [MapProperty(nameof(UpsertOrderDto.Buyer), nameof(EscrowOrderEntity.BuyerFiat))]
-    [MapProperty(nameof(UpsertOrderDto.Status), nameof(EscrowOrderEntity.Status))]
+    [MapProperty(nameof(UpsertOrderDto.Status), nameof(EscrowOrderEntity.EscrowStatus))]
     [MapProperty(nameof(UpsertOrderDto.OrderType), nameof(EscrowOrderEntity.OfferSide))]
     [MapProperty(nameof(UpsertOrderDto.MinFiatAmount), nameof(EscrowOrderEntity.MinFiatAmount))]
     [MapProperty(nameof(UpsertOrderDto.MaxFiatAmount), nameof(EscrowOrderEntity.MaxFiatAmount))]

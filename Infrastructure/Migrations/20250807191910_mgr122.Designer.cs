@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250807191910_mgr122")]
+    partial class mgr122
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,10 +129,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("character varying(60)")
                         .HasColumnName("escrow_pda");
 
-                    b.Property<int>("EscrowStatus")
-                        .HasColumnType("integer")
-                        .HasColumnName("escrow_status");
-
                     b.Property<string>("FiatCode")
                         .IsRequired()
                         .HasColumnType("text")
@@ -159,13 +158,17 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("seller_crypto");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
                     b.Property<string>("TokenMint")
                         .HasColumnType("text")
                         .HasColumnName("token_mint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TokenMint", "FiatCode", "OfferSide", "EscrowStatus", "Price")
+                    b.HasIndex("TokenMint", "FiatCode", "OfferSide", "Status", "Price")
                         .HasDatabaseName("ix_escrow_best_price");
 
                     b.ToTable("escrow_orders");

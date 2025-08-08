@@ -2,14 +2,14 @@
 
 public enum EscrowStatus
 {
-    PendingOnChain,
-    OnChain,
+  PendingOnChain = 0,
+  OnChain = 1,
 
-    PartiallyOnChain,
-    Signed,
-    SignedByOneSide,
+  PartiallyOnChain = 2,
+  Signed = 3,
+  SignedByOneSide = 4,
 
-    Released,
-    Cancelled,
-    AdminResolving
+  Released = 5,
+  Cancelled = 6,
+  AdminResolving = 7
 }

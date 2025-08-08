@@ -35,7 +35,7 @@ public class EscrowOrderEntity: IHasDomainEvents
     [Column("price", TypeName = "numeric(20,0)")]
     public ulong Price { get; set; }
 
-    [Column("status")] public EscrowStatus Status { get; set; }
+    [Column("escrow_status")] public EscrowStatus EscrowStatus { get; set; }
 
     [Column("created_at_utc")] public DateTime CreatedAtUtc { get; set; }
 

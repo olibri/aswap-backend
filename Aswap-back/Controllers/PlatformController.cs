@@ -2,6 +2,7 @@
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.TelegramBot;
+using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,13 +46,13 @@ public class PlatformController(
     }
 
 
-    [HttpGet]
-    [Route("all-new-offers")]
-    [ProducesResponseType(typeof(List<EscrowOrderDto>), 200)]
-    public async Task<IActionResult> GetAllNewOffers()
+    [HttpGet("all-new-offers")]
+    [ProducesResponseType(typeof(EscrowOrderDto[]), 200)]
+    public async Task<IActionResult> GetAllNewOffers(
+        [FromQuery] OffersQuery q, CancellationToken ct)
     {
-        log.LogInformation("New offers requested");
-        var res = await marketDbQueries.GetAllNewOffersAsync();
+        log.LogInformation("New offers requested {@Q}", q);
+        var res = await marketDbQueries.GetAllNewOffersAsync(q, ct);
         return Ok(res);
     }
 

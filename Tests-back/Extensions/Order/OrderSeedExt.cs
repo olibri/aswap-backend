@@ -26,7 +26,7 @@ public static class OrderSeedExt
       TokenMint = tokenMint,
       FiatCode = fiat,
       OfferSide = side,
-      Status = status,
+      EscrowStatus = status,
       Price = price,
       PaymentMethods = new List<EscrowOrderPaymentMethodEntity>()
     };

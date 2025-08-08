@@ -70,14 +70,14 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
 
         entity.MaxFiatAmount = upsertOrder.MaxFiatAmount ?? entity.MaxFiatAmount;
         entity.MinFiatAmount = upsertOrder.MinFiatAmount ?? entity.MinFiatAmount;
-        entity.Status = upsertOrder.Status.HasValue
+        entity.EscrowStatus = upsertOrder.Status.HasValue
             ? (EscrowStatus)upsertOrder.Status.Value
-            : entity.Status;
+            : entity.EscrowStatus;
         entity.BuyerFiat = upsertOrder.Buyer ?? entity.BuyerFiat;
         entity.SellerCrypto = upsertOrder.Seller ?? entity.SellerCrypto;
         if (upsertOrder.FilledQuantity is not null)
         {
-            entity.Status = MoveToSignedStatus(entity, (decimal)upsertOrder.FilledQuantity);
+            entity.EscrowStatus = MoveToSignedStatus(entity, (decimal)upsertOrder.FilledQuantity);
             entity.FilledQuantity += (decimal)upsertOrder.FilledQuantity;
         }
         entity.AdminCall = upsertOrder.AdminCall ?? entity.AdminCall;
@@ -92,6 +92,6 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
         if (fromEntity.FilledQuantity + newFilledQ >= fromEntity.Amount)
             return EscrowStatus.Signed;
 
-        return orderEntity.Status;
+        return orderEntity.EscrowStatus;
     }
 }

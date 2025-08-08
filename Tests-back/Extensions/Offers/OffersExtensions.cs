@@ -8,7 +8,7 @@ using Domain.Models.Enums;
 using Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Tests_back.Extensions;
+namespace Tests_back.Extensions.Offers;
 
 public static class OffersExtensions
 {
@@ -56,7 +56,7 @@ public static class OffersExtensions
         FiatCode = "USD",
         Amount = (ulong)amt,
         Price = (ulong)Rnd.Next(100, 10_000),
-        Status = status ?? (EscrowStatus)Rnd.Next(Enum.GetValues<EscrowStatus>().Length),
+        EscrowStatus = status ?? (EscrowStatus)Rnd.Next(Enum.GetValues<EscrowStatus>().Length),
         CreatedAtUtc = DateTime.UtcNow.AddMinutes(-Rnd.Next(0, 10_000)),
         OfferSide = side ?? (Rnd.Next(2) == 0 ? OrderSide.Sell : OrderSide.Buy),
         MinFiatAmount = 10,
@@ -90,16 +90,12 @@ public static class OffersExtensions
   {
     return orders
       .Where(o => o.TokenMint == tokenMint &&
-                  o.Status is EscrowStatus.OnChain or EscrowStatus.PartiallyOnChain)
+                  o.EscrowStatus is EscrowStatus.OnChain or EscrowStatus.PartiallyOnChain)
       .Sum(o => (o.Amount ?? 0m) - o.FilledQuantity);
   }
 
 
-  /// <summary>
-  /// ??????? <paramref name="count"/> ??????? ? ??????? Released ?
-  /// ?????????? ????? <c>TradeSettled</c> ? <see cref="EventEntity"/>.
-  /// ???????? ???????? ?????? — ? ??? ?????? ??????????? ????????? ???????.
-  /// </summary>
+
   public static async Task<List<EscrowOrderEntity>> SeedTradesAsync(
     this P2PDbContext db,
     int count,
