@@ -226,6 +226,7 @@ public class RootBuilder
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
+          c.EnableAnnotations();
           c.SwaggerDoc("v1", new OpenApiInfo { Title = "api/Aswap", Version = "v1" });
           c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
           {
