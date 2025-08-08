@@ -41,6 +41,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Telegram.Bot;
+using Unchase.Swashbuckle.AspNetCore.Extensions.Extensions;
 
 namespace Aswap_back.Configuration;
 
@@ -236,7 +237,14 @@ public class RootBuilder
             Type = SecuritySchemeType.ApiKey
           });
           c.EnableAnnotations();
-          c.ParameterFilter<EnumNamesInDescriptionParameterFilter>();
+          c.AddEnumsWithValuesFixFilters(o =>
+          {
+            o.ApplySchemaFilter = true;  
+            o.ApplyParameterFilter = true;
+            o.ApplyDocumentFilter = true; 
+            o.IncludeDescriptions = true; 
+            // o.XEnumNamesAlias = "x-enum-varnames"; // якщо треба інший ключ
+          }); 
           c.AddSecurityRequirement(new OpenApiSecurityRequirement
           {
             {
