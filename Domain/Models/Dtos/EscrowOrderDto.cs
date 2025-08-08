@@ -1,6 +1,7 @@
 ﻿using Domain.Enums;
 using Domain.Models.DB;
 using Domain.Models.Enums;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Domain.Models.Dtos;
 
@@ -17,13 +18,15 @@ public class EscrowOrderDto
 
     public decimal? Amount { get; set; } 
     public decimal? FilledQuantity { get; set; }
-    public decimal Price { get; set; }  
+    public decimal Price { get; set; }
 
+    [SwaggerSchema(Description = "EscrowStatus: 0=PendingOnChain, 1=OnChain, 2=PartiallyOnChain, 3=Signed, 4=SignedByOneSide, Released=5, Cancelled=6, AdminResolving=7 ")]
     public EscrowStatus Status { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? ClosedAtUtc { get; set; }
 
+    [SwaggerSchema(Description = "OrderSide: 0=Sell, 1=Buy")]
     public OrderSide OfferSide { get; set; }
     public decimal MinFiatAmount { get; set; }
     public decimal MaxFiatAmount { get; set; }
