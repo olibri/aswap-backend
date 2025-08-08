@@ -181,7 +181,7 @@ public class RootBuilder
       })
       .ConfigureWebHostDefaults(webBuilder =>
       {
-        var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "5123";
         webBuilder
           .UseUrls($"http://*:{port}")
           .Configure(app =>
@@ -226,7 +226,6 @@ public class RootBuilder
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-          c.EnableAnnotations();
           c.SwaggerDoc("v1", new OpenApiInfo { Title = "api/Aswap", Version = "v1" });
           c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
           {
@@ -236,6 +235,8 @@ public class RootBuilder
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.ApiKey
           });
+          c.EnableAnnotations();
+          c.ParameterFilter<EnumNamesInDescriptionParameterFilter>();
           c.AddSecurityRequirement(new OpenApiSecurityRequirement
           {
             {
