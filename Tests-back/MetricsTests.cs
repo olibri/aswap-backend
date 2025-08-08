@@ -23,7 +23,8 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     var expectedTvl = 130m;
     var orders = new[]
     {
-      new EscrowOrderEntity { TokenMint = "USDc", EscrowStatus = EscrowStatus.OnChain, Amount = 100, FilledQuantity = 0 },
+      new EscrowOrderEntity
+        { TokenMint = "USDc", EscrowStatus = EscrowStatus.OnChain, Amount = 100, FilledQuantity = 0 },
       new EscrowOrderEntity
         { TokenMint = "USDc", EscrowStatus = EscrowStatus.PartiallyOnChain, Amount = 50, FilledQuantity = 20 },
       new EscrowOrderEntity { TokenMint = "BONK", EscrowStatus = EscrowStatus.Cancelled, Amount = 99 }
@@ -188,26 +189,27 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     PostgresDatabase.ResetState("sessions");
     PostgresDatabase.ResetState("account");
 
-    var pingController = fixture.GetService<SessionPingController>();
+    var ping = fixture.GetService<SessionPingController>();
 
     await using var scope = fixture.Host.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
 
     var dto = await db.SeedAccountAsync("w2");
-    await pingController.Start(dto, CancellationToken.None);
+    await ping.Start(dto, CancellationToken.None);
 
+    var before = await db.Sessions
+      .AsNoTracking()
+      .SingleAsync(s => s.SessionId == dto.SessionId);
 
-    var createdAt = await db.Sessions
-      .Where(s => s.SessionId == dto.SessionId)
-      .Select(s => s.StartedAt)
-      .FirstAsync();
+    await Task.Delay(1500);
+    await ping.Ping(dto, CancellationToken.None);
 
-    await Task.Delay(1000);
-    await pingController.Ping(dto, CancellationToken.None);
+    var after = await db.Sessions
+      .AsNoTracking()
+      .SingleAsync(s => s.SessionId == dto.SessionId);
 
-    var sess = await db.Sessions.FirstAsync();
-    sess.StartedAt.ShouldBe(createdAt);                   
-    sess.LastSeenAt.ShouldBeGreaterThan(createdAt);        
+    after.StartedAt.ShouldBe(before.StartedAt);
+
+    after.LastSeenAt.ShouldBeGreaterThan(before.LastSeenAt);
   }
-
 }
