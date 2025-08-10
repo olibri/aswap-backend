@@ -184,7 +184,7 @@ public class RootBuilder
       })
       .ConfigureWebHostDefaults(webBuilder =>
       {
-        var port = Environment.GetEnvironmentVariable("PORT") ?? "5123";
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
         webBuilder
           .UseUrls($"http://*:{port}")
           .Configure(app =>
