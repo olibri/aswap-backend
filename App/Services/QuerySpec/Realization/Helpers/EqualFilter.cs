@@ -1,6 +1,8 @@
 ﻿using System.Linq.Expressions;
 using Domain.Interfaces.QuerySpecs;
 
+namespace App.Services.QuerySpec.Realization.Helpers;
+
 public sealed class EqualFilter<T, TProp> : IFilterRule<T>
 {
   private readonly Expression<Func<T, bool>> _predicate;
@@ -22,10 +24,10 @@ public sealed class EqualFilter<T, TProp> : IFilterRule<T>
 
     if (left.Type.IsEnum)
     {
-      var utype = Enum.GetUnderlyingType(left.Type);
-      left = Expression.Convert(left, utype);
-      var boxed = Convert.ChangeType(value, utype);
-      right = Expression.Constant(boxed, utype);
+      var type = Enum.GetUnderlyingType(left.Type);
+      left = Expression.Convert(left, type);
+      var boxed = Convert.ChangeType(value, type);
+      right = Expression.Constant(boxed, type);
     }
     else
     {

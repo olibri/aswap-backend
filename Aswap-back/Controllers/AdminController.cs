@@ -1,9 +1,8 @@
-﻿using Domain.Interfaces.Chat;
-using Domain.Interfaces.Database.Command;
-using Domain.Interfaces.Database.Queries;
+﻿using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Metrics;
 using Domain.Interfaces.Services;
-using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.Auth;
+using Domain.Models.Api.Metrics;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +14,7 @@ namespace Aswap_back.Controllers;
 public class AdminController(
   IMarketDbQueries marketDbQueries,
   IAccountService accounts,
+  IAdminMetricsService adminService,
   ILogger<PlatformController> log) : Controller
 {
   //TODO: add jwt checker to this method 
@@ -35,5 +35,14 @@ public class AdminController(
     if (string.IsNullOrWhiteSpace(dto.Wallet)) return BadRequest("wallet required");
     var id = await accounts.BanAsync(dto, ct);
     return Ok(new { id });
+  }
+
+
+  [HttpGet("dashboard")]
+  [ProducesResponseType(typeof(DashboardMetricsDto), 200)]
+  public async Task<ActionResult<DashboardMetricsDto>> GetDashboard([FromQuery] DashboardQuery q, CancellationToken ct)
+  {
+    log.LogInformation("Get dashboard (first render) {@Query}", q);
+    return Ok(await adminService.GetDashboardAsync(q, ct));
   }
 }

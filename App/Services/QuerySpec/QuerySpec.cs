@@ -1,6 +1,5 @@
 ﻿using Domain.Interfaces.QuerySpecs;
 using Domain.Models.Api.QuerySpecs;
-using Domain.Models.DB;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 

@@ -2,7 +2,6 @@
 using App.Utils;
 using Aswap_back.Controllers;
 using Domain.Enums;
-using Domain.Interfaces.Database.Queries;
 using Domain.Models.DB;
 using Domain.Models.DB.Metrics;
 using Domain.Models.Enums;
@@ -211,5 +210,70 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     after.StartedAt.ShouldBe(before.StartedAt);
 
     after.LastSeenAt.ShouldBeGreaterThan(before.LastSeenAt);
+  }
+
+  [Fact]
+  public async Task AdminDashboard_Returns_Expected_Snapshot_For_Today()
+  {
+    fixture.ResetDb(
+      "escrow_orders", "tvl_snapshots", "asset_volume_daily", "deal_time_daily",
+      "user_metrics_daily", "sessions", "events", "account");
+
+    await using var scope = fixture.Host.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
+
+    var tvl1 = await db.SeedAsync(1, EscrowStatus.OnChain, "USDc", OrderSide.Sell, fixedAmount: 100);
+    var tvl2 = await db.SeedAsync(1, EscrowStatus.PartiallyOnChain, "USDc", OrderSide.Sell, partialFill: true, fixedAmount: 50);
+    var tvlOrders = tvl1.Concat(tvl2).ToList();
+
+    var settled = DateTime.UtcNow;
+    var trades = await db.SeedTradesAsync(3, settled, "USDc", qtyEach: 100m, priceFiat: 1m);
+    var expTrade = trades.ExpectedTradeMetrics(settled);
+
+    var expUsers = await db.SeedUserMetricsScenarioAsync(dauUsers: 5, wauExtra: 2, mauExtra: 4, dauIps: 3);
+
+    await fixture.RunTvlSnapshotAsync();
+    await fixture.RunTradeMetricsAsync();
+    await fixture.RunUserMetricsDailyAsync();
+
+    fixture.ResetDb("sessions");
+    await fixture.SeedOnlineSessionsAsync(online: 2, stale: 1);
+
+    var today = DateTime.UtcNow.Date;
+    var dto = await fixture.ExecuteDashboardAsync(from: today, to: today);
+
+    dto.TvlByAsset["USDc"].ShouldBe(tvlOrders.ExpectedTvl("USDc"));    
+    dto.OrdersSummary["Released"].ShouldBe(3);                          
+    dto.VolumeByAsset["USDc"].ShouldBe(expTrade.Volume);                        
+    dto.AvgDealTimeSec!.Value.ShouldBe(expTrade.AvgSec, 0.6);  
+    dto.Users.Dau.ShouldBe(expUsers.DauUsers);                                  
+    dto.Ips.Dau.ShouldBe(expUsers.DauIps);                                      
+    dto.OnlineUsers.ShouldBeGreaterThanOrEqualTo(2);                    
+  }
+
+
+  [Fact]
+  public async Task AdminDashboard_Respects_Date_Range_AsOf_To()
+  {
+    fixture.ResetDb("tvl_snapshots", "user_metrics_daily", "sessions", "escrow_orders", "events",
+      "asset_volume_daily", "deal_time_daily");
+
+    await using var scope = fixture.Host.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
+
+    var yesterday = DateTime.UtcNow.Date.AddDays(-1);
+    var today = DateTime.UtcNow.Date;
+
+    await db.TvlSnapshots.AddRangeAsync(
+      new TvlSnapshotEntity { TokenMint = "USDc", Balance = 10m, TakenAt = yesterday.AddHours(10) },
+      new TvlSnapshotEntity { TokenMint = "USDc", Balance = 99m, TakenAt = today.AddHours(10) }
+    );
+    await db.SaveChangesAsync();
+
+    var dtoAsOfYesterday = await fixture.ExecuteDashboardAsync(yesterday, yesterday);
+    dtoAsOfYesterday.TvlByAsset["USDc"].ShouldBe(10m);
+
+    var dtoAsOfToday = await fixture.ExecuteDashboardAsync(today, today);
+    dtoAsOfToday.TvlByAsset["USDc"].ShouldBe(99m);
   }
 }

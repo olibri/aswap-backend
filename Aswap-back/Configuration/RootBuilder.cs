@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using App.Chat;
 using App.Db;
+using App.Metrics.Api;
 using App.Metrics.BackgroundWorker;
 using App.Metrics.TaskMetrics;
 using App.Parsing;
@@ -76,6 +77,7 @@ public class RootBuilder
         builder.RegisterType<SessionCleanupTask>().As<IPeriodicTask>().InstancePerLifetimeScope();
         builder.RegisterType<RatingService>().As<IRatingService>().InstancePerLifetimeScope();
         builder.RegisterType<BestPriceService>().As<IBestPriceService>().InstancePerLifetimeScope();
+        builder.RegisterType<AdminMetricsService>().As<IAdminMetricsService>().InstancePerLifetimeScope();
 
 
         builder.RegisterType<RefreshTokenService>()

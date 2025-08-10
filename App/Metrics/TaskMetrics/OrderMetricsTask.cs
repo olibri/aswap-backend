@@ -13,7 +13,7 @@ namespace App.Metrics.TaskMetrics;
 public sealed class OrderMetricsTask(IServiceScopeFactory scopes) : IPeriodicTask
 {
   public int IntervalSeconds => 1;
-  private P2PDbContext db => scopes.CreateScope().ServiceProvider.GetRequiredService<P2PDbContext>();
+  private P2PDbContext Db => scopes.CreateScope().ServiceProvider.GetRequiredService<P2PDbContext>();
 
   public async Task ExecuteAsync(CancellationToken ct)
   {
@@ -31,13 +31,13 @@ public sealed class OrderMetricsTask(IServiceScopeFactory scopes) : IPeriodicTas
 
   private async Task<DateTime> LoadCursorAsync(CancellationToken ct)
   {
-    return (await db.AggregatorStates.FindAsync(["orders"], ct))?.Value
+    return (await Db.AggregatorStates.FindAsync(["orders"], ct))?.Value
            ?? DateTime.UnixEpoch;
   }
 
   private Task<List<EventEntity>> LoadBatchAsync(DateTime since, CancellationToken ct)
   {
-    return db.Events.Where(e => e.EventType == EventType.OfferCreated && e.Ts > since)
+    return Db.Events.Where(e => e.EventType == EventType.OfferCreated && e.Ts > since)
       .OrderBy(e => e.Ts)
       .Take(1_000)
       .ToListAsync(ct);
@@ -58,24 +58,24 @@ public sealed class OrderMetricsTask(IServiceScopeFactory scopes) : IPeriodicTas
   {
     foreach (var (day, side, cnt) in groups)
     {
-      var snap = await db.OrderCreatedDaily.FindAsync([day, side], ct);
+      var snap = await Db.OrderCreatedDaily.FindAsync([day, side], ct);
       if (snap is null)
-        db.OrderCreatedDaily.Add(new OrderCreatedDailyEntity { Day = day, Side = side, CreatedCnt = cnt });
+        Db.OrderCreatedDaily.Add(new OrderCreatedDailyEntity { Day = day, Side = side, CreatedCnt = cnt });
       else
         snap.CreatedCnt += cnt;
     }
 
-    await db.SaveChangesAsync(ct);
+    await Db.SaveChangesAsync(ct);
   }
 
   private async Task MoveCursorAsync(DateTime lastTs, CancellationToken ct)
   {
-    var state = await db.AggregatorStates.FindAsync(["orders"], ct);
+    var state = await Db.AggregatorStates.FindAsync(["orders"], ct);
     if (state is null)
-      db.AggregatorStates.Add(new AggregatorState { Key = "orders", Value = lastTs });
+      Db.AggregatorStates.Add(new AggregatorState { Key = "orders", Value = lastTs });
     else
       state.Value = lastTs;
 
-    await db.SaveChangesAsync(ct);
+    await Db.SaveChangesAsync(ct);
   }
 }
