@@ -11,6 +11,11 @@ public sealed class AdminMetricsService(P2PDbContext db) : IAdminMetricsService
 {
   private static readonly TimeSpan OnlineWindow = TimeSpan.FromSeconds(90);
 
+  private static DateTime EndOfDayExclusiveUtc(DateTime d)
+  {
+    return d.Date.AddDays(1);
+  }
+
   public async Task<DashboardMetricsDto> GetDashboardAsync(DashboardQuery q, CancellationToken ct)
   {
     var (from, to) = q.Normalize();
@@ -37,19 +42,16 @@ public sealed class AdminMetricsService(P2PDbContext db) : IAdminMetricsService
   private async Task<IReadOnlyDictionary<string, decimal>> LoadLatestTvlByAssetAsOfAsync(DateTime asOf,
     CancellationToken ct)
   {
-    var range = new DateRangeFilter<TvlSnapshotEntity>(s => s.TakenAt, DateTime.MinValue, asOf);
-    var filtered = range.Apply(db.TvlSnapshots).AsNoTracking();
     var toExclusive = EndOfDayExclusiveUtc(asOf);
     var rows = await db.TvlSnapshots
       .AsNoTracking()
-      .Where(s => s.TakenAt < toExclusive)         // < (exclusive)
+      .Where(s => s.TakenAt < toExclusive)
       .GroupBy(s => s.TokenMint)
       .Select(g => g.OrderByDescending(x => x.TakenAt).First())
       .ToListAsync(ct);
 
     return rows.ToDictionary(s => s.TokenMint, s => s.Balance, StringComparer.OrdinalIgnoreCase);
   }
-  static DateTime EndOfDayExclusiveUtc(DateTime d) => d.Date.AddDays(1);
 
 
   private async Task<IReadOnlyDictionary<string, int>> LoadOrdersSummaryNowAsync(CancellationToken ct)

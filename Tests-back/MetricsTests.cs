@@ -256,7 +256,7 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
   public async Task AdminDashboard_Respects_Date_Range_AsOf_To()
   {
     fixture.ResetDb("tvl_snapshots", "user_metrics_daily", "sessions", "escrow_orders", "events",
-      "asset_volume_daily", "deal_time_daily");
+    "asset_volume_daily", "deal_time_daily");
 
     await using var scope = fixture.Host.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
