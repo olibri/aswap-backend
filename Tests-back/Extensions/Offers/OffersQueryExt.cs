@@ -83,4 +83,31 @@ public static class OffersQueryExt
     dto.ShouldNotBeNull("Dashboard should return payload");
     return dto!;
   }
+
+  private static long ToUnixDay(DateTime d) =>
+    new DateTimeOffset(d.Date, TimeSpan.Zero).ToUnixTimeSeconds();
+
+  public static Series GetSeries(this IReadOnlyList<Series> list, string asset)
+  {
+    var s = list.FirstOrDefault(x =>
+      string.Equals(x.Key, asset, StringComparison.OrdinalIgnoreCase));
+    s.ShouldNotBeNull($"TVL series must contain asset '{asset}'");
+    return s!;
+  }
+
+  public static void AssertLast(this IReadOnlyList<Series> list, string asset, decimal expected)
+  {
+    var s = list.GetSeries(asset);
+    s.Points.Count.ShouldBeGreaterThan(0, $"Series '{asset}' must have at least 1 point");
+    s.Points[^1].V.ShouldBe(expected);
+  }
+
+  public static void AssertHasPoint(this IReadOnlyList<Series> list, string asset, DateTime day, decimal expected)
+  {
+    var s = list.GetSeries(asset);
+    var ts = ToUnixDay(day);
+    var p = s.Points.FirstOrDefault(x => x.T == ts);
+    p.ShouldNotBe(default, $"Series '{asset}' should have point for {day:yyyy-MM-dd}");
+    p.V.ShouldBe(expected);
+  }
 }

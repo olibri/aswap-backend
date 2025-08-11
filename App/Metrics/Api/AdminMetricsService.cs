@@ -4,7 +4,7 @@ using Domain.Models.Api.Metrics;
 using Domain.Models.DB.Metrics;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 namespace App.Metrics.Api;
 
 public sealed class AdminMetricsService(P2PDbContext db) : IAdminMetricsService
@@ -35,46 +35,39 @@ public sealed class AdminMetricsService(P2PDbContext db) : IAdminMetricsService
     );
   }
 
+  private static long UnixDay(DateTime dayUtc)
+    => new DateTimeOffset(DateTime.SpecifyKind(dayUtc.Date, DateTimeKind.Utc)).ToUnixTimeSeconds();
 
   private async Task<IReadOnlyList<Series>> LoadTvl7dAsync(DateTime asOfUtc, CancellationToken ct)
   {
-    var fromUtc = asOfUtc.Date.AddDays(-6);  
-    var toExclusive = asOfUtc.Date.AddDays(1);
+    var fromUtc = asOfUtc.Date.AddDays(-6);
+    var toExclUtc = asOfUtc.Date.AddDays(1);
 
-    var dailyLast = await db.TvlSnapshots
+    var raw = await db.TvlSnapshots
       .AsNoTracking()
-      .Where(s => s.TakenAt >= fromUtc && s.TakenAt < toExclusive)
-      .Select(s => new
-      {
-        s.TokenMint,
-        Day = (DateTime?)EF.Functions.DateTrunc("day", s.TakenAt),
-        s.TakenAt,
-        s.Balance
-      })
-      .GroupBy(x => new { x.TokenMint, x.Day })
-      .Select(g => g
-        .OrderByDescending(x => x.TakenAt)
-        .Select(x => new { x.TokenMint, x.Day, x.Balance })
-        .First())
-      .OrderBy(x => x.TokenMint)
-      .ThenBy(x => x.Day)
+      .Where(s => s.TakenAt >= fromUtc && s.TakenAt < toExclUtc)
+      .OrderBy(s => s.TokenMint).ThenBy(s => s.TakenAt) 
+      .Select(s => new { s.TokenMint, s.TakenAt, s.Balance })
       .ToListAsync(ct);
 
-    var series = dailyLast
+    var lastPerDay = raw
+      .GroupBy(r => (Token: r.TokenMint, Day: r.TakenAt.Date))
+      .Select(g => g.Last())                           
+      .OrderBy(x => x.TokenMint).ThenBy(x => x.TakenAt)
+      .ToList();
+
+    var series = lastPerDay
       .GroupBy(x => x.TokenMint, StringComparer.OrdinalIgnoreCase)
       .Select(g => new Series(
         g.Key,
-        g.Select(p =>
-        {
-          var dayUtc = DateTime.SpecifyKind(p.Day!.Value, DateTimeKind.Utc);
-          var ts = new DateTimeOffset(dayUtc).ToUnixTimeSeconds();
-          return new TimePoint(ts, p.Balance);
-        }).ToList()
+        g.Select(p => new TimePoint(UnixDay(p.TakenAt), p.Balance)).ToList()
       ))
       .ToList();
 
     return series;
   }
+
+
 
 
   private async Task<IReadOnlyDictionary<string, int>> LoadOrdersSummaryNowAsync(CancellationToken ct)
