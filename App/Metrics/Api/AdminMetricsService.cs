@@ -11,17 +11,13 @@ public sealed class AdminMetricsService(P2PDbContext db) : IAdminMetricsService
 {
   private static readonly TimeSpan OnlineWindow = TimeSpan.FromSeconds(90);
 
-  private static DateTime EndOfDayExclusiveUtc(DateTime d)
-  {
-    return d.Date.AddDays(1);
-  }
 
   public async Task<DashboardMetricsDto> GetDashboardAsync(DashboardQuery q, CancellationToken ct)
   {
     var (from, to) = q.Normalize();
     var nowUtc = DateTime.UtcNow;
 
-    var tvlByAsset = await LoadLatestTvlByAssetAsOfAsync(to, ct);
+    var tvlByAsset = await LoadTvl7dAsync(to, ct);
     var ordersSummary = await LoadOrdersSummaryNowAsync(ct);
     var avgDealTimeSec = await LoadWeightedAvgDealTimeAsync(from, to, ct);
     var volumeByAsset = await LoadVolumeByAssetAsync(from, to, ct);
@@ -29,28 +25,55 @@ public sealed class AdminMetricsService(P2PDbContext db) : IAdminMetricsService
     var onlineUsersCount = await CountOnlineUsersAsync(nowUtc, OnlineWindow, ct);
 
     return new DashboardMetricsDto(
-      tvlByAsset,
       ordersSummary,
       avgDealTimeSec,
       volumeByAsset,
       users,
       ips,
-      onlineUsersCount
+      onlineUsersCount,
+      tvlByAsset
     );
   }
 
-  private async Task<IReadOnlyDictionary<string, decimal>> LoadLatestTvlByAssetAsOfAsync(DateTime asOf,
-    CancellationToken ct)
+
+  private async Task<IReadOnlyList<Series>> LoadTvl7dAsync(DateTime asOfUtc, CancellationToken ct)
   {
-    var toExclusive = EndOfDayExclusiveUtc(asOf);
-    var rows = await db.TvlSnapshots
+    var fromUtc = asOfUtc.Date.AddDays(-6);  
+    var toExclusive = asOfUtc.Date.AddDays(1);
+
+    var dailyLast = await db.TvlSnapshots
       .AsNoTracking()
-      .Where(s => s.TakenAt < toExclusive)
-      .GroupBy(s => s.TokenMint)
-      .Select(g => g.OrderByDescending(x => x.TakenAt).First())
+      .Where(s => s.TakenAt >= fromUtc && s.TakenAt < toExclusive)
+      .Select(s => new
+      {
+        s.TokenMint,
+        Day = (DateTime?)EF.Functions.DateTrunc("day", s.TakenAt),
+        s.TakenAt,
+        s.Balance
+      })
+      .GroupBy(x => new { x.TokenMint, x.Day })
+      .Select(g => g
+        .OrderByDescending(x => x.TakenAt)
+        .Select(x => new { x.TokenMint, x.Day, x.Balance })
+        .First())
+      .OrderBy(x => x.TokenMint)
+      .ThenBy(x => x.Day)
       .ToListAsync(ct);
 
-    return rows.ToDictionary(s => s.TokenMint, s => s.Balance, StringComparer.OrdinalIgnoreCase);
+    var series = dailyLast
+      .GroupBy(x => x.TokenMint, StringComparer.OrdinalIgnoreCase)
+      .Select(g => new Series(
+        g.Key,
+        g.Select(p =>
+        {
+          var dayUtc = DateTime.SpecifyKind(p.Day!.Value, DateTimeKind.Utc);
+          var ts = new DateTimeOffset(dayUtc).ToUnixTimeSeconds();
+          return new TimePoint(ts, p.Balance);
+        }).ToList()
+      ))
+      .ToList();
+
+    return series;
   }
 
 

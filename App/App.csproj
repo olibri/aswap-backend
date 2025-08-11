@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.12.0" />
     <PackageReference Include="Nethereum.JsonRpc.RpcClient" Version="5.0.0" />
     <PackageReference Include="Nethereum.Signer" Version="5.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Riok.Mapperly" Version="4.2.1" />
     <PackageReference Include="Solana.Programs" Version="8.3.0" />
     <PackageReference Include="Solnet.Programs" Version="6.1.0" />
