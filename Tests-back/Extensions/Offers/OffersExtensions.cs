@@ -68,6 +68,24 @@ public static class OffersExtensions
     return list;
   }
 
+  public static List<EscrowOrderEntity> AddPaymentToOrders(this List<EscrowOrderEntity> orders)
+  {
+    const short MaxMethodId = 400;         
+    const short MinMethodId = 1;
+
+    foreach (var o in orders)
+    {
+      var methodId = (short)Random.Shared.Next(MinMethodId, MaxMethodId + 1);
+      o.PaymentMethods.Add(new EscrowOrderPaymentMethodEntity
+      {
+        OrderId = o.Id,
+        MethodId = methodId
+      });
+    }
+
+    return orders;
+  }
+
   public static async Task<List<EscrowOrderEntity>> SeedAsync(
     this P2PDbContext db,
     int count,
@@ -78,7 +96,7 @@ public static class OffersExtensions
     CancellationToken ct = default,
     int? fixedAmount = null)
   {
-    var list = Generate(count, status, tokenMint, side, partialFill, fixedAmount);
+    var list = Generate(count, status, tokenMint, side, partialFill, fixedAmount).AddPaymentToOrders();
     await db.EscrowOrders.AddRangeAsync(list, ct);
     await db.SaveChangesAsync(ct);
     return list;

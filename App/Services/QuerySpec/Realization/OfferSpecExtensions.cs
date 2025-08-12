@@ -24,6 +24,16 @@ public static class OfferSpecExtensions
     if (!string.IsNullOrWhiteSpace(q.TokenMint))
       spec.Where(new EqualFilter<EscrowOrderEntity, string>(o => o.TokenMint, q.TokenMint!));
 
+    if (q.PriceFrom is not null)
+      spec.Where(new GreaterOrEqualFilter<EscrowOrderEntity, decimal>(o => o.Price, (decimal)q.PriceFrom.Value));
+
+    if (q.PaymentMethod is { Length: > 0 })
+      spec.Where(new AnyInCollectionFilter<EscrowOrderEntity, EscrowOrderPaymentMethodEntity, string>(
+        o => o.PaymentMethods,
+        pm => pm.Method.Code,
+        q.PaymentMethod
+      ));
+
     var desc = q.Dir == SortDir.Desc;
     spec.OrderBy(q.SortBy switch
     {

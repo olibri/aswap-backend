@@ -242,7 +242,7 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     var today = DateTime.UtcNow.Date;
     var dto = await fixture.ExecuteDashboardAsync(from: today, to: today);
 
-    dto.TvlByAsset["USDc"].ShouldBe(tvlOrders.ExpectedTvl("USDc"));    
+    dto.Tvl7d.AssertLast("USDc", tvlOrders.ExpectedTvl("USDc"));
     dto.OrdersSummary["Released"].ShouldBe(3);                          
     dto.VolumeByAsset["USDc"].ShouldBe(expTrade.Volume);                        
     dto.AvgDealTimeSec!.Value.ShouldBe(expTrade.AvgSec, 0.6);  
@@ -271,9 +271,10 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     await db.SaveChangesAsync();
 
     var dtoAsOfYesterday = await fixture.ExecuteDashboardAsync(yesterday, yesterday);
-    dtoAsOfYesterday.TvlByAsset["USDc"].ShouldBe(10m);
+    dtoAsOfYesterday.Tvl7d.AssertLast("USDc", 10m);
 
     var dtoAsOfToday = await fixture.ExecuteDashboardAsync(today, today);
-    dtoAsOfToday.TvlByAsset["USDc"].ShouldBe(99m);
+    dtoAsOfToday.Tvl7d.AssertHasPoint("USDc", yesterday, 10m); 
+    dtoAsOfToday.Tvl7d.AssertLast("USDc", 99m);
   }
 }

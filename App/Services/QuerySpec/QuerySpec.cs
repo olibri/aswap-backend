@@ -35,12 +35,12 @@ public class QuerySpec<T>
 
   public async Task<PagedResult<T>> ExecuteAsync(IQueryable<T> source)
   {
-    Log("START", source);
+    //Log("START", source);
 
     foreach (var f in _filters)
     {
       source = f.Apply(source);
-      Log($"AFTER {f.GetType().Name}", source);
+      //Log($"AFTER {f.GetType().Name}", source);
     }
 
     if (_sorts.Count > 0)
@@ -49,7 +49,7 @@ public class QuerySpec<T>
       foreach (var s in _sorts)
       {
         ordered = ordered is null ? s.ApplyFirst(source) : s.ApplyNext(ordered);
-        Log($"AFTER SORT {s.GetType().Name}", ordered!);
+        //Log($"AFTER SORT {s.GetType().Name}", ordered!);
       }
       source = ordered!;
     }
