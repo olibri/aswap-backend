@@ -8,7 +8,7 @@ public sealed class HttpContextIpAccessor(IHttpContextAccessor accessor) : IClie
   public string GetClientIp()
   {
     var ctx = accessor.HttpContext;
-    var forwarded = ctx?.Request.Headers["X‑Forwarded‑For"].FirstOrDefault();
+    var forwarded = ctx?.Request.Headers["X-Forwarded-For"].FirstOrDefault();
     return forwarded ?? ctx?.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
   }
 }

@@ -68,12 +68,12 @@ public sealed class PaymentControllerTest(TestFixture fixture) : IClassFixture<T
   {
     // Arrange
     var method = await fixture.AnyMethodAsync();
-    await fixture.AddPopularityAsync(method.Id, "UA", 3);
+    await fixture.AddPopularityAsync(method.Id, "PL", 3);
     await fixture.ReloadCatalogAsync();
 
     // IP 95.158… → UA (GeoIP db)
     var ctrl = fixture.GetService<PaymentController>()
-                      .WithHttp(fixture, ip: "95.158.56.120");
+                      .WithHttp(fixture, ip: "5.173.151.43");
 
     // Act
     var result = await ctrl.Get(null, CatalogKind.Payments, default);

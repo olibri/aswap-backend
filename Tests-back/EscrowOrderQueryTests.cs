@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Services.IP;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Enums;
 using Infrastructure;
@@ -120,7 +121,8 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
     var codeSet = codes.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     var expectedIds = orders
-      .Where(o => o.PaymentMethods.Any(pm => pm.Method != null && codeSet.Contains(pm.Method.Code)))
+      .Where(o => o.PaymentMethods.Any(pm => pm.Method != null
+                                             && codeSet.Contains(pm.Method.Code)))
       .Select(o => o.Id)
       .ToHashSet();
 
@@ -131,5 +133,15 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
 
     res.Length.ShouldBe(expectedIds.Count);
     res.All(o => expectedIds.Contains(o.Id)).ShouldBeTrue();
+  }
+
+
+  [Fact]
+  public async Task Get_Country_By_IP()
+  {
+    var ipService = fixture.GetService<IGeoIpService>();
+
+    var res= ipService.ResolveCountry("5.173.151.43");
+    res.ShouldBe("PL", "GeoIP DB should resolve country for given IP");
   }
 }
