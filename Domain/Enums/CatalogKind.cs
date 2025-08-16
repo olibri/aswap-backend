@@ -2,7 +2,7 @@
 
 public enum CatalogKind
 {
-  Payments,     
-  Currencies,   
-  All           
+  Payments,
+  Currencies,
+  All
 }

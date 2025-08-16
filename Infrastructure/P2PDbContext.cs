@@ -43,6 +43,9 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
   public DbSet<Currency> Currencies { get; set; }
 
+  /* ─────────── CoinJelly ─────────── */
+  public DbSet<CoinJellyEntity> CoinJelly { get; set; }
+  public DbSet<CoinJellyAccountHistoryEntity> CoinJellyAccountHistory { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
@@ -57,6 +60,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
       entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, Status = x.EscrowStatus, x.Price })
         .HasDatabaseName("ix_escrow_best_price");
     });
+
+
 
     modelBuilder.Entity<EscrowOrderPaymentMethodEntity>(entity =>
     {
@@ -73,6 +78,36 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
         .HasForeignKey(x => x.MethodId)
         .OnDelete(DeleteBehavior.Restrict);
     });
+
+    modelBuilder.Entity<CoinJellyEntity>(e =>
+    {
+      e.HasKey(x => x.Id);
+
+      e.HasIndex(x => new { x.CryptoCurrency, x.CryptoCurrencyChain })
+        .IsUnique()
+        .HasDatabaseName("ux_coin_jelly_currency_chain");
+    });
+
+    modelBuilder.Entity<CoinJellyAccountHistoryEntity>(e =>
+    {
+      e.HasKey(x => x.Id);
+
+      e.Property(x => x.AmountSend).HasColumnType("numeric(20,0)");
+      e.Property(x => x.AmountGet).HasColumnType("numeric(20,0)");
+      e.Property(x => x.FeeAtomic).HasColumnType("numeric(78,0)");
+
+      e.Property(x => x.CreatedAtUtc)
+        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      e.Property(x => x.Status)
+        .HasConversion<int>()
+        .HasColumnType("integer");
+
+      e.HasIndex(x => x.CreatedAtUtc).HasDatabaseName("ix_cj_hist_created_at");
+      e.HasIndex(x => new { x.Status, x.CreatedAtUtc }).HasDatabaseName("ix_cj_hist_status_date");
+      e.HasIndex(x => x.TxID).HasDatabaseName("ix_cj_hist_txid");
+    });
+
 
     modelBuilder.Entity<RoomEntity>(entity =>
     {

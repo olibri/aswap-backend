@@ -2,22 +2,89 @@ name: Deploy Backend (ssh → build on server)
 
 on:
   push:
-    branches: [ master ]          # не чіпаю твою гілку
+    branches: [ master ]
+
+permissions:
+  contents: write   # дозволяє боту комітити/пушити
 
 env:
-  HOST: 65.109.86.205             # IP або DNS
+  HOST: 65.109.86.205
   USER: p2p_user
-  TARGET_DIR: /opt/p2p_back/src   # каталог, куди rsync заллє код
+  TARGET_DIR: /opt/p2p_back/src
   DEPLOY_SCRIPT: /usr/local/bin/deploy_p2p_back.sh
+
+  EF_PROJECT: Infrastructure/Infrastructure.csproj
+  STARTUP_PROJECT: Aswap-back/Aswap-back.csproj
+  DB_CONTEXT: P2PDbContext
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'   # щоб не зациклити
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0   # потрібна повна історія для git push
 
-    # ---------- 0. SSH-ключ тільки у GitHub ----------
+    # ---- .NET + EF CLI ----
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Verify EF paths
+      run: |
+        echo "EF_PROJECT=$EF_PROJECT"
+        echo "STARTUP_PROJECT=$STARTUP_PROJECT"
+        test -f "$EF_PROJECT" || (echo "❌ EF_PROJECT not found"; ls -laR; exit 1)
+        test -f "$STARTUP_PROJECT" || (echo "❌ STARTUP_PROJECT not found"; ls -laR; exit 1)
+
+        dotnet restore
+        dotnet tool update --global dotnet-ef
+        export PATH="$HOME/.dotnet/tools:$PATH"
+
+        # покаже доступні DbContext’и — перевіримо, що все компілюється і шляхи валідні
+        dotnet ef dbcontext list \
+          --project "$EF_PROJECT" \
+          --startup-project "$STARTUP_PROJECT"
+
+    - name: Restore
+      run: dotnet restore
+
+    - name: Install dotnet-ef
+      run: dotnet tool update --global dotnet-ef
+
+    - name: Generate EF migration if model changed
+      env:
+        PATH: ${{ env.PATH }}:~/.dotnet/tools
+      run: |
+        set -e
+        export PATH="$HOME/.dotnet/tools:$PATH"
+
+        MIG_NAME="auto_${GITHUB_RUN_NUMBER}_$(date +%Y%m%d%H%M%S)"
+
+        # Спроба додати міграцію; якщо "No changes", команда завершується з кодом 1 — ігноруємо.
+        set +e
+        dotnet ef migrations add "$MIG_NAME" \
+          --project "$EF_PROJECT" \
+          --startup-project "$STARTUP_PROJECT" \
+          --context "$DB_CONTEXT"
+        STATUS=$?
+        set -e
+
+        # Комітимо тільки якщо справді з’явилися файли в Migrations/
+        if git status --porcelain | grep -E '^ M|^A |^\?\?' | grep 'Migrations/'; then
+          echo "Detected new migration files. Committing..."
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "ci: auto EF migration $MIG_NAME [skip ci]"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
+        else
+          echo "No model changes — skipping commit."
+        fi
+
+    # ---- SSH ключ ----
     - name: Add SSH key
       run: |
         mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -25,7 +92,7 @@ jobs:
         chmod 600 ~/.ssh/id_ed25519
         ssh-keyscan -H ${{ env.HOST }} >> ~/.ssh/known_hosts
 
-    # ---------- 1. Синхронізуємо код ----------
+    # ---- rsync коду ----
     - name: Sync backend to server
       run: |
         ssh ${{ env.USER }}@${{ env.HOST }} "mkdir -p ${{ env.TARGET_DIR }}"
@@ -34,8 +101,6 @@ jobs:
           --exclude=".github" \
           ./ ${{ env.USER }}@${{ env.HOST }}:${{ env.TARGET_DIR }}/
 
-    # ---------- 2. Build + restart ----------
+    # ---- build+restart (на сервері deploy скрипт запускає контейнер; апка сама накотить міграції на старті через Migrate/IHostedService) ----
     - name: Build & run backend container
-      run: |
-        ssh ${{ env.USER }}@${{ env.HOST }} \
-          "sudo ${{ env.DEPLOY_SCRIPT }}"
+      run: ssh ${{ env.USER }}@${{ env.HOST }} "sudo ${{ env.DEPLOY_SCRIPT }}"

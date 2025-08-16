@@ -293,11 +293,12 @@ public class RootBuilder
       .Build();
 
     using var scope = host.Services.CreateScope();
+    var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<P2PDbContext>>();
+    using var db = factory.CreateDbContext();
+
     try
     {
-      var dbContext = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
-      dbContext.Database.Migrate();
-      //Log.Information("Database migrated successfully.");
+      db.Database.Migrate();
     }
     catch (Exception e)
     {
