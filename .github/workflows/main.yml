@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 permissions:
-  contents: write   # дозволяє боту комітити/пушити
+  contents: write
 
 env:
   HOST: 65.109.86.205
@@ -20,19 +20,20 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.actor != 'github-actions[bot]'   # щоб не зациклити
+    if: github.actor != 'github-actions[bot]'
 
     steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0   # потрібна повна історія для git push
+        fetch-depth: 0
 
-    # ---- .NET + EF CLI ----
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 9.0.x   # ← став ту версію, на якій реально таргетиться проект
 
+    # Перевірка шляхів + список DbContext
     - name: Verify EF paths
+      shell: bash
       run: |
         echo "EF_PROJECT=$EF_PROJECT"
         echo "STARTUP_PROJECT=$STARTUP_PROJECT"
@@ -43,27 +44,19 @@ jobs:
         dotnet tool update --global dotnet-ef
         export PATH="$HOME/.dotnet/tools:$PATH"
 
-        # покаже доступні DbContext’и — перевіримо, що все компілюється і шляхи валідні
         dotnet ef dbcontext list \
           --project "$EF_PROJECT" \
           --startup-project "$STARTUP_PROJECT"
 
-    - name: Restore
-      run: dotnet restore
-
-    - name: Install dotnet-ef
-      run: dotnet tool update --global dotnet-ef
-
+    # (опц.) автогенерація міграції — БЕЗ затирання PATH
     - name: Generate EF migration if model changed
-      env:
-        PATH: ${{ env.PATH }}:~/.dotnet/tools
+      shell: bash
       run: |
         set -e
         export PATH="$HOME/.dotnet/tools:$PATH"
 
-        MIG_NAME="auto_${GITHUB_RUN_NUMBER}_$(date +%Y%m%d%H%M%S)"
+        MIG_NAME="auto_${GITHUB_RUN_NUMBER}_$(/usr/bin/date +%Y%m%d%H%M%S)"
 
-        # Спроба додати міграцію; якщо "No changes", команда завершується з кодом 1 — ігноруємо.
         set +e
         dotnet ef migrations add "$MIG_NAME" \
           --project "$EF_PROJECT" \
@@ -72,7 +65,6 @@ jobs:
         STATUS=$?
         set -e
 
-        # Комітимо тільки якщо справді з’явилися файли в Migrations/
         if git status --porcelain | grep -E '^ M|^A |^\?\?' | grep 'Migrations/'; then
           echo "Detected new migration files. Committing..."
           git config user.name  "github-actions[bot]"
@@ -84,23 +76,26 @@ jobs:
           echo "No model changes — skipping commit."
         fi
 
-    # ---- SSH ключ ----
+    # SSH ключ
     - name: Add SSH key
+      shell: bash
       run: |
         mkdir -p ~/.ssh && chmod 700 ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H ${{ env.HOST }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
-    # ---- rsync коду ----
+    # rsync коду
     - name: Sync backend to server
+      shell: bash
       run: |
-        ssh ${{ env.USER }}@${{ env.HOST }} "mkdir -p ${{ env.TARGET_DIR }}"
+        ssh $USER@$HOST "mkdir -p $TARGET_DIR"
         rsync -az --delete \
           --exclude=".git" \
           --exclude=".github" \
-          ./ ${{ env.USER }}@${{ env.HOST }}:${{ env.TARGET_DIR }}/
+          ./ $USER@$HOST:$TARGET_DIR/
 
-    # ---- build+restart (на сервері deploy скрипт запускає контейнер; апка сама накотить міграції на старті через Migrate/IHostedService) ----
+    # build+restart (деплой-скрипт на сервері робить усе інше; міграції застосуються на старті або бандлом — як налаштовано)
     - name: Build & run backend container
-      run: ssh ${{ env.USER }}@${{ env.HOST }} "sudo ${{ env.DEPLOY_SCRIPT }}"
+      shell: bash
+      run: ssh $USER@$HOST "sudo $DEPLOY_SCRIPT"
