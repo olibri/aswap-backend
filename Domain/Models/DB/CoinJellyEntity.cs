@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Models.DB;
 
-
 [Table("coin_jelly")]
 public class CoinJellyEntity
 {
@@ -11,5 +10,5 @@ public class CoinJellyEntity
   [Column("company_wallet_address")] public string CompanyWalletAddress { get; set; }
   [Column("crypto_currency")] public string CryptoCurrency { get; set; }
   [Column("crypto_currency_chain")] public string CryptoCurrencyChain { get; set; }
-
+  [Column("test_column")] public string TEST { get; set; }
 }
