@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using App.Chat;
+using App.CoinJelly;
 using App.Db;
 using App.Metrics.Api;
 using App.Metrics.BackgroundWorker;
@@ -22,6 +23,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Domain.Interfaces;
 using Domain.Interfaces.Chat;
+using Domain.Interfaces.CoinJelly;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Hooks.Parsing;
@@ -78,6 +80,7 @@ public class RootBuilder
         builder.RegisterType<RatingService>().As<IRatingService>().InstancePerLifetimeScope();
         builder.RegisterType<BestPriceService>().As<IBestPriceService>().InstancePerLifetimeScope();
         builder.RegisterType<AdminMetricsService>().As<IAdminMetricsService>().InstancePerLifetimeScope();
+        builder.RegisterType<CoinJellyService>().As<ICoinJellyService>().InstancePerLifetimeScope();
 
 
         builder.RegisterType<RefreshTokenService>()
@@ -171,6 +174,7 @@ public class RootBuilder
         //  .InstancePerLifetimeScope();
 
         builder.RegisterType<WebHookController>().InstancePerDependency();
+        builder.RegisterType<CoinJellyController>().InstancePerDependency();
         builder.RegisterType<TelegramHookController>().InstancePerDependency();
         builder.RegisterType<AdminController>().InstancePerDependency();
         builder.RegisterType<SessionPingController>().InstancePerDependency();

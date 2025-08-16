@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Chaos.NaCl;
+using Microsoft.AspNetCore.Mvc;
+using Shouldly;
 using Solnet.Wallet.Utilities;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using Chaos.NaCl;
-using Shouldly;
 
 namespace Tests_back.Extensions.AccountAuth;
 

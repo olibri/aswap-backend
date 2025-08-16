@@ -1,7 +1,9 @@
-﻿using Domain.Interfaces.Database.Queries;
+﻿using Domain.Interfaces.CoinJelly;
+using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Metrics;
 using Domain.Interfaces.Services;
 using Domain.Models.Api.Auth;
+using Domain.Models.Api.CoinJelly;
 using Domain.Models.Api.Metrics;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -15,6 +17,7 @@ public class AdminController(
   IMarketDbQueries marketDbQueries,
   IAccountService accounts,
   IAdminMetricsService adminService,
+  ICoinJellyService coinJellyService,
   ILogger<PlatformController> log) : Controller
 {
   //TODO: add jwt checker to this method 
@@ -44,5 +47,14 @@ public class AdminController(
   {
     log.LogInformation("Get dashboard (first render) {@Query}", q);
     return Ok(await adminService.GetDashboardAsync(q, ct));
+  }
+
+
+  [Authorize(Roles = "admin")]
+  [HttpPost("new-jelly-method")]
+  public async Task<IActionResult> NewCoinJellyMethod([FromBody] CoinJellyDto dto, CancellationToken ct)
+  {
+    var res = await coinJellyService.AddNewCoinJellyMethod(dto, ct);
+    return Ok(res);
   }
 }
