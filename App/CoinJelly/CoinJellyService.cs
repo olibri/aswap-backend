@@ -41,7 +41,7 @@ public sealed class CoinJellyService(
     return true;
   }
 
-  public async Task<CoinJellyAccountHistoryRequest[]> GetJellyHistoryAsync(string userWallet, CancellationToken ct)
+  public async Task<CoinJellyAccountHistoryRequest[]> GetUserJellyHistoryAsync(string userWallet, CancellationToken ct)
   {
     await using var db = await NewDb(ct);
 

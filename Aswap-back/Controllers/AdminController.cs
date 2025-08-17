@@ -64,4 +64,12 @@ public class AdminController(
     var res = await coinJellyService.DeleteCoinJellyMethod(id, ct);
     return Ok(res);
   }
+
+  [HttpPatch]
+  [Route("update-jelly")]
+  public async Task<IActionResult> UpdateCoinJelly([FromBody] CoinJellyUpdateRequest dto, CancellationToken ct)
+  {
+    var res = await coinJellyService.UpdateJellyAsync(dto, ct);
+    return Ok(res);
+  }
 }

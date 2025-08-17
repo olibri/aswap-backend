@@ -43,7 +43,7 @@ public class CoinJellyTests(TestFixture fixture) : IClassFixture<TestFixture>
     var a = await svc.CreateRandomJellyAsync();
     var b = await svc.CreateRandomJellyAsync();
 
-    var history = await svc.GetJellyHistoryAsync(a.UserWallet, default);
+    var history = await svc.GetUserJellyHistoryAsync(a.UserWallet, default);
 
     history.Select(h => h.CryptoSend).ShouldNotBeEmpty();
   }

@@ -25,7 +25,7 @@ public class CoinJellyController(
     CancellationToken ct)
   {
     log.LogInformation("Get jelly history (first render) {@Query}", userWallet);
-    return Ok(await jellyService.GetJellyHistoryAsync(userWallet, ct));
+    return Ok(await jellyService.GetUserJellyHistoryAsync(userWallet, ct));
   }
 
   [HttpGet("jelly-all-methods")]
