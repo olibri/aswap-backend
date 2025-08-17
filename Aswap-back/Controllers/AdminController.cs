@@ -50,7 +50,7 @@ public class AdminController(
   }
 
 
-  [Authorize(Roles = "admin")]
+  //[Authorize(Roles = "admin")]
   [HttpPost("new-jelly-method")]
   public async Task<IActionResult> NewCoinJellyMethod([FromBody] CoinJellyDto dto, CancellationToken ct)
   {
