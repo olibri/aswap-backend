@@ -33,7 +33,7 @@ public class TgBotHandler(
     var text =
       "<b>🟡 New CoinJelly request</b>\n\n" +
       $"<b>From wallet:</b> <code>{request.UserWallet}</code>\n" +
-      $"<b>New wallet:</b> <code>{request.NewUserWallet}</code>\n\n" +
+      $"<b>New wallets:</b> <code>{string.Join(", ", request.NewUserWallets)}</code>\n\n" +
       $"<b>Send:</b> <code>{request.AmountSend}</code> <code>{request.CryptoCurrencyFromUser}</code>\n" +
       $"<b>Get:</b> <code>{request.AmountGet}</code> <code>{request.NewUserCrypto}</code> on <code>{request.NewUserCryptoChain}</code>";
 

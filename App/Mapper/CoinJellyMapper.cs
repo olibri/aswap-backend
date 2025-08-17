@@ -10,7 +10,8 @@ public static partial class CoinJellyMapper
     return new CoinJellyEntity
     {
       CompanyWalletAddress = dto.CompanyWalletAddress,
-      CryptoCurrency = dto.CryptoCurrency,
+      CryptoCurrencyCode = dto.CryptoCurrencyCode,
+      CryptoCurrencyName = dto.CryptoCurrencyName,
       CryptoCurrencyChain = dto.CryptoCurrencyChain
     };
   }

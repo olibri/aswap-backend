@@ -3,5 +3,6 @@
 public sealed record CoinJellyDto(
   Guid Id,
   string CompanyWalletAddress,
-  string CryptoCurrency,
+  string CryptoCurrencyCode,
+  string CryptoCurrencyName,
   string CryptoCurrencyChain);

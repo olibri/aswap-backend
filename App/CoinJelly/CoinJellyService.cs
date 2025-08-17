@@ -22,7 +22,7 @@ public sealed class CoinJellyService(
 
     await using var db = await NewDb(ct);
 
-    var existing = await FindMethodAsync(db, dto.CryptoCurrency, dto.CryptoCurrencyChain, ct);
+    var existing = await FindMethodAsync(db, dto.CryptoCurrencyCode, dto.CryptoCurrencyChain, ct);
     if (existing is null)
       return await InsertMethodAsync(db, dto, ct);
 
@@ -126,7 +126,7 @@ public sealed class CoinJellyService(
 
     var rows = await db.Set<CoinJellyEntity>()
       .AsNoTracking()
-      .OrderBy(x => x.CryptoCurrency)
+      .OrderBy(x => x.CryptoCurrencyCode)
       .ThenBy(x => x.CryptoCurrencyChain)
       .ToListAsync(ct);
 
@@ -134,7 +134,8 @@ public sealed class CoinJellyService(
       .Select(e => new CoinJellyDto(
         e.Id,
         e.CompanyWalletAddress,
-        e.CryptoCurrency,
+        e.CryptoCurrencyCode,
+        e.CryptoCurrencyName,
         e.CryptoCurrencyChain))
       .ToArray();
   }
@@ -142,7 +143,8 @@ public sealed class CoinJellyService(
 
   private static void Validate(CoinJellyDto dto)
   {
-    if (string.IsNullOrWhiteSpace(dto.CryptoCurrency)) throw new ArgumentException("CryptoCurrency is required.");
+    if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyCode)) throw new ArgumentException("CryptoCurrencyCode is required.");
+    if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyName)) throw new ArgumentException("CryptoCurrencyName is required.");
     if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyChain))
       throw new ArgumentException("CryptoCurrencyChain is required.");
     if (string.IsNullOrWhiteSpace(dto.CompanyWalletAddress))
@@ -159,7 +161,7 @@ public sealed class CoinJellyService(
     CancellationToken ct)
   {
     return db.Set<CoinJellyEntity>()
-      .FirstOrDefaultAsync(x => x.CryptoCurrency == code && x.CryptoCurrencyChain == chain, ct);
+      .FirstOrDefaultAsync(x => x.CryptoCurrencyCode == code && x.CryptoCurrencyChain == chain, ct);
   }
 
   private static async Task<Guid> InsertMethodAsync(P2PDbContext db, CoinJellyDto dto, CancellationToken ct)

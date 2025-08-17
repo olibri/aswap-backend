@@ -3,7 +3,7 @@
 public sealed record NewUserCoinJellyRequest(
   string CryptoCurrencyFromUser,
   string UserWallet,
-  string NewUserWallet,
+  string[] NewUserWallets,
   string NewUserCrypto,
   string NewUserCryptoChain,
   decimal AmountSend,

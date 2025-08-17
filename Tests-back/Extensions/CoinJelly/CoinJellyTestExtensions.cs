@@ -9,10 +9,11 @@ public static class CoinJellyTestExtensions
   public static Task<Guid> AddMethodAsync(
     this ICoinJellyService svc,
     string wallet = "  WALLET_TEST  ",
+    string cryptoName = "usdt",
     string code = "usdt",
     string chain = "solana",
     CancellationToken ct = default)
-    => svc.AddNewCoinJellyMethod(new CoinJellyDto(new Guid(), wallet, code, chain), ct);
+    => svc.AddNewCoinJellyMethod(new CoinJellyDto(new Guid(), wallet, code, cryptoName,chain), ct);
 
     public static Task<CoinJellyAccountHistoryRequest> CreateJellyAsync(
       this ICoinJellyService svc,
@@ -26,7 +27,7 @@ public static class CoinJellyTestExtensions
       var req = new NewUserCoinJellyRequest(
         CryptoCurrencyFromUser: code,
         UserWallet: userWallet,
-        NewUserWallet: $"NEW_{userWallet}",
+        NewUserWallets: [$"NEW_{userWallet}"],
         NewUserCrypto: code,
         NewUserCryptoChain: chain,
         AmountSend: amountSend,
@@ -49,7 +50,7 @@ public static class CoinJellyTestExtensions
       var req = new NewUserCoinJellyRequest(
         CryptoCurrencyFromUser: code,
         UserWallet: user,
-        NewUserWallet: $"NEW_{user}",
+        NewUserWallets: [$"NEW_{user}"],
         NewUserCrypto: code,             
         NewUserCryptoChain: chain,
         AmountSend: RandAmount(),

@@ -83,7 +83,7 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     {
       e.HasKey(x => x.Id);
 
-      e.HasIndex(x => new { x.CryptoCurrency, x.CryptoCurrencyChain })
+      e.HasIndex(x => new { x.CryptoCurrencyName, x.CryptoCurrencyChain })
         .IsUnique()
         .HasDatabaseName("ux_coin_jelly_currency_chain");
     });

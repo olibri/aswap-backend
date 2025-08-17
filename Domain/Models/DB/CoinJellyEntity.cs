@@ -8,6 +8,7 @@ public class CoinJellyEntity
 {
   [Key] [Column("id")] public Guid Id { get; set; } = Guid.NewGuid();
   [Column("company_wallet_address")] public string CompanyWalletAddress { get; set; }
-  [Column("crypto_currency")] public string CryptoCurrency { get; set; }
+  [Column("crypto_currency_code")] public string CryptoCurrencyCode { get; set; }
+  [Column("crypto_currency_name")] public string CryptoCurrencyName { get; set; }
   [Column("crypto_currency_chain")] public string CryptoCurrencyChain { get; set; }
 }
