@@ -62,11 +62,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<decimal>("AmountGet")
+                    b.Property<decimal>("AmountUserWannaGet")
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("amount_get");
 
-                    b.Property<decimal>("AmountSend")
+                    b.Property<decimal>("AmountUserSend")
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("amount_send");
 

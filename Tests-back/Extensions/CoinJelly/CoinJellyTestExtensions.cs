@@ -30,8 +30,8 @@ public static class CoinJellyTestExtensions
         NewUserWallets: [$"NEW_{userWallet}"],
         NewUserCrypto: code,
         NewUserCryptoChain: chain,
-        AmountSend: amountSend,
-        AmountGet: amountGet
+        AmountUserSend: amountSend,
+        AmountUserWannaGet: amountGet
       );
       return svc.CreateNewJellyAsync(req, ct);
     }
@@ -53,8 +53,8 @@ public static class CoinJellyTestExtensions
         NewUserWallets: [$"NEW_{user}"],
         NewUserCrypto: code,             
         NewUserCryptoChain: chain,
-        AmountSend: RandAmount(),
-        AmountGet: RandAmount()
+        AmountUserSend: RandAmount(),
+        AmountUserWannaGet: RandAmount()
       );
       return svc.CreateNewJellyAsync(req, ct);
     }

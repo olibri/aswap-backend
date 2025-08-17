@@ -6,5 +6,5 @@ public sealed record NewUserCoinJellyRequest(
   string[] NewUserWallets,
   string NewUserCrypto,
   string NewUserCryptoChain,
-  decimal AmountSend,
-  decimal AmountGet);
+  decimal AmountUserSend,
+  decimal AmountUserWannaGet);
