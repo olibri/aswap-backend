@@ -57,4 +57,11 @@ public class AdminController(
     var res = await coinJellyService.AddNewCoinJellyMethod(dto, ct);
     return Ok(res);
   }
+
+  [HttpDelete("delete-jelly-method")]
+  public async Task<IActionResult> DeleteCoinJellyMethod([FromBody] Guid id, CancellationToken ct)
+  {
+    var res = await coinJellyService.DeleteCoinJellyMethod(id, ct);
+    return Ok(res);
+  }
 }

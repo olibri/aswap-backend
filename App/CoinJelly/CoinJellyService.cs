@@ -30,6 +30,17 @@ public sealed class CoinJellyService(
     return existing.Id;
   }
 
+  public async Task<bool> DeleteCoinJellyMethod(Guid id, CancellationToken ct)
+  {
+    await using var db = await NewDb(ct);
+    var entity = await db.Set<CoinJellyEntity>()
+                   .FirstOrDefaultAsync(x => x.Id == id, ct)
+                 ?? throw new KeyNotFoundException($"CoinJelly method not found: {id}");
+    db.Remove(entity);
+    await db.SaveChangesAsync(ct);
+    return true;
+  }
+
   public async Task<CoinJellyAccountHistoryRequest[]> GetJellyHistoryAsync(string userWallet, CancellationToken ct)
   {
     await using var db = await NewDb(ct);
@@ -121,6 +132,7 @@ public sealed class CoinJellyService(
 
     return rows
       .Select(e => new CoinJellyDto(
+        e.Id,
         e.CompanyWalletAddress,
         e.CryptoCurrency,
         e.CryptoCurrencyChain))

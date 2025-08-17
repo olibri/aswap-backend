@@ -12,7 +12,7 @@ public static class CoinJellyTestExtensions
     string code = "usdt",
     string chain = "solana",
     CancellationToken ct = default)
-    => svc.AddNewCoinJellyMethod(new CoinJellyDto(wallet, code, chain), ct);
+    => svc.AddNewCoinJellyMethod(new CoinJellyDto(new Guid(), wallet, code, chain), ct);
 
     public static Task<CoinJellyAccountHistoryRequest> CreateJellyAsync(
       this ICoinJellyService svc,

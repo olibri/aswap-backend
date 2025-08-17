@@ -5,6 +5,8 @@ namespace Domain.Interfaces.CoinJelly;
 public interface ICoinJellyService
 {
   Task<Guid> AddNewCoinJellyMethod(CoinJellyDto dto, CancellationToken ct);
+
+  Task<bool> DeleteCoinJellyMethod(Guid id, CancellationToken ct);
   Task<CoinJellyAccountHistoryRequest[]> GetJellyHistoryAsync(string userWallet, CancellationToken ct);
   Task<CoinJellyAccountHistoryRequest> CreateNewJellyAsync(NewUserCoinJellyRequest dto, CancellationToken ct);
 
