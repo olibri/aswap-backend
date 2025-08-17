@@ -20,7 +20,7 @@ public class CoinJellyTests(TestFixture fixture) : IClassFixture<TestFixture>
     var coinJelly = fixture.GetService<ICoinJellyService>();
 
     var id1 = await coinJelly.AddMethodAsync("WALLET1", "USDT", "SOLANA");
-    var id2 = await coinJelly.AddMethodAsync("WALLET2", "usdt", "solana");
+    var id2 = await coinJelly.AddMethodAsync("WALLET2", "USDT", "SOLANA");
 
     id1.ShouldNotBe(Guid.Empty);
     id2.ShouldNotBe(Guid.Empty);

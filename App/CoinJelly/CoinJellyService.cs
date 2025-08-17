@@ -21,9 +21,8 @@ public sealed class CoinJellyService(
     Validate(dto);
 
     await using var db = await NewDb(ct);
-    var (code, chain) = NormalizeCodes(dto);
 
-    var existing = await FindMethodAsync(db, code, chain, ct);
+    var existing = await FindMethodAsync(db, dto.CryptoCurrency, dto.CryptoCurrencyChain, ct);
     if (existing is null)
       return await InsertMethodAsync(db, dto, ct);
 
@@ -136,11 +135,6 @@ public sealed class CoinJellyService(
       throw new ArgumentException("CryptoCurrencyChain is required.");
     if (string.IsNullOrWhiteSpace(dto.CompanyWalletAddress))
       throw new ArgumentException("CompanyWalletAddress is required.");
-  }
-
-  private static (string Code, string Chain) NormalizeCodes(CoinJellyDto dto)
-  {
-    return (dto.CryptoCurrency.Trim().ToUpperInvariant(), dto.CryptoCurrencyChain.Trim().ToUpperInvariant());
   }
 
 
