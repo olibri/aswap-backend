@@ -1,4 +1,5 @@
 ﻿using App.Mapper;
+using App.Services.QuerySpec.Realization;
 using Domain.Enums;
 using Domain.Interfaces.CoinJelly;
 using Domain.Interfaces.TelegramBot;
@@ -140,6 +141,14 @@ public sealed class CoinJellyService(
       .ToArray();
   }
 
+  public async Task<CoinJellyAccountHistoryRequest[]> GetAllJellyHistoryAsync(CoinJellyHistoryQueryAsync q,CancellationToken ct)
+  {
+    await using var db = await NewDb(ct);
+    var src = db.Set<CoinJellyAccountHistoryEntity>().AsNoTracking();
+
+    var page = await q.BuildSpec().ExecuteAsync(src);
+    return page.Data.Select(CoinJellyMapper.ToApi).ToArray();
+  }
 
   private static void Validate(CoinJellyDto dto)
   {

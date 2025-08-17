@@ -5,6 +5,7 @@ using Domain.Interfaces.Services;
 using Domain.Models.Api.Auth;
 using Domain.Models.Api.CoinJelly;
 using Domain.Models.Api.Metrics;
+using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -71,5 +72,13 @@ public class AdminController(
   {
     var res = await coinJellyService.UpdateJellyAsync(dto, ct);
     return Ok(res);
+  }
+
+  [HttpGet]
+  [Route("jelly-history")]
+  public async Task<ActionResult<CoinJellyAccountHistoryRequest[]>> GetJellyHistory([FromQuery] CoinJellyHistoryQueryAsync q,
+    CancellationToken ct)
+  {
+    return Ok(await coinJellyService.GetAllJellyHistoryAsync(q,ct));
   }
 }
