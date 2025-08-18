@@ -6,6 +6,8 @@ using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.CoinJelly;
 using Domain.Models.DB;
 using Infrastructure;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +19,7 @@ public sealed class CoinJellyService(
   ILogger<CoinJellyService> log)
   : ICoinJellyService
 {
+  private const decimal Persentage = 3; 
   public async Task<Guid> AddNewCoinJellyMethod(CoinJellyDto dto, CancellationToken ct)
   {
     Validate(dto);
@@ -59,6 +62,12 @@ public sealed class CoinJellyService(
   public async Task<CoinJellyAccountHistoryRequest> CreateNewJellyAsync(NewUserCoinJellyRequest dto,
     CancellationToken ct)
   {
+    if (dto.AmountUserWannaGet > dto.AmountUserSend * (Persentage / 100))
+    {
+      // Return null to indicate a bad request, or throw an exception if you want to handle it elsewhere.
+      // Alternatively, you can change the return type to IResult and return Results.BadRequest directly.
+      return null;
+    }
     await using var db = await NewDb(ct);
 
     var entity = new CoinJellyAccountHistoryEntity

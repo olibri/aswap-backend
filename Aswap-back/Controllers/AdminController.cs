@@ -5,7 +5,6 @@ using Domain.Interfaces.Services;
 using Domain.Models.Api.Auth;
 using Domain.Models.Api.CoinJelly;
 using Domain.Models.Api.Metrics;
-using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
