@@ -18,11 +18,12 @@ services:
   app:
     build:
       context: .
-      dockerfile: Aswap-back/Dockerfile
+      dockerfile: Dockerfile
     depends_on:
       - db
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - PORT=8080
       - ConnectionStrings__Default=Host=db;Port=5432;Database=p2p_db;Username=postgres;Password=postgres
     ports:
       - "8085:8080"
