@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.Mime;
+using System.Text;
 using App.Chat;
 using App.CoinJelly;
 using App.Db;
@@ -9,6 +10,12 @@ using App.Parsing;
 using App.Services.Accounts;
 using App.Services.Auth;
 using App.Services.Auth.NetworkVerifier;
+using App.Services.CoinPrice;
+using App.Services.CoinPrice.Jobs;
+using App.Services.CoinPrice.Jupiter;
+using App.Services.CoinPrice.Planner;
+using App.Services.CoinPrice.TokenRepo;
+using App.Services.CoinPrice.Workers;
 using App.Services.Order;
 using App.Services.PaymentMethod;
 using App.Services.PaymentMethod.BackgroundWorker;
@@ -31,6 +38,11 @@ using Domain.Interfaces.Metrics;
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.Services.Auth;
+using Domain.Interfaces.Services.CoinService;
+using Domain.Interfaces.Services.CoinService.Jobs;
+using Domain.Interfaces.Services.CoinService.Jupiter;
+using Domain.Interfaces.Services.CoinService.Planner;
+using Domain.Interfaces.Services.CoinService.TokenRepo;
 using Domain.Interfaces.Services.IP;
 using Domain.Interfaces.Services.Order;
 using Domain.Interfaces.Services.PaymentMethod;
@@ -38,6 +50,7 @@ using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models;
 using Domain.Models.Api.Auth;
+using Domain.Models.Api.CoinPrice;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -81,8 +94,47 @@ public class RootBuilder
         builder.RegisterType<BestPriceService>().As<IBestPriceService>().InstancePerLifetimeScope();
         builder.RegisterType<AdminMetricsService>().As<IAdminMetricsService>().InstancePerLifetimeScope();
         builder.RegisterType<CoinJellyService>().As<ICoinJellyService>().InstancePerLifetimeScope();
+        builder.RegisterType<CoinService>().As<ICoinService>().InstancePerLifetimeScope();
 
+        builder.Register(ctx =>
+            ctx.Resolve<IDbContextFactory<Infrastructure.P2PDbContext>>().CreateDbContext())
+          .As<Infrastructure.P2PDbContext>()
+          .InstancePerLifetimeScope();
 
+        // Repositories
+        builder.RegisterType<TokenRepository>()
+          .As<ITokenRepository>()
+          .InstancePerLifetimeScope();
+
+        builder.RegisterType<PriceSnapshotRepository>()
+          .As<IPriceSnapshotRepository>()
+          .InstancePerLifetimeScope();
+
+        builder.RegisterType<AppLockService>()
+          .As<IAppLockService>()
+          .InstancePerLifetimeScope();
+
+        builder.RegisterType<PriceBatchPlanner>()
+          .As<IPriceBatchPlanner>()
+          .SingleInstance();
+
+        // Jobs
+        builder.RegisterType<TokenBootstrapJob>()
+          .As<ITokenBootstrapJob>()
+          .InstancePerDependency();
+
+        builder.RegisterType<MinutePriceIngestJob>()
+          .As<IMinutePriceIngestJob>()
+          .InstancePerDependency();
+
+        builder.RegisterType<DailyPriceRetentionJob>()
+          .As<IDailyPriceRetentionJob>()
+          .InstancePerDependency();
+
+        // Facade
+        builder.RegisterType<PriceIngestFacade>()
+          .As<IPriceIngestFacade>()
+          .InstancePerLifetimeScope();
         builder.RegisterType<RefreshTokenService>()
           .As<IRefreshTokenService>()
           .InstancePerLifetimeScope();
@@ -214,7 +266,7 @@ public class RootBuilder
         services.AddMemoryCache();
         services.Configure<TokenOptions>(cfg.GetSection("Jwt"));
         services.AddSingleton<ITokenService, TokenService>();
-
+        services.AddSingleton<TimeProvider>(TimeProvider.System);
         services.AddHttpContextAccessor();
 
         services.AddControllers();
@@ -266,10 +318,32 @@ public class RootBuilder
             }
           });
         });
+        var priceCfg = new PriceIngestConfig(
+          Quote: ctx.Configuration["PriceIngest:Quote"] ?? "USDC",
+          PollEveryMinutes: ctx.Configuration.GetValue<int?>("PriceIngest:PollEveryMinutes") ?? 5,
+          MaxIdsPerRequest: ctx.Configuration.GetValue<int?>("PriceIngest:MaxIdsPerRequest") ?? 50,
+          RequestsPerWindow: ctx.Configuration.GetValue<int?>("PriceIngest:RequestsPerWindow") ?? 60,
+          Window: TimeSpan.FromSeconds(ctx.Configuration.GetValue<int?>("PriceIngest:WindowSeconds") ?? 60)
+        );
+        services.AddSingleton(priceCfg);
 
+        // --- Typed HttpClients
+        services.AddHttpClient<IJupTokenClient, JupTokenClient>(c =>
+        {
+          c.BaseAddress = new Uri("https://lite-api.jup.ag");
+          c.Timeout = TimeSpan.FromSeconds(10);
+        });
+
+        services.AddHttpClient<IJupPriceClient, JupPriceClient>(c =>
+        {
+          c.BaseAddress = new Uri("https://lite-api.jup.ag");
+          c.Timeout = TimeSpan.FromSeconds(10);
+        });
         services.AddSingleton<IJsonSerializer, SystemTextJsonSerializer>();
         services.AddSingleton<OutboxSaveChangesInterceptor>();
-
+        services.AddHostedService<TokenBootstrapHostedService>();
+        services.AddHostedService<MinutePriceIngestHostedService>();
+        services.AddHostedService<DailyPriceRetentionHostedService>();
 
         services.AddDbContextFactory<P2PDbContext>((sp, opt) =>
           opt.UseNpgsql(cfg.GetConnectionString("PgDatabase"))

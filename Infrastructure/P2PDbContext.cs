@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Models.DB;
+using Domain.Models.DB.CoinPrice;
 using Domain.Models.DB.Currency;
 using Domain.Models.DB.Metrics;
 using Domain.Models.DB.PaymentMethod;
@@ -47,6 +48,11 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
   public DbSet<CoinJellyEntity> CoinJelly { get; set; }
   public DbSet<CoinJellyAccountHistoryEntity> CoinJellyAccountHistory { get; set; }
 
+  /* ─────────── CoinPrice ─────────── */
+  public DbSet<PriceSnapshotEntity> PriceSnapshot { get; set; }
+  public DbSet<TokenEntity> Tokens { get; set; }
+  public DbSet<AppLockEntity> AppLocks { get; set; }
+
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     modelBuilder.Entity<EscrowOrderEntity>(entity =>
@@ -54,15 +60,60 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
       entity.Property(e => e.CreatedAtUtc)
         .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
       entity.Property(x => x.EscrowStatus)
-        .HasConversion<int>()          // або .HasConversion<short>() якщо хочеш smallint
-        .HasColumnType("integer")      // "smallint" якщо <short>
+        .HasConversion<int>()
+        .HasColumnType("integer")
         .HasColumnName("escrow_status");
       entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, Status = x.EscrowStatus, x.Price })
         .HasDatabaseName("ix_escrow_best_price");
     });
 
+    modelBuilder.Entity<AppLockEntity>(e =>
+    {
+      e.HasKey(x => x.Name);
+      e.Property(x => x.CreatedAtUtc).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+      e.HasIndex(x => x.LockedUntilUtc);
+    });
 
+    modelBuilder.Entity<PriceSnapshotEntity>(e =>
+    {
+      e.ToTable("price_snapshot_minute");
+      e.HasKey(x => x.Id);
 
+      e.Property(x => x.TokenMint).IsRequired();
+      e.Property(x => x.Quote).HasMaxLength(16).IsRequired();
+      e.Property(x => x.Price).HasColumnType("numeric(38,18)").IsRequired();
+
+      e.Property(x => x.CollectedAtUtc)
+        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      e.HasIndex(x => new { x.TokenMint, x.Quote, x.MinuteBucketUtc })
+        .IsUnique()
+        .HasDatabaseName("ux_price_minute");
+
+      e.HasIndex(x => x.MinuteBucketUtc)
+        .HasDatabaseName("ix_price_minute_bucket");
+
+      e.HasIndex(x => new { x.TokenMint, x.Quote })
+        .HasDatabaseName("ix_price_token_quote");
+    });
+
+    modelBuilder.Entity<TokenEntity>(e =>
+    {
+      e.ToTable("token");
+      e.HasKey(x => x.Mint);
+
+      e.Property(x => x.Symbol).HasMaxLength(32);
+      e.Property(x => x.Name).HasMaxLength(128);
+      e.Property(x => x.Decimals);
+      e.Property(x => x.IsVerified);
+
+      e.Property(x => x.CreatedAtUtc)
+        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      // не унікальні, просто допоміжні індекси (опційно)
+      e.HasIndex(x => x.Symbol).HasDatabaseName("ix_token_symbol");
+      e.HasIndex(x => x.IsVerified).HasDatabaseName("ix_token_verified");
+    });
     modelBuilder.Entity<EscrowOrderPaymentMethodEntity>(entity =>
     {
       entity.HasKey(x => new { x.OrderId, x.MethodId });

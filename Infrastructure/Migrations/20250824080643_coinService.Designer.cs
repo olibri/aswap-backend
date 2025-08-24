@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250824080643_coinService")]
+    partial class coinService
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -157,33 +160,6 @@ namespace Infrastructure.Migrations
                         .HasDatabaseName("ux_coin_jelly_currency_chain");
 
                     b.ToTable("coin_jelly");
-                });
-
-            modelBuilder.Entity("Domain.Models.DB.CoinPrice.AppLockEntity", b =>
-                {
-                    b.Property<string>("Name")
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at_utc")
-                        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
-
-                    b.Property<Guid?>("LockOwner")
-                        .HasColumnType("uuid")
-                        .HasColumnName("lock_owner");
-
-                    b.Property<DateTime?>("LockedUntilUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("locked_until_utc");
-
-                    b.HasKey("Name");
-
-                    b.HasIndex("LockedUntilUtc");
-
-                    b.ToTable("app_lock");
                 });
 
             modelBuilder.Entity("Domain.Models.DB.CoinPrice.PriceSnapshotEntity", b =>
