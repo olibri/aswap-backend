@@ -10,7 +10,7 @@ public sealed class JupPriceClient(HttpClient http) : IJupPriceClient
     IEnumerable<string> mints, CancellationToken ct)
   {
     var ids = string.Join(",", mints);
-    var url = $"/price/v3/price?ids={Uri.EscapeDataString(ids)}&vsToken=USDC";
+    var url = $"/price/v3/price?ids={Uri.EscapeDataString(ids)}";
 
     using var res = await http.GetAsync(url, ct);
     res.EnsureSuccessStatusCode();

@@ -14,7 +14,7 @@ public class PriceSnapshotEntity
   [Key] [Column("id")] public long Id { get; set; }
 
   [Column("token_mint")] public string TokenMint { get; set; } = null!;
-  [Column("quote")] public string Quote { get; set; } = "USDC";
+  [Column("quote")] public string Quote { get; set; } = " ";
 
   [Column("price", TypeName = "numeric(38,18)")]
   public decimal Price { get; set; }

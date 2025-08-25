@@ -5,7 +5,6 @@ using Domain.Interfaces.Services.CoinService;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
-using Domain.Models.Dtos.BierdEye;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aswap_back.Controllers;
@@ -71,7 +70,7 @@ public class PlatformController(
 
   [HttpGet]
   [Route("coin-prices/{coinX}/{coinY}")]
-  [ProducesResponseType(typeof(List<OhlcvCoinResponse>), 200)]
+  [ProducesResponseType(typeof(List<TokenDailyPriceResponse>), 200)]
   public async Task<IActionResult> GetCoinPrices(string coinX, string coinY)
   {
     log.LogInformation("Coin prices");

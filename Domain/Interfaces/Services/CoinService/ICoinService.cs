@@ -1,8 +1,8 @@
-﻿using Domain.Models.Dtos.BierdEye;
+﻿using Domain.Models.Dtos;
 
 namespace Domain.Interfaces.Services.CoinService;
 
 public interface ICoinService
 {
-  Task<OhlcvCoinResponse> GetPricesAsync(string coinX, string coinY);
+  Task<TokenDailyPriceResponse[]> GetPricesAsync(string coinX, string coinY);
 }
