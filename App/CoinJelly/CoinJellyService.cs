@@ -6,8 +6,6 @@ using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.CoinJelly;
 using Domain.Models.DB;
 using Infrastructure;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

@@ -73,9 +73,9 @@ public class CoinPriceTests(TestFixture fixture) : IClassFixture<TestFixture>
     await tokenRepo.UpsertAsync(new[]
     {
       new TokenDto(
-        "So11111111111111111111111111111111111111112", "SOL", "Solana", 9, true),
+        "So11111111111111111111111111111111111111112", "SOL", "Solana", 9, true, "xxx"),
       new TokenDto(
-        "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "USDC", "USD Coin", 6, true)
+        "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "USDC", "USD Coin", 6, true, "xxx")
     }, default);
 
     var cfg = new PriceIngestConfig(
@@ -288,8 +288,8 @@ public class CoinPriceTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     await tokenRepo.UpsertAsync(new[]
     {
-      new TokenDto("So11111111111111111111111111111111111111112", "SOL", "Solana", 9, true),
-      new TokenDto("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "USDC", "USD Coin", 6, true)
+      new TokenDto("So11111111111111111111111111111111111111112", "SOL", "Solana", 9, true, "xxx"),
+      new TokenDto("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "USDC", "USD Coin", 6, true, "xxx")
     }, default);
 
     var today = DateTime.UtcNow.Date;

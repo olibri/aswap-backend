@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250827161740_SyncUuidPk1")]
+    partial class SyncUuidPk1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -184,50 +187,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("LockedUntilUtc");
 
                     b.ToTable("app_lock");
-                });
-
-            modelBuilder.Entity("Domain.Models.DB.CoinPrice.PriceSnapshotEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("CollectedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("collected_at_utc")
-                        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
-
-                    b.Property<DateTime>("MinuteBucketUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("minute_bucket_utc");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric(38,18)")
-                        .HasColumnName("price");
-
-                    b.Property<string>("TokenMint")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token_mint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MinuteBucketUtc")
-                        .HasDatabaseName("ix_price_minute_bucket");
-
-                    b.HasIndex("TokenMint", "MinuteBucketUtc")
-                        .IsUnique()
-                        .HasDatabaseName("ux_price_minute");
-
-                    b.HasIndex(new[] { "MinuteBucketUtc" }, "ix_price_minute_bucket");
-
-                    b.HasIndex(new[] { "TokenMint", "MinuteBucketUtc" }, "ux_price_minute")
-                        .IsUnique();
-
-                    b.ToTable("price_snapshot_minute", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.DB.CoinPrice.TokenEntity", b =>

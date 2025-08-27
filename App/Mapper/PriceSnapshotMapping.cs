@@ -12,7 +12,7 @@ public static class PriceSnapshotMapping
     IEnumerable<PriceSnapshotEntity> snapshotsForDay)
   {
     var ordered = snapshotsForDay
-      .Where(s => s.TokenMint == tokenMint && s.Quote == quote &&
+      .Where(s => s.TokenMint == tokenMint &&
                   DateOnly.FromDateTime(s.MinuteBucketUtc) == dateUtc)
       .OrderBy(s => s.MinuteBucketUtc)
       .ToList();
@@ -28,7 +28,6 @@ public static class PriceSnapshotMapping
     return new TokenDailyPriceResponse
     {
       TokenMint = tokenMint,
-      Quote = quote,
       DateUtc = dateUtc,
       Points = points,
       FirstCollectedUtc = ordered.FirstOrDefault()?.CollectedAtUtc,

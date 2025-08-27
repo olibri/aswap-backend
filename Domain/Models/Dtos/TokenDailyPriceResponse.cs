@@ -5,7 +5,6 @@ namespace Domain.Models.Dtos;
 public sealed class TokenDailyPriceResponse
 {
   public string TokenMint { get; init; } = null!;
-  public string Quote { get; init; } = "USDC";
 
   public DateOnly DateUtc { get; init; }
 

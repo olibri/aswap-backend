@@ -5,5 +5,6 @@ public sealed record TokenDto(
   string? Symbol,
   string? Name,
   int? Decimals,
-  bool? IsVerified
+  bool? IsVerified,
+  string? Icon
 );

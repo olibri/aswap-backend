@@ -84,7 +84,6 @@ public class CoinService(IDbContextFactory<P2PDbContext> dbFactory) : ICoinServi
     return new TokenDailyPriceResponse
     {
       TokenMint = mint,
-      Quote = list.Count > 0 ? list[0].Quote : "USDC",
       DateUtc = dateUtc,
       Points = points,
       FirstCollectedUtc = firstCollected,

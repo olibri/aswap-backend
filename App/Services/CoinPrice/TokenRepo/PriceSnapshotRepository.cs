@@ -22,23 +22,21 @@ public sealed class PriceSnapshotRepository(P2PDbContext db) : IPriceSnapshotRep
 
     var existingKeys = await db.Set<PriceSnapshotEntity>()
         .Where(x => mints.Contains(x.TokenMint)
-                 && quotes.Contains(x.Quote)
                  && buckets.Contains(x.MinuteBucketUtc))
-        .Select(x => new { x.TokenMint, x.Quote, x.MinuteBucketUtc })
+        .Select(x => new { x.TokenMint, x.MinuteBucketUtc })
         .AsNoTracking()
         .ToListAsync(ct);
 
     var existSet = existingKeys
-        .Select(k => (k.TokenMint, k.Quote, k.MinuteBucketUtc))
+        .Select(k => (k.TokenMint, k.MinuteBucketUtc))
         .ToHashSet();
 
     // INSERT-и
     var toInsert = latest
-        .Where(kv => !existSet.Contains((kv.Key.TokenMint, kv.Key.Quote, kv.Key.MinuteBucketUtc)))
+        .Where(kv => !existSet.Contains((kv.Key.TokenMint, kv.Key.MinuteBucketUtc)))
         .Select(kv => new PriceSnapshotEntity
         {
           TokenMint = kv.Key.TokenMint,
-          Quote = kv.Key.Quote,
           MinuteBucketUtc = kv.Key.MinuteBucketUtc,
           Price = kv.Value.Price,
           CollectedAtUtc = kv.Value.CollectedAtUtc
@@ -48,11 +46,10 @@ public sealed class PriceSnapshotRepository(P2PDbContext db) : IPriceSnapshotRep
     if (toInsert.Count > 0)
       await db.Set<PriceSnapshotEntity>().AddRangeAsync(toInsert, ct);
 
-    foreach (var (key, dto) in latest.Where(kv => existSet.Contains((kv.Key.TokenMint, kv.Key.Quote, kv.Key.MinuteBucketUtc))))
+    foreach (var (key, dto) in latest.Where(kv => existSet.Contains((kv.Key.TokenMint, kv.Key.MinuteBucketUtc))))
     {
       await db.Set<PriceSnapshotEntity>()
           .Where(x => x.TokenMint == key.TokenMint
-                   && x.Quote == key.Quote
                    && x.MinuteBucketUtc == key.MinuteBucketUtc)
           .ExecuteUpdateAsync(set => set
               .SetProperty(x => x.Price, dto.Price)

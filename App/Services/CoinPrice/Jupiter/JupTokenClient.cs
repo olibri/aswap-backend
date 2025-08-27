@@ -36,7 +36,6 @@ public sealed class JupTokenClient(HttpClient http) : IJupTokenClient
     var list = new List<TokenDto>();
     foreach (var el in items)
     {
-      // Jupiter іноді віддає mint як "id", інколи як "address"
       var mint = el.TryGetProperty("address", out var a) ? a.GetString()
         : el.TryGetProperty("id", out var i) ? i.GetString()
         : null;
@@ -45,8 +44,9 @@ public sealed class JupTokenClient(HttpClient http) : IJupTokenClient
       var symbol = el.TryGetProperty("symbol", out var s) ? s.GetString() : null;
       var name = el.TryGetProperty("name", out var n) ? n.GetString() : null;
       int? decimals = el.TryGetProperty("decimals", out var d) && d.TryGetInt32(out var di) ? di : null;
+      var iconUrl = el.TryGetProperty("icon", out var icon) ? icon.GetString() : null;
 
-      list.Add(new TokenDto(mint!, symbol, name, decimals, true));
+      list.Add(new TokenDto(mint, symbol, name, decimals, true, iconUrl));
     }
 
     return list;

@@ -40,6 +40,7 @@ public sealed class TokenRepository(IDbContextFactory<P2PDbContext> factory) : I
         e.Name = t.Name;
         e.Decimals = t.Decimals;
         e.IsVerified = t.IsVerified;
+        e.Icon = t.Icon;
       }
       else
       {
@@ -49,7 +50,8 @@ public sealed class TokenRepository(IDbContextFactory<P2PDbContext> factory) : I
           Symbol = t.Symbol,
           Name = t.Name,
           Decimals = t.Decimals,
-          IsVerified = t.IsVerified
+          IsVerified = t.IsVerified,
+          Icon = t.Icon
         });
       }
     }

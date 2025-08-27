@@ -78,23 +78,23 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     {
       e.ToTable("price_snapshot_minute");
       e.HasKey(x => x.Id);
-
+      e.Property(x => x.Id)
+        .HasColumnName("id")
+        .HasColumnType("uuid")
+        .ValueGeneratedOnAdd()
+        .HasDefaultValueSql("gen_random_uuid()");
       e.Property(x => x.TokenMint).IsRequired();
-      e.Property(x => x.Quote).HasMaxLength(16).IsRequired();
       e.Property(x => x.Price).HasColumnType("numeric(38,18)").IsRequired();
 
       e.Property(x => x.CollectedAtUtc)
         .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
 
-      e.HasIndex(x => new { x.TokenMint, x.Quote, x.MinuteBucketUtc })
+      e.HasIndex(x => new { x.TokenMint, x.MinuteBucketUtc })
         .IsUnique()
         .HasDatabaseName("ux_price_minute");
 
       e.HasIndex(x => x.MinuteBucketUtc)
         .HasDatabaseName("ix_price_minute_bucket");
-
-      e.HasIndex(x => new { x.TokenMint, x.Quote })
-        .HasDatabaseName("ix_price_token_quote");
     });
 
     modelBuilder.Entity<TokenEntity>(e =>
