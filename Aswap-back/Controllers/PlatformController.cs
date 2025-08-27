@@ -77,4 +77,14 @@ public class PlatformController(
     var res = await coinService.GetPricesAsync(coinX, coinY);
     return Ok(res);
   }
+
+  [HttpGet]
+  [Route("coins")]
+  [ProducesResponseType(typeof(List<TokenDailyPriceResponse>), 200)]
+  public async Task<IActionResult> GetCoins(CancellationToken ct)
+  {
+    log.LogInformation("Coins");
+    var res = await coinService.GetCoinsAsync(ct);
+    return Ok(res);
+  }
 }

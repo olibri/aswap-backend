@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces.Services.CoinService;
+using Domain.Models.Api.CoinPrice;
 using Domain.Models.DB.CoinPrice;
 using Domain.Models.Dtos;
 using Infrastructure;
@@ -30,6 +31,26 @@ public class CoinService(IDbContextFactory<P2PDbContext> dbFactory) : ICoinServi
     }).ToArray();
 
     return result;
+  }
+
+  public async Task<TokenDto[]> GetCoinsAsync(CancellationToken ct)
+  {
+    await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+    var tokens = await db.Set<TokenEntity>()
+      .AsNoTracking()
+      .OrderBy(t => t.Symbol ?? t.Name ?? t.Mint) // зручне сортування
+      .Select(t => new TokenDto(
+        t.Mint,
+        t.Symbol,
+        t.Name,
+        t.Decimals,
+        t.IsVerified,
+        t.Icon
+      ))
+      .ToArrayAsync(ct);
+
+    return tokens;
   }
 
 
