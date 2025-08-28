@@ -1,4 +1,5 @@
 ﻿using Domain.Models.Api.CoinPrice;
+using Microsoft.AspNetCore.Builder.Extensions;
 
 namespace Domain.Interfaces.Services.CoinService.Jupiter;
 

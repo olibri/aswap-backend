@@ -2,9 +2,12 @@
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Services.CoinService;
+using Domain.Interfaces.Services.CoinService.Jupiter;
 using Domain.Interfaces.TelegramBot;
+using Domain.Models.Api.CoinPrice;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
+using Domain.Models.Dtos.Jupiter;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aswap_back.Controllers;
@@ -16,6 +19,7 @@ public class PlatformController(
   ITgBotHandler tgBotHandler,
   ICoinService coinService,
   IChatDbCommand chatDbCommand,
+  IJupiterSwapApi jupiter,
   ILogger<PlatformController> log) : Controller
 {
   [HttpPost]
@@ -85,6 +89,39 @@ public class PlatformController(
   {
     log.LogInformation("Coins");
     var res = await coinService.GetCoinsAsync(ct);
+    return Ok(res);
+  }
+
+  [HttpGet("jupiter/quote")]
+  [ProducesResponseType(typeof(QuoteResponseDto), 200)]
+  public async Task<IActionResult> GetJupiterQuote([FromQuery] QuoteQueryDto q, CancellationToken ct)
+  {
+    if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+    log.LogInformation("[JUP] Quote {Input}->{Output} amount={Amount} swapMode={Mode} slippageBps={Slip}",
+      q.InputMint, q.OutputMint, q.Amount, q.SwapMode, q.SlippageBps);
+
+    var quote = await jupiter.GetQuoteAsync(
+      new QuoteRequest(q.InputMint, q.OutputMint, q.Amount, q.SwapMode, q.SlippageBps),
+      ct);
+
+    return Ok(quote);
+  }
+
+  [HttpPost("jupiter/swap")]
+  [ProducesResponseType(typeof(SwapResponseDto), 200)]
+  public async Task<IActionResult> BuildJupiterSwap([FromBody] SwapBuildRequestDto body, CancellationToken ct)
+  {
+    if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+    log.LogInformation("[JUP] Swap build for {User}", body.UserPublicKey);
+
+    var res = await jupiter.CreateSwapAsync(
+      body.UserPublicKey,
+      body.Quote,
+      body.Options,
+      ct);
+
     return Ok(res);
   }
 }

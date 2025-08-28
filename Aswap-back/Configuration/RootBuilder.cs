@@ -339,6 +339,12 @@ public class RootBuilder
           c.BaseAddress = new Uri("https://lite-api.jup.ag");
           c.Timeout = TimeSpan.FromSeconds(10);
         });
+
+        services.AddHttpClient<IJupiterSwapApi, JupSwap>(c =>
+        {
+          c.BaseAddress = new Uri("https://lite-api.jup.ag/swap/v1/");
+          c.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        });
         services.AddSingleton<IJsonSerializer, SystemTextJsonSerializer>();
         services.AddSingleton<OutboxSaveChangesInterceptor>();
         services.AddHostedService<TokenBootstrapHostedService>();
