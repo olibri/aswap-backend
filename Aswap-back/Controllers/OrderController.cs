@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aswap_back.Controllers;
 
-[Authorize]
+//[Authorize]
 [ApiController]
 [Route("api/orders")]
 public class OrderController(
