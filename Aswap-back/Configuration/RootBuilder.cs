@@ -95,6 +95,10 @@ public class RootBuilder
         builder.RegisterType<AdminMetricsService>().As<IAdminMetricsService>().InstancePerLifetimeScope();
         builder.RegisterType<CoinJellyService>().As<ICoinJellyService>().InstancePerLifetimeScope();
         builder.RegisterType<CoinService>().As<ICoinService>().InstancePerLifetimeScope();
+        
+        builder.RegisterType<CoinGeckoPriceValidatorService>()
+          .As<IPriceValidatorService>()
+          .SingleInstance();
 
         builder.Register(ctx =>
             ctx.Resolve<IDbContextFactory<Infrastructure.P2PDbContext>>().CreateDbContext())

@@ -2,22 +2,28 @@
 using App.Services.QuerySpec.Realization;
 using Domain.Enums;
 using Domain.Interfaces.CoinJelly;
+using Domain.Interfaces.Services.CoinService;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.CoinJelly;
 using Domain.Models.DB;
 using Infrastructure;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Math;
 
 namespace App.CoinJelly;
 
 public sealed class CoinJellyService(
   IDbContextFactory<P2PDbContext> dbFactory,
   ITgBotHandler tgBotHandler,
+  IPriceValidatorService priceValidatorService,
   ILogger<CoinJellyService> log)
   : ICoinJellyService
 {
-  private const decimal Persentage = 3; 
+  private const decimal Persentage = 3;
+  private const decimal UsdTolerance = 1m; // ±1 USD
+
   public async Task<Guid> AddNewCoinJellyMethod(CoinJellyDto dto, CancellationToken ct)
   {
     Validate(dto);
@@ -57,16 +63,35 @@ public sealed class CoinJellyService(
     return items.Select(CoinJellyMapper.ToApi).ToArray();
   }
 
+  public async Task<(bool ok, string? reason, decimal expectedReceive)> ValidateJellyQuoteAsync(
+    NewUserCoinJellyRequest dto, CancellationToken ct)
+  {
+    if (dto.AmountUserSend <= 0)
+      return (false, "AmountUserSend must be > 0", 0);
+
+    var sellUsd = await priceValidatorService.GetUsdPriceAsync(dto.CryptoCurrencyFromUser, ct);
+    var buyUsd = await priceValidatorService.GetUsdPriceAsync(dto.NewUserCrypto, ct);
+
+    if (sellUsd is null || buyUsd is null || sellUsd <= 0 || buyUsd <= 0)
+      return (false, "Price unavailable", 0);
+
+    var sendUsd = dto.AmountUserSend * sellUsd.Value;
+    var recvUsd = dto.AmountUserWannaGet * buyUsd.Value;
+
+    if (recvUsd > sendUsd + UsdTolerance)
+      return (false, $"Receive ${recvUsd:F2} > Send ${sendUsd:F2} + tol ${UsdTolerance}", 0);
+
+    var netUsd = sendUsd * (1 - Persentage);
+    var expectedReceive = netUsd / buyUsd.Value;
+
+    return (true, null, expectedReceive);
+  }
+
   public async Task<CoinJellyAccountHistoryRequest> CreateNewJellyAsync(NewUserCoinJellyRequest dto,
     CancellationToken ct)
   {
-    //TODO: add price validation
-    //if (dto.AmountUserWannaGet > dto.AmountUserSend * (Persentage / 100))
-    //{
-    //  // Return null to indicate a bad request, or throw an exception if you want to handle it elsewhere.
-    //  // Alternatively, you can change the return type to IResult and return Results.BadRequest directly.
-    //  return null;
-    //}
+    var (ok, reason, expectedReceive) = await ValidateJellyQuoteAsync(dto, ct);
+    if (!ok) return null;
     await using var db = await NewDb(ct);
 
     var entity = new CoinJellyAccountHistoryEntity
@@ -149,7 +174,8 @@ public sealed class CoinJellyService(
       .ToArray();
   }
 
-  public async Task<CoinJellyAccountHistoryRequest[]> GetAllJellyHistoryAsync(CoinJellyHistoryQueryAsync q,CancellationToken ct)
+  public async Task<CoinJellyAccountHistoryRequest[]> GetAllJellyHistoryAsync(CoinJellyHistoryQueryAsync q,
+    CancellationToken ct)
   {
     await using var db = await NewDb(ct);
     var src = db.Set<CoinJellyAccountHistoryEntity>().AsNoTracking();
@@ -160,8 +186,10 @@ public sealed class CoinJellyService(
 
   private static void Validate(CoinJellyDto dto)
   {
-    if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyCode)) throw new ArgumentException("CryptoCurrencyCode is required.");
-    if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyName)) throw new ArgumentException("CryptoCurrencyName is required.");
+    if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyCode))
+      throw new ArgumentException("CryptoCurrencyCode is required.");
+    if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyName))
+      throw new ArgumentException("CryptoCurrencyName is required.");
     if (string.IsNullOrWhiteSpace(dto.CryptoCurrencyChain))
       throw new ArgumentException("CryptoCurrencyChain is required.");
     if (string.IsNullOrWhiteSpace(dto.CompanyWalletAddress))
