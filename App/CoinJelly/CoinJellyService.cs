@@ -60,12 +60,13 @@ public sealed class CoinJellyService(
   public async Task<CoinJellyAccountHistoryRequest> CreateNewJellyAsync(NewUserCoinJellyRequest dto,
     CancellationToken ct)
   {
-    if (dto.AmountUserWannaGet > dto.AmountUserSend * (Persentage / 100))
-    {
-      // Return null to indicate a bad request, or throw an exception if you want to handle it elsewhere.
-      // Alternatively, you can change the return type to IResult and return Results.BadRequest directly.
-      return null;
-    }
+    //TODO: add price validation
+    //if (dto.AmountUserWannaGet > dto.AmountUserSend * (Persentage / 100))
+    //{
+    //  // Return null to indicate a bad request, or throw an exception if you want to handle it elsewhere.
+    //  // Alternatively, you can change the return type to IResult and return Results.BadRequest directly.
+    //  return null;
+    //}
     await using var db = await NewDb(ct);
 
     var entity = new CoinJellyAccountHistoryEntity
