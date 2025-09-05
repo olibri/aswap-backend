@@ -53,8 +53,33 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
   public DbSet<TokenEntity> Tokens { get; set; }
   public DbSet<AppLockEntity> AppLocks { get; set; }
 
+  /* ─────────── SwapHistory ─────────── */
+  public DbSet<AccountSwapHistoryEntity> AccountSwapHistory { get; set; }
+
+
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
+    modelBuilder.Entity<AccountSwapHistoryEntity>(entity =>
+    {
+      entity.HasKey(x => x.Tx);
+
+      entity.HasIndex(x => new { x.CryptoFrom, x.CreatedAtUtc })
+        .HasDatabaseName("ix_swap_from_date")
+        .IncludeProperties(x => new { x.PriceUsdIn, x.AmountIn, x.Tx });
+
+      entity.HasIndex(x => new { x.CryptoTo, x.CreatedAtUtc })
+        .HasDatabaseName("ix_swap_to_date")
+        .IncludeProperties(x => new { x.PriceUsdOut, x.AmountOut, x.Tx });
+
+      entity.HasIndex(x => new { x.CryptoFrom, x.PriceUsdIn, x.CreatedAtUtc })
+        .HasDatabaseName("ix_swap_from_price_date");
+
+      entity.HasIndex(x => new { x.CryptoTo, x.PriceUsdOut, x.CreatedAtUtc })
+        .HasDatabaseName("ix_swap_to_price_date");
+
+      entity.HasIndex(x => x.CreatedAtUtc).HasDatabaseName("ix_swap_created_at");
+    });
+
     modelBuilder.Entity<EscrowOrderEntity>(entity =>
     {
       entity.Property(e => e.CreatedAtUtc)

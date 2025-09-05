@@ -1,5 +1,4 @@
 ﻿using Domain.Interfaces.Chat;
-using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Services.CoinService;
 using Domain.Interfaces.Services.CoinService.Jupiter;
@@ -20,6 +19,7 @@ public class PlatformController(
   ICoinService coinService,
   IChatDbCommand chatDbCommand,
   IJupiterSwapApi jupiter,
+  ISwapService swapService,
   ILogger<PlatformController> log) : Controller
 {
   [HttpPost]
@@ -115,13 +115,14 @@ public class PlatformController(
     if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
     log.LogInformation("[JUP] Swap build for {User}", body.UserPublicKey);
-
-    var res = await jupiter.CreateSwapAsync(
-      body.UserPublicKey,
-      body.Quote,
-      body.Options,
-      ct);
-
+    var res = await swapService.AddSwapAsync(body, ct);
     return Ok(res);
+  }
+
+  [HttpGet("jup/swap/history")]
+  [ProducesResponseType(typeof(QuoteResponseDto), 200)]
+  public async Task<IActionResult> GetSwapHistory([FromQuery] string userWallet, CancellationToken ct)
+  {
+    return Ok(quote);
   }
 }

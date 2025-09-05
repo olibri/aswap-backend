@@ -9,5 +9,4 @@ public interface IJupiterSwapApi
 
   Task<SwapResponseDto> CreateSwapAsync(string userPublicKey, QuoteResponseDto quote, SwapOptions? opts = null,
     CancellationToken ct = default);
-
 }

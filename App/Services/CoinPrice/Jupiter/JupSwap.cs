@@ -66,5 +66,4 @@ public sealed class JupSwap(HttpClient http) : IJupiterSwapApi
 
     return dto;
   }
-
 }

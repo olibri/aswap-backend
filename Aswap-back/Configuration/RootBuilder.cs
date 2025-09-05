@@ -14,6 +14,7 @@ using App.Services.CoinPrice;
 using App.Services.CoinPrice.Jobs;
 using App.Services.CoinPrice.Jupiter;
 using App.Services.CoinPrice.Planner;
+using App.Services.CoinPrice.Swap;
 using App.Services.CoinPrice.TokenRepo;
 using App.Services.CoinPrice.Workers;
 using App.Services.Order;
@@ -95,14 +96,17 @@ public class RootBuilder
         builder.RegisterType<AdminMetricsService>().As<IAdminMetricsService>().InstancePerLifetimeScope();
         builder.RegisterType<CoinJellyService>().As<ICoinJellyService>().InstancePerLifetimeScope();
         builder.RegisterType<CoinService>().As<ICoinService>().InstancePerLifetimeScope();
-        
+        builder.RegisterType<SwapService>()
+          .As<ISwapService>()
+          .InstancePerLifetimeScope();
+
         builder.RegisterType<CoinGeckoPriceValidatorService>()
           .As<IPriceValidatorService>()
           .SingleInstance();
 
         builder.Register(ctx =>
-            ctx.Resolve<IDbContextFactory<Infrastructure.P2PDbContext>>().CreateDbContext())
-          .As<Infrastructure.P2PDbContext>()
+            ctx.Resolve<IDbContextFactory<P2PDbContext>>().CreateDbContext())
+          .As<P2PDbContext>()
           .InstancePerLifetimeScope();
 
         // Repositories
@@ -301,12 +305,12 @@ public class RootBuilder
           c.EnableAnnotations();
           c.AddEnumsWithValuesFixFilters(o =>
           {
-            o.ApplySchemaFilter = true;  
+            o.ApplySchemaFilter = true;
             o.ApplyParameterFilter = true;
-            o.ApplyDocumentFilter = true; 
-            o.IncludeDescriptions = true; 
+            o.ApplyDocumentFilter = true;
+            o.IncludeDescriptions = true;
             // o.XEnumNamesAlias = "x-enum-varnames"; // якщо треба інший ключ
-          }); 
+          });
           c.AddSecurityRequirement(new OpenApiSecurityRequirement
           {
             {
@@ -323,11 +327,11 @@ public class RootBuilder
           });
         });
         var priceCfg = new PriceIngestConfig(
-          Quote: ctx.Configuration["PriceIngest:Quote"] ?? "USDC",
-          PollEveryMinutes: ctx.Configuration.GetValue<int?>("PriceIngest:PollEveryMinutes") ?? 5,
-          MaxIdsPerRequest: ctx.Configuration.GetValue<int?>("PriceIngest:MaxIdsPerRequest") ?? 50,
-          RequestsPerWindow: ctx.Configuration.GetValue<int?>("PriceIngest:RequestsPerWindow") ?? 60,
-          Window: TimeSpan.FromSeconds(ctx.Configuration.GetValue<int?>("PriceIngest:WindowSeconds") ?? 60)
+          ctx.Configuration["PriceIngest:Quote"] ?? "USDC",
+          ctx.Configuration.GetValue<int?>("PriceIngest:PollEveryMinutes") ?? 5,
+          ctx.Configuration.GetValue<int?>("PriceIngest:MaxIdsPerRequest") ?? 50,
+          ctx.Configuration.GetValue<int?>("PriceIngest:RequestsPerWindow") ?? 60,
+          TimeSpan.FromSeconds(ctx.Configuration.GetValue<int?>("PriceIngest:WindowSeconds") ?? 60)
         );
         services.AddSingleton(priceCfg);
 

@@ -8,4 +8,6 @@ public interface ITokenRepository
   Task UpsertAsync(IEnumerable<TokenDto> tokens, CancellationToken ct);
 
   Task<IReadOnlyList<string>> GetAllMintsAsync(CancellationToken ct);
+
+  Task<TokenDto?> GetByMintAsync(string mint, CancellationToken ct);
 }

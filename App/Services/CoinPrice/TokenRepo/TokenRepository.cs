@@ -70,4 +70,24 @@ public sealed class TokenRepository(IDbContextFactory<P2PDbContext> factory) : I
       .OrderBy(x => x)
       .ToListAsync(ct);
   }
+
+  public async Task<TokenDto?> GetByMintAsync(string mint, CancellationToken ct)
+  {
+    if (string.IsNullOrWhiteSpace(mint))
+      return null;
+
+    await using var db = await factory.CreateDbContextAsync(ct);
+    var entity = await db.Tokens.AsNoTracking()
+      .FirstOrDefaultAsync(x => x.Mint == mint, ct);
+
+    return entity == null ? null : new TokenDto(
+      entity.Mint,
+      entity.Symbol,
+      entity.Name,
+      entity.Decimals,
+      entity.IsVerified,
+      entity.Icon
+    );
+
+  }
 }

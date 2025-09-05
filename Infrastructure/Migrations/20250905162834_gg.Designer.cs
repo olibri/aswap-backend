@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(P2PDbContext))]
-    partial class P2PDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250905162834_gg")]
+    partial class gg
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,13 +86,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("crypto_to");
 
-                    b.Property<decimal>("PriceUsdIn")
+                    b.Property<decimal>("PriceUsd")
                         .HasColumnType("numeric(38,18)")
-                        .HasColumnName("price_usd_in");
-
-                    b.Property<decimal>("PriceUsdOut")
-                        .HasColumnType("numeric(38,18)")
-                        .HasColumnName("price_usd_out");
+                        .HasColumnName("price_usd");
 
                     b.HasKey("Tx");
 
@@ -99,18 +98,15 @@ namespace Infrastructure.Migrations
                     b.HasIndex("CryptoFrom", "CreatedAtUtc")
                         .HasDatabaseName("ix_swap_from_date");
 
-                    NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("CryptoFrom", "CreatedAtUtc"), new[] { "PriceUsdIn", "AmountIn", "Tx" });
+                    NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("CryptoFrom", "CreatedAtUtc"), new[] { "PriceUsd", "Tx" });
 
                     b.HasIndex("CryptoTo", "CreatedAtUtc")
                         .HasDatabaseName("ix_swap_to_date");
 
-                    NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("CryptoTo", "CreatedAtUtc"), new[] { "PriceUsdOut", "AmountOut", "Tx" });
+                    NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("CryptoTo", "CreatedAtUtc"), new[] { "PriceUsd", "Tx" });
 
-                    b.HasIndex("CryptoFrom", "PriceUsdIn", "CreatedAtUtc")
-                        .HasDatabaseName("ix_swap_from_price_date");
-
-                    b.HasIndex("CryptoTo", "PriceUsdOut", "CreatedAtUtc")
-                        .HasDatabaseName("ix_swap_to_price_date");
+                    b.HasIndex("PriceUsd", "CreatedAtUtc")
+                        .HasDatabaseName("ix_swap_price_date");
 
                     b.ToTable("account_swap_history");
                 });

@@ -33,6 +33,32 @@ public class CoinService(IDbContextFactory<P2PDbContext> dbFactory) : ICoinServi
     return result;
   }
 
+  public async Task<(decimal, decimal)> GetLastPriceAsync(string coinX, string coinY)
+  {
+    var mints = NormalizeMints(coinX, coinY);
+    if (mints.Length == 0)
+      return (0m, 0m);
+
+    await using var db = await dbFactory.CreateDbContextAsync();
+
+    var lastPrices = await db.Set<PriceSnapshotEntity>()
+      .AsNoTracking()
+      .Where(x => mints.Contains(x.TokenMint))
+      .GroupBy(x => x.TokenMint)
+      .Select(g => new
+      {
+        TokenMint = g.Key,
+        LastPrice = g.OrderByDescending(p => p.MinuteBucketUtc)
+          .ThenByDescending(p => p.CollectedAtUtc)
+          .First().Price
+      })
+      .ToDictionaryAsync(x => x.TokenMint, x => x.LastPrice);
+
+    var coinXPrice = lastPrices.GetValueOrDefault(coinX, 0m);
+    var coinYPrice = lastPrices.GetValueOrDefault(coinY, 0m);
+
+    return (coinXPrice, coinYPrice);
+  }
   public async Task<TokenDto[]> GetCoinsAsync(CancellationToken ct)
   {
     await using var db = await dbFactory.CreateDbContextAsync(ct);
