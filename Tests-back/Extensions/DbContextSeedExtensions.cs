@@ -1,13 +1,10 @@
-﻿namespace Tests_back.Extensions;
+﻿using Domain.Models.DB.CoinPrice;
+using Microsoft.EntityFrameworkCore;
+
+namespace Tests_back.Extensions;
 
 public static class DbContextSeedExtensions
 {
-  /// <summary>
-  /// Додає у контекст випадкові запису PriceSnapshotEntity для заданого tokenMint.
-  /// </summary>
-  /// <param name="db">Контекст БД (InMemory чи реальна)</param>
-  /// <param name="tokenMint">Mint токена, для якого створюються записи</param>
-  /// <param name="count">Кількість записів (за замовчуванням 5)</param>
   public static async Task SeedPriceSnapshotsAsync(
     this DbContext db,
     string tokenMint,
@@ -28,10 +25,8 @@ public static class DbContextSeedExtensions
       })
       .ToList();
 
-    // Вставляємо в DbSet<PriceSnapshotEntity> 
     db.Set<PriceSnapshotEntity>().AddRange(snapshots);
 
-    // Зберігаємо зміни
     await db.SaveChangesAsync();
   }
 }

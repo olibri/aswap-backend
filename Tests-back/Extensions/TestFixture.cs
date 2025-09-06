@@ -36,6 +36,7 @@ public class TestFixture : IDisposable
     PostgresDatabase.ResetState("deal_time_daily");
     PostgresDatabase.ResetState("user_metrics_daily");
     PostgresDatabase.ResetState("rating_reviews");
+    PostgresDatabase.ResetState("account_swap_history");
 
 
     Host.Dispose();

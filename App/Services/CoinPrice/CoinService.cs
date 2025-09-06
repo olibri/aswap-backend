@@ -41,24 +41,31 @@ public class CoinService(IDbContextFactory<P2PDbContext> dbFactory) : ICoinServi
 
     await using var db = await dbFactory.CreateDbContextAsync();
 
-    var lastPrices = await db.Set<PriceSnapshotEntity>()
-      .AsNoTracking()
-      .Where(x => mints.Contains(x.TokenMint))
-      .GroupBy(x => x.TokenMint)
-      .Select(g => new
-      {
-        TokenMint = g.Key,
-        LastPrice = g.OrderByDescending(p => p.MinuteBucketUtc)
-          .ThenByDescending(p => p.CollectedAtUtc)
-          .First().Price
-      })
-      .ToDictionaryAsync(x => x.TokenMint, x => x.LastPrice);
+    var coinXPrice = await GetLatestPriceAsync(mints[0], db);
+    var coinYPrice = await GetLatestPriceAsync(mints[1], db);
 
-    var coinXPrice = lastPrices.GetValueOrDefault(coinX, 0m);
-    var coinYPrice = lastPrices.GetValueOrDefault(coinY, 0m);
 
-    return (coinXPrice, coinYPrice);
+    return (coinXPrice.Price, coinYPrice.Price);
   }
+
+  private async Task<PriceSnapshotEntity> GetLatestPriceAsync(
+    string tokenMint,
+    P2PDbContext db,
+    CancellationToken cancellationToken = default)
+  {
+    var snapshot = await db.PriceSnapshot
+      .AsNoTracking()
+      .Where(p => p.TokenMint == tokenMint)
+      .OrderByDescending(p => p.CollectedAtUtc)
+      .FirstOrDefaultAsync(cancellationToken);
+
+    if (snapshot is null)
+      throw new InvalidOperationException($"Price not found for mint '{tokenMint}'");
+
+    return snapshot;
+  }
+
+
   public async Task<TokenDto[]> GetCoinsAsync(CancellationToken ct)
   {
     await using var db = await dbFactory.CreateDbContextAsync(ct);

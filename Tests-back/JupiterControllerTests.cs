@@ -1,6 +1,8 @@
 ﻿using Aswap_back.Controllers;
 using Domain.Models.Dtos.Jupiter;
+using Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Tests_back.Extensions;
 
@@ -39,6 +41,13 @@ public class JupiterControllerTests(TestFixture fixture) : IClassFixture<TestFix
   [Fact]
   public async Task BuildJupiterSwap_Works()
   {
+    var dbFactory = fixture.GetService<IDbContextFactory<P2PDbContext>>();
+    await using var db = await dbFactory.CreateDbContextAsync();
+
+    await db.SeedPriceSnapshotsAsync("So11111111111111111111111111111111111111112", count: 3);
+    await db.SeedPriceSnapshotsAsync("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", count: 3);
+
+
     var q = new QuoteQueryDto
     {
       InputMint = "So11111111111111111111111111111111111111112",

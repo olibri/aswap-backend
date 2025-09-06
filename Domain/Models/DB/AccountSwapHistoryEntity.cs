@@ -10,6 +10,9 @@ public class AccountSwapHistoryEntity
   [Column("tx")]
   public string Tx { get; set; } = null!;
 
+  [Column("user_wallet")]
+  public string UserWallet { get; set; } = null!;
+
   [Column("crypto_from")]
   public string CryptoFrom { get; set; } = null!;
 

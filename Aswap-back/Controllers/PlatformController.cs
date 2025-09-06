@@ -123,6 +123,9 @@ public class PlatformController(
   [ProducesResponseType(typeof(QuoteResponseDto), 200)]
   public async Task<IActionResult> GetSwapHistory([FromQuery] string userWallet, CancellationToken ct)
   {
-    return Ok(quote);
+    log.LogInformation("Swap history for {userWallet}", userWallet);
+    var res = await swapService.SwapHistoryAsync(userWallet, ct);
+
+    return Ok(res);
   }
 }
