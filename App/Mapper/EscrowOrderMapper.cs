@@ -59,7 +59,7 @@ public static partial class EscrowOrderMapper
     [MapProperty(nameof(UpsertOrderDto.Seller), nameof(EscrowOrderEntity.SellerCrypto))]
     [MapProperty(nameof(UpsertOrderDto.Buyer), nameof(EscrowOrderEntity.BuyerFiat))]
     [MapProperty(nameof(UpsertOrderDto.Status), nameof(EscrowOrderEntity.EscrowStatus))]
-    [MapProperty(nameof(UpsertOrderDto.OrderType), nameof(EscrowOrderEntity.OfferSide))]
+    [MapProperty(nameof(UpsertOrderDto.OrderSide), nameof(EscrowOrderEntity.OfferSide))]
     [MapProperty(nameof(UpsertOrderDto.MinFiatAmount), nameof(EscrowOrderEntity.MinFiatAmount))]
     [MapProperty(nameof(UpsertOrderDto.MaxFiatAmount), nameof(EscrowOrderEntity.MaxFiatAmount))]
     [MapProperty(nameof(UpsertOrderDto.FiatCode), nameof(EscrowOrderEntity.FiatCode))]

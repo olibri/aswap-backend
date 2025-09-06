@@ -15,9 +15,9 @@ public sealed class PopularityCounter(
 {
   private ConcurrentDictionary<(short, string), int> _hits = new();
 
-  public void Hit(short id, string region)
+  public void Hit(short[] ids, string region)
   {
-    _hits.AddOrUpdate((id, region), 1, (_, v) => v + 1);
+    _ = ids.Select(id => _hits.AddOrUpdate((id, region), 1, (_, v) => v + 1));
   }
 
   public async Task<IReadOnlyList<short>> Top(

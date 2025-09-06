@@ -140,7 +140,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       Status = EscrowStatus.OnChain,
       Buyer = "wallet0xzzzz",
       FilledQuantity = 0.1m,
-      OrderType = OrderSide.Buy,
+      OrderSide = OrderSide.Buy,
       TokenMint = "tokenMintExample",
       Amount = 32m
     };

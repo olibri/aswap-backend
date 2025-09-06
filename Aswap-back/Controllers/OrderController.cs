@@ -30,7 +30,7 @@ public class OrderController(
     await marketDbCommand.UpdateCurrentOfferAsync(orderUpdate);
 
     var region = geo.ResolveCountry(ipAccessor.GetClientIp()) ?? "ZZ";
-    pop.Hit(orderUpdate.PaymentMethodId, region);
+    pop.Hit(orderUpdate.PaymentMethodIds, region);
 
     return Ok();
   }
@@ -43,7 +43,7 @@ public class OrderController(
     await marketDbCommand.CreateBuyerOfferAsync(createOrder);
 
     var region = geo.ResolveCountry(ipAccessor.GetClientIp()) ?? "ZZ";
-    pop.Hit(createOrder.PaymentMethodId, region);
+    pop.Hit(createOrder.PaymentMethodIds, region);
 
     return Ok();
   }
