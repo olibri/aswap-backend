@@ -5,6 +5,7 @@ using Domain.Interfaces.Services.CoinService.Jupiter;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.CoinPrice;
 using Domain.Models.Api.QuerySpecs;
+using Domain.Models.Api.Swap;
 using Domain.Models.Dtos;
 using Domain.Models.Dtos.Jupiter;
 using Microsoft.AspNetCore.Mvc;
@@ -120,12 +121,11 @@ public class PlatformController(
   }
 
   [HttpGet("jup/swap/history")]
-  [ProducesResponseType(typeof(QuoteResponseDto), 200)]
-  public async Task<IActionResult> GetSwapHistory([FromQuery] string userWallet, CancellationToken ct)
+  [ProducesResponseType(typeof(PagedResult<AccountSwapHistoryDto>), 200)]
+  public async Task<IActionResult> GetSwapHistory([FromQuery] SwapHistoryQuery q, CancellationToken ct)
   {
-    log.LogInformation("Swap history for {userWallet}", userWallet);
-    var res = await swapService.SwapHistoryAsync(userWallet, ct);
-
+    log.LogInformation("Swap history for {userWallet}", q.UserWallet);
+    var res = await swapService.SwapHistoryAsync(q, ct);
     return Ok(res);
   }
 }

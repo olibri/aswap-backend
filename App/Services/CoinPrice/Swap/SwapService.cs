@@ -7,6 +7,9 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using App.Mapper;
+using App.Services.QuerySpec.Realization;
+using Domain.Models.Api.QuerySpecs;
+using Domain.Models.Api.Swap;
 using Domain.Models.Dtos;
 
 namespace App.Services.CoinPrice.Swap;
@@ -30,23 +33,15 @@ public sealed class SwapService(
     return res;
   }
 
-  public async Task<AccountSwapHistoryDto> SwapHistoryAsync(string userWallet, CancellationToken ct)
+  public async Task<PagedResult<AccountSwapHistoryDto>> SwapHistoryAsync(SwapHistoryQuery q, CancellationToken ct)
   {
-    if (string.IsNullOrWhiteSpace(userWallet))
-      throw new ArgumentException("Value cannot be null or whitespace.", nameof(userWallet));
-
     await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-    var entity = await db.AccountSwapHistory
-      .AsNoTracking()
-      .Where(x => x.UserWallet == userWallet)
-      .OrderByDescending(x => x.CreatedAtUtc)
-      .FirstOrDefaultAsync(ct);
+    var spec = q.BuildSpec();
+    var page = await spec.ExecuteAsync(db.AccountSwapHistory.AsNoTracking());
 
-    if (entity is null)
-      throw new InvalidOperationException($"No swap history found for wallet '{userWallet}'.");
-
-    return entity.ToDto();
+    var dtoItems = page.Data.Select(e => e.ToDto()).ToList();
+    return new PagedResult<AccountSwapHistoryDto>(dtoItems, page.Page, page.Size, page.Total);
   }
 
   private async Task SaveHistoryAsync(
