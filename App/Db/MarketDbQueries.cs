@@ -1,5 +1,6 @@
 ﻿using App.Services.QuerySpec.Realization;
 using Domain.Enums;
+using Domain.Models.Api.Order;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
 using Infrastructure;
@@ -46,13 +47,18 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
       .ToArrayAsync();
   }
 
-  public async Task<EscrowOrderDto[]> GetAllUsersOffersAsync(string userId)
+
+  public async Task<PagedResult<EscrowOrderDto>> GetAllUsersOffersAsync(string userId, UserOffersQuery q)
   {
-    return await dbContext.EscrowOrders
-      .Where(o => o.BuyerFiat == userId || o.SellerCrypto == userId)
-      .OrderByDescending(o => o.CreatedAtUtc)
-      .Select(o => EscrowOrderDto.FromEntity(o))
-      .ToArrayAsync();
+    var baseQ = dbContext.EscrowOrders
+      .AsNoTracking()
+      .Where(e => e.BuyerFiat == userId || e.SellerCrypto == userId);
+
+    var spec = q.BuildSpec();
+    var page = await spec.ExecuteAsync(baseQ);
+
+    var items = page.Data.Select(EscrowOrderDto.FromEntity).ToList();
+    return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
   }
 
   public async Task<EscrowOrderDto?> CheckOrderStatusAsync(ulong orderId)

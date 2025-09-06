@@ -4,6 +4,7 @@ using Domain.Interfaces.Services.CoinService;
 using Domain.Interfaces.Services.CoinService.Jupiter;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.CoinPrice;
+using Domain.Models.Api.Order;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Api.Swap;
 using Domain.Models.Dtos;
@@ -63,13 +64,12 @@ public class PlatformController(
   }
 
 
-  [HttpGet]
-  [Route("all-user-offers/{userId}")]
-  [ProducesResponseType(typeof(List<EscrowOrderDto>), 200)]
-  public async Task<IActionResult> GetAllUserOffers(string userId)
+  [HttpGet("all-user-offers/{userId}")]
+  [ProducesResponseType(typeof(PagedResult<EscrowOrderDto>), 200)]
+  public async Task<IActionResult> GetAllUserOffers([FromRoute] string userId, [FromQuery] UserOffersQuery q)
   {
-    log.LogInformation("New user offers requested");
-    var res = await marketDbQueries.GetAllUsersOffersAsync(userId);
+    log.LogInformation("User offers requested for {userId}", userId);
+    var res = await marketDbQueries.GetAllUsersOffersAsync(userId, q);
     return Ok(res);
   }
 
