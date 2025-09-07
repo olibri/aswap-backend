@@ -46,6 +46,8 @@ public class UpsertOrderDto : IValidatableObject
   public string? ReferralCode { get; set; } 
   public string? AutoReply { get; set; } 
 
+  public bool? isPratial { get; set; }
+
   public bool? AdminCall { get; set; }
 
   public IEnumerable<ValidationResult> Validate(ValidationContext _)

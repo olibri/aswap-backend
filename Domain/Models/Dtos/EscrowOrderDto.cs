@@ -59,6 +59,7 @@ public class EscrowOrderDto
   public string[]? Tags { get; set; }
   public string? ReferralCode { get; set; }
   public string? AutoReply { get; set; }
+  public bool? IsPartial { get; set; }
 
   public List<PaymentMethodDto> PaymentMethods { get; set; } = new();
 
@@ -98,7 +99,8 @@ public class EscrowOrderDto
       Terms = e.Terms,
       Tags = e.Tags,
       ReferralCode = e.ReferralCode,
-      AutoReply = e.AutoReply
+      AutoReply = e.AutoReply,
+      IsPartial = e.IsPartial,
     };
 
     if (e.PaymentMethods is not null)

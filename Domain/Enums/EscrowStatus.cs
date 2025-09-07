@@ -2,14 +2,14 @@
 
 public enum EscrowStatus
 {
-  PendingOnChain = 0,
-  OnChain = 1,
+  PendingOnChain = 0, //це для бай ордерів при першому створенні
+  OnChain = 1, // це для сел ордерів при першому створенні
 
-  PartiallyOnChain = 2,
-  Signed = 3,
-  SignedByOneSide = 4,
+  PartiallyOnChain = 2, // це для сел/бай ордерів коли частково заповнено
+  Signed = 3, // це для сел/бай ордерів коли обидві сторони підписали
+  SignedByOneSide = 4, // це для сел/бай ордерів коли підписала одна сторона
 
-  Released = 5,
-  Cancelled = 6,
+  Released = 5, // це для сел/бай ордерів коли релізнули кошти
+  Cancelled = 6, // це для сел/бай ордерів коли скасували з селл(крипто сторони) і з бай(фіат сторони)
   AdminResolving = 7
 }

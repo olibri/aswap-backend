@@ -37,6 +37,7 @@ public static class EscrowOrderPatcher
     entity.MarginPercent = dto.MarginPercent;
     entity.PaymentWindowMinutes = dto.PaymentWindowMinutes;
     entity.ListingMode = dto.ListingMode;
+    entity.IsPartial = dto.isPratial ?? entity.IsPartial;
 
     if (dto.VisibleInCountries is not null) entity.VisibleInCountries = dto.VisibleInCountries;
     if (dto.MinAccountAgeDays.HasValue) entity.MinAccountAgeDays = dto.MinAccountAgeDays;
@@ -54,8 +55,6 @@ public static class EscrowOrderPatcher
 
   private static void SyncPaymentMethods(EscrowOrderEntity entity, short[] methodIds)
   {
-    entity.PaymentMethods ??= new List<EscrowOrderPaymentMethodEntity>();
-
     var desired = methodIds.Distinct().ToHashSet();
     var current = entity.PaymentMethods.Select(pm => pm.MethodId).ToHashSet();
 

@@ -42,6 +42,8 @@ public class EscrowOrderEntity : IHasDomainEvents
 
   [Column("offer_side")] public OrderSide OfferSide { get; set; }
 
+  [Column("is_partial")] public bool IsPartial { get; set; } = false;
+
   [Column("min_fiat_amount")] public decimal MinFiatAmount { get; set; }
   [Column("max_fiat_amount")] public decimal MaxFiatAmount { get; set; }
 

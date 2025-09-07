@@ -96,7 +96,6 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
             .Include(x => x.PaymentMethods)
             .FirstOrDefaultAsync(x => x.DealId == upsertOrder.OrderId);
 
-
         if (entity is null)
             throw new InvalidOperationException($"EscrowOrderEntity with DealId {upsertOrder.OrderId} was not found.");
 
