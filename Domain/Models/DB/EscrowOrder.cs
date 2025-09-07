@@ -79,6 +79,7 @@ public class EscrowOrderEntity : IHasDomainEvents
   public string? AutoReply { get; set; }
 
 
+  public ICollection<ChildOrderEntity> ChildOrders { get; set; } = new List<ChildOrderEntity>();
   public ICollection<EscrowOrderPaymentMethodEntity> PaymentMethods { get; set; } = [];
 
   [NotMapped] public List<DomainEvent> DomainEvents { get; } = new();

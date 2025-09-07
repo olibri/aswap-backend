@@ -9,12 +9,14 @@ public class UpsertOrderDto : IValidatableObject
   public ulong OrderId { get; set; }
   [Required] public string FiatCode { get; set; } = null!;
   [Required] public string TokenMint { get; set; } = null!;
+  [Required] public OrderSide OrderSide { get; set; }
+  [Required] public PriceType PriceType { get; set; } = PriceType.Fixed;
 
   public EscrowStatus? Status { get; set; }
   public string? Buyer { get; set; }
   public string? Seller { get; set; }
 
-  [Required] public OrderSide OrderSide { get; set; }
+  public string? EscrowPda { get; set; }
 
   [Range(0, double.MaxValue)] public decimal? Amount { get; set; }
 
@@ -24,7 +26,6 @@ public class UpsertOrderDto : IValidatableObject
 
   [Range(0, double.MaxValue)] public decimal? MaxFiatAmount { get; set; }
 
-  [Required] public PriceType PriceType { get; set; } = PriceType.Fixed;
 
   [Range(0, double.MaxValue)] public decimal? Price { get; set; }
 

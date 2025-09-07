@@ -35,7 +35,7 @@ public class EscrowOrderDto
   public decimal Price { get; set; }
 
   [SwaggerSchema(Description =
-    "EscrowStatus: 0=PendingOnChain, 1=OnChain, 2=PartiallyOnChain, 3=Signed, 4=SignedByOneSide, 5=Released, 6=Cancelled, 7=AdminResolving")]
+    "EscrowStatus: 0=PendingOnChain, 1=OnChain, 2=PartiallyOnChain, 3=Signed, 4=SignedByOwnerSide, 5=SignedByContraAgentSide, 6=Released, 7=Cancelled, 8=AdminResolving")]
   public EscrowStatus Status { get; set; }
 
   public DateTime CreatedAtUtc { get; set; }

@@ -57,9 +57,30 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
   /* ─────────── SwapHistory ─────────── */
   public DbSet<AccountSwapHistoryEntity> AccountSwapHistory { get; set; }
 
+  public DbSet<ChildOrderEntity> ChildOrders { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
+    modelBuilder.Entity<ChildOrderEntity>(entity =>
+    {
+      entity.HasKey(x => x.Id);
+
+      entity.HasOne(x => x.ParentOrder)
+        .WithMany(p => p.ChildOrders)
+        .HasForeignKey(x => x.ParentOrderId)
+        .HasPrincipalKey(p => p.Id)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      entity.HasIndex(x => x.ParentOrderId)
+        .HasDatabaseName("ix_child_order_parent");
+
+      entity.HasIndex(x => x.DealId)
+        .HasDatabaseName("ix_child_order_deal");
+
+      entity.HasIndex(x => new { x.EscrowStatus, x.CreatedAtUtc })
+        .HasDatabaseName("ix_child_order_status_created");
+    });
+
     modelBuilder.Entity<AccountSwapHistoryEntity>(entity =>
     {
       entity.HasKey(x => x.Tx);
@@ -91,6 +112,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
         .HasColumnName("escrow_status");
       entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, Status = x.EscrowStatus, x.Price })
         .HasDatabaseName("ix_escrow_best_price");
+
+      entity.Navigation(x => x.ChildOrders).AutoInclude(false);
     });
 
     modelBuilder.Entity<AppLockEntity>(e =>
