@@ -67,6 +67,19 @@ public static partial class EscrowOrderMapper
     [MapProperty(nameof(UpsertOrderDto.Amount), nameof(EscrowOrderEntity.Amount))]
     [MapProperty(nameof(UpsertOrderDto.Price), nameof(EscrowOrderEntity.Price))]
 
+    [MapProperty(nameof(UpsertOrderDto.PriceType), nameof(EscrowOrderEntity.PriceType))]
+    [MapProperty(nameof(UpsertOrderDto.BasePrice), nameof(EscrowOrderEntity.BasePrice))]
+    [MapProperty(nameof(UpsertOrderDto.MarginPercent), nameof(EscrowOrderEntity.MarginPercent))]
+    [MapProperty(nameof(UpsertOrderDto.PaymentWindowMinutes), nameof(EscrowOrderEntity.PaymentWindowMinutes))]
+    [MapProperty(nameof(UpsertOrderDto.ListingMode), nameof(EscrowOrderEntity.ListingMode))]
+    [MapProperty(nameof(UpsertOrderDto.VisibleInCountries), nameof(EscrowOrderEntity.VisibleInCountries))]
+    [MapProperty(nameof(UpsertOrderDto.MinAccountAgeDays), nameof(EscrowOrderEntity.MinAccountAgeDays))]
+    [MapProperty(nameof(UpsertOrderDto.Terms), nameof(EscrowOrderEntity.Terms))]
+    [MapProperty(nameof(UpsertOrderDto.Tags), nameof(EscrowOrderEntity.Tags))]
+    [MapProperty(nameof(UpsertOrderDto.ReferralCode), nameof(EscrowOrderEntity.ReferralCode))]
+    [MapProperty(nameof(UpsertOrderDto.AutoReply), nameof(EscrowOrderEntity.AutoReply))]
+    [MapProperty(nameof(UpsertOrderDto.FilledQuantity), nameof(EscrowOrderEntity.FilledQuantity))]
+    [MapProperty(nameof(UpsertOrderDto.AdminCall), nameof(EscrowOrderEntity.AdminCall))]
     public static partial EscrowOrderEntity ToEntity(UpsertOrderDto dto);
 
     private static void OnAfterToEntity(UpsertOrderDto dto, EscrowOrderEntity entity)
@@ -76,6 +89,31 @@ public static partial class EscrowOrderMapper
             entity.Id = Guid.NewGuid();
             entity.CreatedAtUtc = DateTime.UtcNow;
         }
+
+        if (dto.Amount is not null)
+            entity.Amount = ToAtomic(dto.Amount.Value, 1_000_000m);
+
+        entity.Price = dto.Price is not null ? ToAtomic(dto.Price.Value, 100m) : 0UL;
+
+        if (dto.PaymentMethodIds is { Length: > 0 })
+        {
+            entity.PaymentMethods = dto.PaymentMethodIds
+                .Distinct()
+                .Select(mid => new EscrowOrderPaymentMethodEntity
+                {
+                    OrderId = entity.Id,  
+                    MethodId = mid
+                })
+                .ToList();
+        }
+    }
+
+    private static ulong ToAtomic(decimal value, decimal multiplier)
+    {
+        var scaled = decimal.Round(value * multiplier, 0, MidpointRounding.AwayFromZero);
+        if (scaled < 0 || scaled > (decimal)ulong.MaxValue)
+            throw new OverflowException($"Value {value}×{multiplier} виходить за межі UInt64.");
+        return (ulong)scaled;
     }
 
 }
