@@ -47,7 +47,10 @@ public class UpsertOrderDto : IValidatableObject
   public string? ReferralCode { get; set; } 
   public string? AutoReply { get; set; } 
 
-  public bool? isPratial { get; set; }
+  public bool? IsPratial { get; set; }
+  public string? FillNonce { get; set; }
+  public string? FillPda { get; set; }
+
 
   public bool? AdminCall { get; set; }
 

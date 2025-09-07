@@ -6,14 +6,15 @@ using Domain.Models.Dtos;
 using Domain.Models.Events;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.ComponentModel.DataAnnotations;
 using Domain.Models.Enums;
 using System.Data;
+using Domain.Interfaces.Services.Order;
+using Domain.Models.Api.Order;
 
 namespace App.Db;
 
-public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
+public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOffers) : IMarketDbCommand
 {
     public async Task CreateSellerOfferAsync(OfferInitialized offer)
     {
@@ -99,6 +100,24 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
         if (entity is null)
             throw new InvalidOperationException($"EscrowOrderEntity with DealId {upsertOrder.OrderId} was not found.");
 
+        if (upsertOrder.IsPratial == true)
+        {
+            var childDto = BuildChildUpsertFrom(upsertOrder, entity);
+            await childOffers.UpsertAsync(childDto with { EscrowStatus = EscrowStatus.PartiallyOnChain }, CancellationToken.None);
+
+            entity.IsPartial = true;
+            entity.EscrowStatus = EscrowStatus.PartiallyOnChain;
+
+            if (upsertOrder.FilledQuantity.HasValue)
+            {
+                entity.FilledQuantity += upsertOrder.FilledQuantity.Value;
+                TryReleaseParentIfFullyFilled(entity);
+            }
+
+            await dbContext.SaveChangesAsync(CancellationToken.None);
+            return;
+        }
+
         EscrowOrderPatcher.ApplyUpsert(entity, upsertOrder, MoveToSignedStatus);
 
         await dbContext.SaveChangesAsync();
@@ -112,4 +131,49 @@ public class MarketDbCommand(P2PDbContext dbContext) : IMarketDbCommand
 
         return orderEntity.EscrowStatus;
     }
+
+
+    private static ChildOrderUpsertDto BuildChildUpsertFrom(UpsertOrderDto dto, EscrowOrderEntity parent)
+    {
+        var ownerWallet = dto.OrderSide == OrderSide.Sell ? dto.Seller : dto.Buyer;
+        var contraWallet = dto.OrderSide == OrderSide.Sell ? dto.Buyer : dto.Seller;
+
+        if (string.IsNullOrWhiteSpace(ownerWallet))
+            throw new ArgumentException("Owner wallet is required for child upsert (derived from dto.Seller/dto.Buyer).", nameof(dto));
+        if (string.IsNullOrWhiteSpace(contraWallet))
+            throw new ArgumentException("Contra wallet is required for child upsert (derived from dto.Seller/dto.Buyer).", nameof(dto));
+
+        int? childFilled = dto.FilledQuantity.HasValue
+            ? decimal.ToInt32(decimal.Round(dto.FilledQuantity.Value, 0, MidpointRounding.AwayFromZero))
+            : null;
+
+        return new ChildOrderUpsertDto(
+            ParentOrderId: parent.Id,
+            DealId: parent.DealId,
+            OrderOwnerWallet: ownerWallet,
+            ContraAgentWallet: contraWallet,
+            EscrowStatus: EscrowStatus.PartiallyOnChain,
+            FilledAmount: childFilled,
+            FillNonce: dto.FillNonce, 
+            FillPda: dto.FillPda     
+        );
+    }
+
+
+    private static void TryReleaseParentIfFullyFilled(EscrowOrderEntity entity)
+    {
+        var totalHuman = NormalizeAmount(entity.Amount, 1_000_000m);
+        if (totalHuman is null) return;
+
+        if (entity.FilledQuantity >= totalHuman.Value)
+        {
+            entity.EscrowStatus = EscrowStatus.Released;
+            if (entity.ClosedAtUtc is null)
+                entity.ClosedAtUtc = DateTime.UtcNow;
+        }
+    }
+
+    private static decimal? NormalizeAmount(ulong? atomic, decimal multiplier)
+        => atomic.HasValue ? (decimal)atomic.Value / multiplier : null;
+
 }

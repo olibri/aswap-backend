@@ -2,6 +2,7 @@
 using Domain.Enums;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Services.Order;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Dtos;
 using Domain.Models.Enums;
@@ -157,5 +158,142 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     createdOrder.ShouldNotBeNull();
     createdOrder.DealId.ShouldBe(dealId);
     createdOrder.PaymentMethods.Count.ShouldBeGreaterThan(1);
+  }
+
+
+  [Fact]
+  public async Task PartialFlow_CreatesChild_And_SetsParent_PartiallyOnChain()
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+    PostgresDatabase.ResetState("child_order");
+
+    // arrange
+    await OffersExtensions.CreateFakeOrder(fixture);
+    var cmd = fixture.GetService<IMarketDbCommand>();
+    var q = fixture.GetService<IMarketDbQueries>();
+    var childSvc = fixture.GetService<IChildOffersService>();
+
+    var deal = 1747314431853UL;
+    var parent = await q.GetNewOfferAsync(deal);
+    parent.ShouldNotBeNull();
+    parent.Status.ShouldBeOneOf(EscrowStatus.PendingOnChain, EscrowStatus.OnChain);
+
+    // act: partial флоу
+    var dto = new UpsertOrderDto
+    {
+      OrderId = deal,
+      OrderSide = OrderSide.Sell,    // власник = Seller
+      Seller = "seller_wallet_X",
+      Buyer = "buyer_wallet_Y",
+      IsPratial = true,              // <- ключ: йдемо в child-флоу
+      FilledQuantity = 0.1m
+    };
+    await cmd.UpdateCurrentOfferAsync(dto);
+
+    // assert: parent оновлено мінімально і має Partial статус
+    var after = await q.GetNewOfferAsync(deal);
+    after.ShouldNotBeNull();
+    after.Status.ShouldBe(EscrowStatus.PartiallyOnChain);
+    after.FilledQuantity.ShouldBe(0.1m);
+
+    // child створено і теж PartiallyOnChain
+    var children = await childSvc.GetByParentAsync((long)deal);
+    children.Count.ShouldBe(1);
+
+    var ch = children[0];
+    ch.DealId.ShouldBe(deal);
+    ch.ParentOrderId.ShouldNotBe(Guid.Empty);
+    ch.EscrowStatus.ShouldBe(EscrowStatus.PartiallyOnChain);
+    ch.OrderOwnerWallet.ShouldBe("seller_wallet_X");   // власник за OrderSide.Sell
+    ch.ContraAgentWallet.ShouldBe("buyer_wallet_Y");
+  }
+
+  [Fact]
+  public async Task PartialFlow_MultipleSteps_Finally_Releases_Parent()
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+    PostgresDatabase.ResetState("child_order");
+
+    // arrange
+    await OffersExtensions.CreateFakeOrder(fixture);
+    var cmd = fixture.GetService<IMarketDbCommand>();
+    var q = fixture.GetService<IMarketDbQueries>();
+    var childSvc = fixture.GetService<IChildOffersService>();
+
+    var deal = 1747314431853UL;
+    var initial = await q.GetNewOfferAsync(deal);
+    initial.ShouldNotBeNull();
+
+    // крок 1: часткове заповнення
+    await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
+    {
+      OrderId = deal,
+      OrderSide = OrderSide.Sell,
+      Seller = "seller_wallet_X",
+      Buyer = "buyer_wallet_Y",
+      IsPratial = true,
+      FilledQuantity = 0.4m
+    });
+
+    // крок 2: добиваємо до повного
+    await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
+    {
+      OrderId = deal,
+      OrderSide = OrderSide.Sell,
+      Seller = "seller_wallet_X",
+      Buyer = "buyer_wallet_Y",
+      IsPratial = true,
+      FilledQuantity = 0.6m
+    });
+
+    // assert: parent має бути Released і зникнути з "нових" офферів (як у твоєму існуючому тесті)
+    var list = await q.GetAllNewOffersAsync(new OffersQuery());
+    list.ShouldBeEmpty();
+
+    // діти є (2 шт)
+    var children = await childSvc.GetByParentAsync((long)deal);
+    children.Count.ShouldBe(2);
+    children.ShouldAllBe(x => x.EscrowStatus == EscrowStatus.PartiallyOnChain);
+  }
+
+
+  public static IEnumerable<object[]> PartialSequences()
+  {
+    yield return [new[] { 1.0m }];
+    yield return [new[] { 0.5m, 0.5m }];
+    yield return [new[] { 0.2m, 0.3m, 0.5m }];
+    yield return [new[] { 0.1m, 0.1m, 0.1m, 0.7m }];
+  }
+
+  [Theory]
+  [MemberData(nameof(PartialSequences))]
+  public async Task PartialFlow_Sequences_Reach_Release(decimal[] fills)
+  {
+    PostgresDatabase.ResetState("escrow_orders");
+    PostgresDatabase.ResetState("child_order");
+
+    await OffersExtensions.CreateFakeOrder(fixture);
+
+    var cmd = fixture.GetService<IMarketDbCommand>();
+    var q = fixture.GetService<IMarketDbQueries>();
+
+    var deal = 1747314431853UL;
+
+    foreach (var f in fills)
+    {
+      await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
+      {
+        OrderId = deal,
+        OrderSide = OrderSide.Sell,
+        Seller = "seller_wallet_X",
+        Buyer = "buyer_wallet_Y",
+        IsPratial = true,
+        FilledQuantity = f
+      });
+    }
+
+    // коли сума == 1.0 (як у твоїх кейсах) – оффер зникає зі списку нових (Released)
+    var list = await q.GetAllNewOffersAsync(new OffersQuery());
+    list.ShouldBeEmpty();
   }
 }

@@ -5,20 +5,6 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Domain.Models.Dtos;
 
-public sealed class PaymentCategoryDto
-{
-  public int Id { get; set; }
-  public string Name { get; set; } = default!;
-}
-
-public sealed class PaymentMethodDto
-{
-  public int Id { get; set; }
-  public string Code { get; set; } = default!;
-  public string Name { get; set; } = default!;
-  public PaymentCategoryDto? Category { get; set; }
-}
-
 public class EscrowOrderDto
 {
   public Guid Id { get; set; }
@@ -63,6 +49,7 @@ public class EscrowOrderDto
 
   public List<PaymentMethodDto> PaymentMethods { get; set; } = new();
 
+  public List<ChildOrderDto> Children { get; set; } = new();
 
   public static EscrowOrderDto FromEntity(EscrowOrderEntity e)
   {

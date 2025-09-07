@@ -7,11 +7,12 @@ namespace Domain.Models.DB;
 [Table("child_order")]
 public class ChildOrderEntity
 {
-  [Key] [Column("id")] public Guid Id { get; set; }
+  [Key] [Column("id")] public Guid Id { get; set; } = Guid.NewGuid();
 
   [Column("parent_order_id")] public Guid ParentOrderId { get; set; }
 
   public EscrowOrderEntity ParentOrder { get; set; } = default!;
+
 
   [Column("deal_id")] public ulong DealId { get; set; }
 

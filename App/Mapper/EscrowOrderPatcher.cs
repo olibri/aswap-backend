@@ -38,7 +38,7 @@ public static class EscrowOrderPatcher
     entity.MarginPercent = dto.MarginPercent;
     entity.PaymentWindowMinutes = dto.PaymentWindowMinutes;
     entity.ListingMode = dto.ListingMode;
-    entity.IsPartial = dto.isPratial ?? entity.IsPartial;
+    entity.IsPartial = dto.IsPratial ?? entity.IsPartial;
     entity.EscrowPda = dto.EscrowPda ?? entity.EscrowPda;
 
     if (dto.VisibleInCountries is not null) entity.VisibleInCountries = dto.VisibleInCountries;

@@ -100,6 +100,10 @@ public class RootBuilder
           .As<ISwapService>()
           .InstancePerLifetimeScope();
 
+        builder.RegisterType<ChildOffersService>()
+          .As<IChildOffersService>()
+          .InstancePerLifetimeScope();
+
         builder.RegisterType<CoinGeckoPriceValidatorService>()
           .As<IPriceValidatorService>()
           .SingleInstance();
