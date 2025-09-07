@@ -94,18 +94,6 @@ public static partial class EscrowOrderMapper
             entity.Amount = ToAtomic(dto.Amount.Value, 1_000_000m);
 
         entity.Price = dto.Price is not null ? ToAtomic(dto.Price.Value, 100m) : 0UL;
-
-        if (dto.PaymentMethodIds is { Length: > 0 })
-        {
-            entity.PaymentMethods = dto.PaymentMethodIds
-                .Distinct()
-                .Select(mid => new EscrowOrderPaymentMethodEntity
-                {
-                    OrderId = entity.Id,  
-                    MethodId = mid
-                })
-                .ToList();
-        }
     }
 
     private static ulong ToAtomic(decimal value, decimal multiplier)

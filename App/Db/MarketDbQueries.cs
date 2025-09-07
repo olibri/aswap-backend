@@ -27,7 +27,12 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
     var baseQ = dbContext.EscrowOrders
       .Where(o => o.EscrowStatus == EscrowStatus.PendingOnChain
                   || o.EscrowStatus == EscrowStatus.OnChain
-                  || o.EscrowStatus == EscrowStatus.PartiallyOnChain);
+                  || o.EscrowStatus == EscrowStatus.PartiallyOnChain)
+      .Include(o => o.PaymentMethods)
+      .ThenInclude(link => link.Method)
+      .ThenInclude(m => m.Category)
+      .AsSplitQuery()
+      .AsNoTracking();
 
     var spec = q.BuildSpec();
     var page = await spec.ExecuteAsync(baseQ.AsNoTracking());

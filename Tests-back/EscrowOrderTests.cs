@@ -73,7 +73,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       MinFiatAmount = 10,
       Status = EscrowStatus.OnChain,
       Buyer = "wallet0xzzzz",
-      FilledQuantity = 0.1m
+      FilledQuantity = 0.1m,
+      PaymentMethodIds = [1,2]
     };
 
     var result = await controller.UpdateOffers(updateOrderDto);
@@ -88,6 +89,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     updatedOrder[0].Status.ShouldBe(EscrowStatus.OnChain);
     updatedOrder[0].BuyerFiat.ShouldBe("wallet0xzzzz");
     updatedOrder[0].FilledQuantity.ShouldBe(0.1m);
+    updatedOrder[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
   }
 
   [Fact]
@@ -105,13 +107,15 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       MinFiatAmount = 10,
       Status = EscrowStatus.OnChain,
       Buyer = "wallet0xzzzz",
-      FilledQuantity = 0.1m
+      FilledQuantity = 0.1m,
+      PaymentMethodIds = [1,2]
     };
 
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto1);
     var updatedOrder1 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
     Console.WriteLine($"Updated order: {updatedOrder1[0].Amount}, {updatedOrder1[0].FilledQuantity}");
     updatedOrder1[0].FilledQuantity.ShouldBe(0.1m);
+    updatedOrder1[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
 
 
     var updateOrderDto2 = new UpsertOrderDto()
@@ -142,10 +146,16 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       FilledQuantity = 0.1m,
       OrderSide = OrderSide.Buy,
       TokenMint = "tokenMintExample",
-      Amount = 32m
+      Amount = 32m,
+      PaymentMethodIds = [2,4]
     };
 
     var createdDealId = await marketDbCommand.CreateBuyerOfferAsync(updateOrderDto);
     createdDealId.ShouldBe(dealId);
+    var marketDbQuery = fixture.GetService<IMarketDbQueries>();
+    var createdOrder = await marketDbQuery.GetNewOfferAsync(dealId);
+    createdOrder.ShouldNotBeNull();
+    createdOrder.DealId.ShouldBe(dealId);
+    createdOrder.PaymentMethods.Count.ShouldBeGreaterThan(1);
   }
 }
