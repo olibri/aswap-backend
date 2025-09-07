@@ -56,8 +56,12 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
   public async Task<PagedResult<EscrowOrderDto>> GetAllUsersOffersAsync(string userId, UserOffersQuery q)
   {
     var baseQ = dbContext.EscrowOrders
-      .AsNoTracking()
-      .Where(e => e.BuyerFiat == userId || e.SellerCrypto == userId);
+      .Where(e => e.BuyerFiat == userId || e.SellerCrypto == userId)
+      .Include(o => o.PaymentMethods)
+      .ThenInclude(link => link.Method)
+      .ThenInclude(m => m.Category)
+      .AsSplitQuery()
+      .AsNoTracking(); 
 
     var spec = q.BuildSpec();
     var page = await spec.ExecuteAsync(baseQ);
