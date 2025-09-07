@@ -29,6 +29,7 @@ public static class EscrowOrderPatcher
       entity.FilledQuantity += dto.FilledQuantity.Value;
     }
 
+
     if (dto.MinFiatAmount.HasValue) entity.MinFiatAmount = dto.MinFiatAmount.Value;
     if (dto.MaxFiatAmount.HasValue) entity.MaxFiatAmount = dto.MaxFiatAmount.Value;
 
