@@ -31,4 +31,6 @@ public class MessageEntity
     [ForeignKey(nameof(AccountId))]
     public AccountEntity Account { get; set; }
 
+    public ICollection<AttachmentEntity> Attachments { get; set; } = new List<AttachmentEntity>();
+
 }

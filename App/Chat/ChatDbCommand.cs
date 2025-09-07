@@ -14,6 +14,7 @@ public class ChatDbCommand(P2PDbContext dbContext, IAccountDbCommand accountDbCo
 {
   public async Task<Guid> CreateMessageAsync(MessageDto message)
   {
+    //TODO: add user/admin validation
     try
     {
       await accountDbCommand.UpsertAccountAsync(message.AccountId);

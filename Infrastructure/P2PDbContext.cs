@@ -15,6 +15,7 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
   public DbSet<EscrowOrderPaymentMethodEntity> EscrowOrderPaymentMethod { get; set; }
   public DbSet<RoomEntity> Rooms { get; set; }
   public DbSet<MessageEntity> Messages { get; set; }
+  public DbSet<AttachmentEntity> Attachments { get; set; }
   public DbSet<AccountEntity> Account { get; set; }
   public DbSet<TelegramLinkEntity> TelegramLinks { get; set; }
 
@@ -97,6 +98,45 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
       e.HasKey(x => x.Name);
       e.Property(x => x.CreatedAtUtc).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
       e.HasIndex(x => x.LockedUntilUtc);
+    });
+
+    modelBuilder.Entity<AttachmentEntity>(e =>
+    {
+      e.HasKey(x => x.Id);
+
+      e.Property(x => x.Bucket)
+        .HasConversion<int>()
+        .HasColumnType("integer");
+
+      e.Property(x => x.Status)
+        .HasConversion<int>()
+        .HasColumnType("integer")
+        .HasDefaultValue(PhotoStatus.Uploading);
+
+      e.Property(x => x.CreatedAtUtc)
+        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      e.Property(x => x.Sha256)
+        .HasColumnType("bytea");
+
+      e.HasOne(x => x.Message)
+        .WithMany(m => m.Attachments)
+        .HasForeignKey(x => x.MessageId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      e.HasIndex(x => new { x.MessageId, x.CreatedAtUtc })
+        .HasDatabaseName("ix_attachment_msg_created");
+
+      e.HasIndex(x => new { x.Status, x.CreatedAtUtc })
+        .HasDatabaseName("ix_attachment_status_created");
+
+      e.HasIndex(x => x.StorageKey)
+        .IsUnique()
+        .HasDatabaseName("ux_attachment_storage_key");
+
+      e.HasIndex(x => new { x.Sha256, x.SizeBytes })
+        .IsUnique()
+        .HasDatabaseName("ux_attachment_sha_size");
     });
 
     modelBuilder.Entity<PriceSnapshotEntity>(e =>
