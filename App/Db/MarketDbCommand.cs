@@ -109,14 +109,13 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
             entity.IsPartial = true;
             entity.EscrowStatus = EscrowStatus.PartiallyOnChain;
 
-            if (upsertOrder.OrderSide == OrderSide.Sell)
-            {
-                entity.SellerCrypto = upsertOrder.Buyer ?? entity.BuyerFiat;
-            }
-            else
-            {
-                entity.BuyerFiat = upsertOrder.Seller ?? entity.SellerCrypto;  
-            }
+            //if (upsertOrder.OrderSide == OrderSide.Sell)
+            //{
+            entity.SellerCrypto = upsertOrder.Seller ?? entity.SellerCrypto;  
+
+            //{
+            entity.BuyerFiat = upsertOrder.Buyer ?? entity.BuyerFiat;
+            //}
 
             if (upsertOrder.FilledQuantity.HasValue)
             {
