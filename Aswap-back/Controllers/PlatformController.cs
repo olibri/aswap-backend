@@ -54,7 +54,7 @@ public class PlatformController(
 
 
   [HttpGet("all-new-offers")]
-  [ProducesResponseType(typeof(EscrowOrderDto[]), 200)]
+  [ProducesResponseType(typeof(PagedResult<EscrowOrderDto>), 200)]
   public async Task<IActionResult> GetAllNewOffers(
     [FromQuery] OffersQuery q, CancellationToken ct)
   {

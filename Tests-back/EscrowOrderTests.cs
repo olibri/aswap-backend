@@ -54,9 +54,9 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     result.ShouldBeOfType<OkObjectResult>();
 
     var okResult = result as OkObjectResult;
-    okResult.Value.ShouldBeOfType<EscrowOrderDto[]>();
-    var offers = okResult.Value as EscrowOrderDto[];
-    offers.Length.ShouldBe(ordersCount);
+    okResult.Value.ShouldBeOfType<PagedResult<EscrowOrderDto>>();
+    var offers = okResult.Value as PagedResult<EscrowOrderDto>;
+    offers.Data.Count.ShouldBe(ordersCount);
   }
 
   [Fact]
@@ -83,14 +83,14 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     result.ShouldBeOfType<OkResult>();
 
     var updatedOrder = await marketDbQueries.GetAllNewOffersAsync(new OffersQuery());
-    Console.WriteLine($"Updated order: {updatedOrder[0].Amount}, {updatedOrder[0].FilledQuantity}");
+    Console.WriteLine($"Updated order: {updatedOrder.Data[0].Amount}, {updatedOrder.Data[0].FilledQuantity}");
     updatedOrder.ShouldNotBeNull();
-    updatedOrder[0].MinFiatAmount.ShouldBe(10);
-    updatedOrder[0].MaxFiatAmount.ShouldBe(10000);
-    updatedOrder[0].Status.ShouldBe(EscrowStatus.OnChain);
-    updatedOrder[0].BuyerFiat.ShouldBe("wallet0xzzzz");
-    updatedOrder[0].FilledQuantity.ShouldBe(0.1m);
-    updatedOrder[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
+    updatedOrder.Data[0].MinFiatAmount.ShouldBe(10);
+    updatedOrder.Data[0].MaxFiatAmount.ShouldBe(10000);
+    updatedOrder.Data[0].Status.ShouldBe(EscrowStatus.OnChain);
+    updatedOrder.Data[0].BuyerFiat.ShouldBe("wallet0xzzzz");
+    updatedOrder.Data[0].FilledQuantity.ShouldBe(0.1m);
+    updatedOrder.Data[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
   }
 
   [Fact]
@@ -114,9 +114,9 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto1);
     var updatedOrder1 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
-    Console.WriteLine($"Updated order: {updatedOrder1[0].Amount}, {updatedOrder1[0].FilledQuantity}");
-    updatedOrder1[0].FilledQuantity.ShouldBe(0.1m);
-    updatedOrder1[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
+    Console.WriteLine($"Updated order: {updatedOrder1.Data[0].Amount} ,  {updatedOrder1.Data[0].FilledQuantity}");
+    updatedOrder1.Data[0].FilledQuantity.ShouldBe(0.1m);
+    updatedOrder1.Data[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
 
 
     var updateOrderDto2 = new UpsertOrderDto()
@@ -126,7 +126,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     };
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
     var updatedOrder2 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
-    updatedOrder2.ShouldBeEmpty();
+    updatedOrder2.Data.ShouldBeEmpty();
   }
 
   [Fact]
@@ -248,7 +248,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     // assert: parent має бути Released і зникнути з "нових" офферів (як у твоєму існуючому тесті)
     var list = await q.GetAllNewOffersAsync(new OffersQuery());
-    list.ShouldBeEmpty();
+    list.Data.ShouldBeEmpty();
 
     // діти є (2 шт)
     var children = await childSvc.GetByParentAsync((long)deal);
@@ -294,6 +294,6 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     // коли сума == 1.0 (як у твоїх кейсах) – оффер зникає зі списку нових (Released)
     var list = await q.GetAllNewOffersAsync(new OffersQuery());
-    list.ShouldBeEmpty();
+    list.Data.ShouldBeEmpty();
   }
 }

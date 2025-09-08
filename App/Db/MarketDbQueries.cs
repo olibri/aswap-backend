@@ -22,7 +22,7 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
   }
 
 
-  public async Task<EscrowOrderDto[]> GetAllNewOffersAsync(
+  public async Task<PagedResult<EscrowOrderDto>> GetAllNewOffersAsync(
     OffersQuery q, CancellationToken ct = default)
   {
     var qDb = q with { PriceFrom = q.PriceFrom * 100m };
@@ -38,11 +38,10 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
       .AsNoTracking();
 
     var spec = qDb.BuildSpec();
-    var page = await spec.ExecuteAsync(baseQ.AsNoTracking());
+    var page = await spec.ExecuteAsync(baseQ);
 
-    var zz = page.Data.Count;
-    Console.WriteLine($"Offers found: {zz}");
-    return page.Data.Select(EscrowOrderDto.FromEntity).ToArray();
+    var items = page.Data.Select(EscrowOrderDto.FromEntity).ToList();
+    return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
   }
 
 

@@ -29,7 +29,7 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
     var q = new OffersQuery().With(2, 10); // стор.2 по 10
 
     var page = await queries.GetAllNewOffersAsync(q);
-    page.Length.ShouldBe(10);
+    page.Data.Count.ShouldBe(10);
   }
 
   [Fact]
@@ -42,7 +42,7 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
     var q = new OffersQuery().With(sort: OfferSortField.Price, dir: SortDir.Asc);
 
     var res = await queries.GetAllNewOffersAsync(q);
-    var prices = res.Select(o => o.Price).ToList();
+    var prices = res.Data.Select(o => o.Price).ToList();
     prices.ShouldBe(prices.OrderBy(p => p).ToList());
   }
 
@@ -64,8 +64,8 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
 
     var res = await queries.GetAllNewOffersAsync(q);
 
-    res.Length.ShouldBe(5);
-    res.All(o => o.Status == EscrowStatus.OnChain && o.OfferSide == OrderSide.Buy).ShouldBeTrue();
+    res.Data.Count.ShouldBe(5);
+    res.Data.All(o => o.Status == EscrowStatus.OnChain && o.OfferSide == OrderSide.Buy).ShouldBeTrue();
   }
 
   [Fact]
@@ -94,9 +94,9 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
 
     var res = await queries.GetAllNewOffersAsync(q);
 
-    res.Length.ShouldBeGreaterThan(0);
+    res.Data.Count.ShouldBeGreaterThan(0);
 
-    res.All(o => o.Price * 100 >= thresholdNative).ShouldBeTrue();
+    res.Data.All(o => o.Price * 100 >= thresholdNative).ShouldBeTrue();
   }
 
   [Fact]
@@ -131,8 +131,8 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
 
     var res = await queries.GetAllNewOffersAsync(q);
 
-    res.Length.ShouldBe(expectedIds.Count);
-    res.All(o => expectedIds.Contains(o.Id)).ShouldBeTrue();
+    res.Data.Count.ShouldBe(expectedIds.Count);
+    res.Data.All(o => expectedIds.Contains(o.Id)).ShouldBeTrue();
   }
 
 

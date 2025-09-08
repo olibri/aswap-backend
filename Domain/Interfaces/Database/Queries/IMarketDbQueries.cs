@@ -8,7 +8,7 @@ public interface IMarketDbQueries
 {
     Task<EscrowOrderDto> GetNewOfferAsync(ulong dealId);
 
-    Task<EscrowOrderDto[]> GetAllNewOffersAsync(OffersQuery q, CancellationToken ct = default);
+    Task<PagedResult<EscrowOrderDto>> GetAllNewOffersAsync(OffersQuery q, CancellationToken ct = default);
     Task<EscrowOrderDto[]> GetAllAdminOffersAsync();
 
     public Task<PagedResult<EscrowOrderDto>> GetAllUsersOffersAsync(string userId, UserOffersQuery q);
