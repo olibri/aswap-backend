@@ -108,13 +108,14 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
             entity.EscrowPda = upsertOrder.EscrowPda ?? entity.EscrowPda;
             entity.IsPartial = true;
             entity.EscrowStatus = EscrowStatus.PartiallyOnChain;
+
             if (upsertOrder.OrderSide == OrderSide.Sell)
             {
-                entity.SellerCrypto = upsertOrder.Seller ?? entity.SellerCrypto;
+                entity.SellerCrypto = upsertOrder.Buyer ?? entity.BuyerFiat;
             }
             else
             {
-                entity.BuyerFiat = upsertOrder.Buyer ?? entity.BuyerFiat;
+                entity.BuyerFiat = upsertOrder.Seller ?? entity.SellerCrypto;  
             }
 
             if (upsertOrder.FilledQuantity.HasValue)
