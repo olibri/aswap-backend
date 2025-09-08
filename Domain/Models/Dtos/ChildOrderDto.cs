@@ -13,7 +13,7 @@ public sealed record ChildOrderDto(
   DateTime CreatedAtUtc,
   DateTime? ClosedAtUtc,
   int? FilledAmount,
-  string? FillNonce,
+  int? FillNonce,
   string? FillPda
 )
 {

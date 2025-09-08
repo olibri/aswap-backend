@@ -29,11 +29,11 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
       throw new InvalidOperationException($"DealId mismatch: parent={parent.DealId}, dto={dto.DealId}.");
 
     ChildOrderEntity? entity = null;
-    if (!string.IsNullOrWhiteSpace(dto.FillNonce))
+    if (dto.FillNonce.HasValue)
       entity = await db.Set<ChildOrderEntity>()
         .FirstOrDefaultAsync(x =>
-          x.ParentOrderId == dto.ParentOrderId &&
-          x.FillNonce == dto.FillNonce, ct);
+          x.ParentOrderId == dto.ParentOrderId
+          && x.FillNonce == dto.FillNonce, ct);
 
     var now = DateTime.UtcNow;
 

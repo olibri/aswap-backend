@@ -9,6 +9,6 @@ public sealed record ChildOrderUpsertDto(
   string ContraAgentWallet,
   EscrowStatus EscrowStatus,
   int? FilledAmount,
-  string? FillNonce,
+  int? FillNonce,
   string? FillPda
 );

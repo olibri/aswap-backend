@@ -26,6 +26,6 @@ public class ChildOrderEntity
 
 
   [Column("filled_amount")] public int? FilledAmount { get; set; }
-  [Column("fill_nonce")] public string? FillNonce { get; set; }
+  [Column("fill_nonce")] public int? FillNonce { get; set; }
   [Column("fill_pda")] public string? FillPda { get; set; }
 }
