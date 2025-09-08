@@ -39,6 +39,7 @@ public class EscrowOrderEntity : IHasDomainEvents
 
 
   [Column("closed_at_utc")] public DateTime? ClosedAtUtc { get; set; }
+  [Column("deat_start_time")] public DateTime? DealStartTime { get; set; }
 
   [Column("offer_side")] public OrderSide OfferSide { get; set; }
 

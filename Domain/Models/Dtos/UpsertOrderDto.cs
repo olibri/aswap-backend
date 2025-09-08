@@ -50,6 +50,7 @@ public class UpsertOrderDto : IValidatableObject
   public bool? IsPratial { get; set; }
   public string? FillNonce { get; set; }
   public string? FillPda { get; set; }
+  public DateTime? DealStartTime { get; set; }
 
 
   public bool? AdminCall { get; set; }

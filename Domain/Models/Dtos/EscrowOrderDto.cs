@@ -26,6 +26,7 @@ public class EscrowOrderDto
 
   public DateTime CreatedAtUtc { get; set; }
   public DateTime? ClosedAtUtc { get; set; }
+  public DateTime? DealStartTime { get; set; }
 
   [SwaggerSchema(Description = "OrderSide: 0=Sell, 1=Buy")]
   public OrderSide OfferSide { get; set; }
@@ -88,6 +89,7 @@ public class EscrowOrderDto
       ReferralCode = e.ReferralCode,
       AutoReply = e.AutoReply,
       IsPartial = e.IsPartial,
+      DealStartTime = e.DealStartTime,
     };
 
     if (e.PaymentMethods is not null)
