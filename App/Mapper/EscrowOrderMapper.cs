@@ -80,6 +80,7 @@ public static partial class EscrowOrderMapper
     [MapProperty(nameof(UpsertOrderDto.AutoReply), nameof(EscrowOrderEntity.AutoReply))]
     [MapProperty(nameof(UpsertOrderDto.FilledQuantity), nameof(EscrowOrderEntity.FilledQuantity))]
     [MapProperty(nameof(UpsertOrderDto.AdminCall), nameof(EscrowOrderEntity.AdminCall))]
+    [MapProperty(nameof(UpsertOrderDto.DealStartTime), nameof(EscrowOrderEntity.DealStartTime))]
     public static partial EscrowOrderEntity ToEntity(UpsertOrderDto dto);
 
     private static void OnAfterToEntity(UpsertOrderDto dto, EscrowOrderEntity entity)
