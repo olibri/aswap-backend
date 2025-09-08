@@ -105,7 +105,7 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
         {
             var childDto = BuildChildUpsertFrom(upsertOrder, entity);
             await childOffers.UpsertAsync(childDto with { EscrowStatus = EscrowStatus.PartiallyOnChain }, CancellationToken.None);
-
+            entity.EscrowPda = upsertOrder.EscrowPda ?? entity.EscrowPda;
             entity.IsPartial = true;
             entity.EscrowStatus = EscrowStatus.PartiallyOnChain;
             if (upsertOrder.OrderSide == OrderSide.Sell)
