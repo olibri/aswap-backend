@@ -135,8 +135,8 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
 
     private static ChildOrderUpsertDto BuildChildUpsertFrom(UpsertOrderDto dto, EscrowOrderEntity parent)
     {
-        var ownerWallet = dto.OrderSide == OrderSide.Sell ? dto.Seller : dto.Buyer;
-        var contraWallet = dto.OrderSide == OrderSide.Sell ? dto.Buyer : dto.Seller;
+        var ownerWallet = parent.OfferSide == OrderSide.Sell ? parent.SellerCrypto : parent.BuyerFiat;
+        var contraWallet = parent.OfferSide == OrderSide.Sell ? dto.Buyer : dto.Seller;
 
         if (string.IsNullOrWhiteSpace(ownerWallet))
             throw new ArgumentException("Owner wallet is required for child upsert (derived from dto.Seller/dto.Buyer).", nameof(dto));
