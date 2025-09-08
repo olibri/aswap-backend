@@ -34,10 +34,10 @@ public static class EscrowOrderPatcher
     if (dto.MaxFiatAmount.HasValue) entity.MaxFiatAmount = dto.MaxFiatAmount.Value;
 
     entity.PriceType = dto.PriceType;
-    entity.BasePrice = dto.BasePrice;
-    entity.MarginPercent = dto.MarginPercent;
-    entity.PaymentWindowMinutes = dto.PaymentWindowMinutes;
-    entity.ListingMode = dto.ListingMode;
+    entity.BasePrice = dto.BasePrice ?? entity.BasePrice;
+    entity.MarginPercent = dto.MarginPercent ?? entity.MarginPercent;
+    entity.PaymentWindowMinutes = dto.PaymentWindowMinutes ?? entity.PaymentWindowMinutes;
+    entity.ListingMode = dto.ListingMode ;
     entity.IsPartial = dto.IsPratial ?? entity.IsPartial;
     entity.EscrowPda = dto.EscrowPda ?? entity.EscrowPda;
     entity.DealStartTime = dto.DealStartTime ?? entity.DealStartTime;
