@@ -100,7 +100,7 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
         if (entity is null)
             throw new InvalidOperationException($"EscrowOrderEntity with DealId {upsertOrder.OrderId} was not found.");
 
-        if (upsertOrder.IsPratial == true)
+        if (upsertOrder.IsPartial == true)
         {
             var childDto = BuildChildUpsertFrom(upsertOrder, entity);
             await childOffers.UpsertAsync(childDto with { EscrowStatus = EscrowStatus.PartiallyOnChain }, CancellationToken.None);

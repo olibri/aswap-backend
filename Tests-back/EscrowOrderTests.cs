@@ -185,7 +185,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       OrderSide = OrderSide.Sell,    // власник = Seller
       Seller = "seller_wallet_X",
       Buyer = "buyer_wallet_Y",
-      IsPratial = true,              // <- ключ: йдемо в child-флоу
+      IsPartial = true,              // <- ключ: йдемо в child-флоу
       FilledQuantity = 0.1m
     };
     await cmd.UpdateCurrentOfferAsync(dto);
@@ -231,7 +231,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       OrderSide = OrderSide.Sell,
       Seller = "seller_wallet_X",
       Buyer = "buyer_wallet_Y",
-      IsPratial = true,
+      IsPartial = true,
       FilledQuantity = 0.4m
     });
 
@@ -242,7 +242,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       OrderSide = OrderSide.Sell,
       Seller = "seller_wallet_X",
       Buyer = "buyer_wallet_Y",
-      IsPratial = true,
+      IsPartial = true,
       FilledQuantity = 0.6m
     });
 
@@ -287,7 +287,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
         OrderSide = OrderSide.Sell,
         Seller = "seller_wallet_X",
         Buyer = "buyer_wallet_Y",
-        IsPratial = true,
+        IsPartial = true,
         FilledQuantity = f
       });
     }
