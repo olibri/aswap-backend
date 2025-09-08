@@ -25,6 +25,8 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
   public async Task<EscrowOrderDto[]> GetAllNewOffersAsync(
     OffersQuery q, CancellationToken ct = default)
   {
+    var qDb = q with { PriceFrom = q.PriceFrom * 100m };
+
     var baseQ = dbContext.EscrowOrders
       .Where(o => o.EscrowStatus == EscrowStatus.PendingOnChain
                   || o.EscrowStatus == EscrowStatus.OnChain
@@ -35,7 +37,7 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
       .AsSplitQuery()
       .AsNoTracking();
 
-    var spec = q.BuildSpec();
+    var spec = qDb.BuildSpec();
     var page = await spec.ExecuteAsync(baseQ.AsNoTracking());
 
     var zz = page.Data.Count;

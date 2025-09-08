@@ -25,7 +25,7 @@ public static class OfferSpecExtensions
       spec.Where(new EqualFilter<EscrowOrderEntity, string>(o => o.TokenMint, q.TokenMint!));
 
     if (q.PriceFrom is not null)
-      spec.Where(new GreaterOrEqualFilter<EscrowOrderEntity, decimal>(o => o.Price, (decimal)q.PriceFrom.Value));
+      spec.Where(new GreaterOrEqualFilter<EscrowOrderEntity, decimal>(o => o.Price, q.PriceFrom.Value));
 
     if (q.PaymentMethod is { Length: > 0 })
       spec.Where(new AnyInCollectionFilter<EscrowOrderEntity, EscrowOrderPaymentMethodEntity, string>(

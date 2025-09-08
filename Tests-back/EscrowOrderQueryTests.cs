@@ -86,7 +86,7 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
 
     prices.Count.ShouldBeGreaterThan(0);
 
-    var thresholdNative = prices[prices.Count / 3];
+    var thresholdNative = prices[prices.Count / 3]/100;
 
     var thresholdForQuery = Convert.ToDecimal(thresholdNative);
     var queries = fixture.GetService<IMarketDbQueries>();
