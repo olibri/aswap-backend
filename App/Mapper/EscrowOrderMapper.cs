@@ -80,7 +80,6 @@ public static partial class EscrowOrderMapper
     [MapProperty(nameof(UpsertOrderDto.AutoReply), nameof(EscrowOrderEntity.AutoReply))]
     [MapProperty(nameof(UpsertOrderDto.FilledQuantity), nameof(EscrowOrderEntity.FilledQuantity))]
     [MapProperty(nameof(UpsertOrderDto.AdminCall), nameof(EscrowOrderEntity.AdminCall))]
-    [MapProperty(nameof(UpsertOrderDto.DealStartTime), nameof(EscrowOrderEntity.DealStartTime))]
     public static partial EscrowOrderEntity ToEntity(UpsertOrderDto dto);
 
     private static void OnAfterToEntity(UpsertOrderDto dto, EscrowOrderEntity entity)
@@ -95,6 +94,7 @@ public static partial class EscrowOrderMapper
             entity.Amount = ToAtomic(dto.Amount.Value, 1_000_000m);
 
         entity.Price = dto.Price is not null ? ToAtomic(dto.Price.Value, 100m) : 0UL;
+        entity.DealStartTime = dto.DealStartTime;
     }
 
     private static ulong ToAtomic(decimal value, decimal multiplier)
