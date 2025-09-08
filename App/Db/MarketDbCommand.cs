@@ -1,16 +1,17 @@
 ﻿using App.Mapper;
 using Domain.Enums;
 using Domain.Interfaces.Database.Command;
-using Domain.Models.DB;
-using Domain.Models.Dtos;
-using Domain.Models.Events;
-using Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using Domain.Models.Enums;
-using System.Data;
 using Domain.Interfaces.Services.Order;
 using Domain.Models.Api.Order;
+using Domain.Models.DB;
+using Domain.Models.Dtos;
+using Domain.Models.Enums;
+using Domain.Models.Events;
+using Infrastructure;
+using Infrastructure.Migrations;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
 
 namespace App.Db;
 
@@ -107,6 +108,14 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
 
             entity.IsPartial = true;
             entity.EscrowStatus = EscrowStatus.PartiallyOnChain;
+            if (upsertOrder.OrderSide == OrderSide.Sell)
+            {
+                entity.SellerCrypto = upsertOrder.Seller ?? entity.SellerCrypto;
+            }
+            else
+            {
+                entity.BuyerFiat = upsertOrder.Buyer ?? entity.BuyerFiat;
+            }
 
             if (upsertOrder.FilledQuantity.HasValue)
             {

@@ -183,7 +183,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     {
       OrderId = deal,
       OrderSide = OrderSide.Sell,    // власник = Seller
-      Seller = "seller_wallet_X",
+      Seller = parent.SellerCrypto,
       Buyer = "buyer_wallet_Y",
       IsPartial = true,              // <- ключ: йдемо в child-флоу
       FilledQuantity = 0.1m
@@ -204,7 +204,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     ch.DealId.ShouldBe(deal);
     ch.ParentOrderId.ShouldNotBe(Guid.Empty);
     ch.EscrowStatus.ShouldBe(EscrowStatus.PartiallyOnChain);
-    ch.OrderOwnerWallet.ShouldBe("seller_wallet_X");   // власник за OrderSide.Sell
+    ch.OrderOwnerWallet.ShouldBe(parent.SellerCrypto);   // власник за OrderSide.Sell
     ch.ContraAgentWallet.ShouldBe("buyer_wallet_Y");
   }
 
