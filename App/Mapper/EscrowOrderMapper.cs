@@ -94,7 +94,9 @@ public static partial class EscrowOrderMapper
             entity.Amount = ToAtomic(dto.Amount.Value, 1_000_000m);
 
         entity.Price = dto.Price is not null ? ToAtomic(dto.Price.Value, 100m) : 0UL;
-        entity.DealStartTime = dto.DealStartTime;
+
+        if (dto.DealStartTime.HasValue)
+            entity.DealStartTime = dto.DealStartTime;
     }
 
     private static ulong ToAtomic(decimal value, decimal multiplier)
