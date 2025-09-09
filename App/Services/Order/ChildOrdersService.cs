@@ -29,11 +29,11 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
       throw new InvalidOperationException($"DealId mismatch: parent={parent.DealId}, dto={dto.DealId}.");
 
     ChildOrderEntity? entity = null;
-    if (dto.FillNonce.HasValue)
+
+    if (dto.EscrowStatus is EscrowStatus.SignedByContraAgentSide or EscrowStatus.SignedByOwnerSide)
       entity = await db.Set<ChildOrderEntity>()
         .FirstOrDefaultAsync(x =>
-          x.ParentOrderId == dto.ParentOrderId
-          && x.FillNonce == dto.FillNonce, ct);
+          x.ParentOrderId == dto.ParentOrderId, ct);
 
     var now = DateTime.UtcNow;
 
@@ -63,10 +63,7 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
       entity.FillPda = dto.FillPda;
       entity.FillNonce = dto.FillNonce;
 
-      if (dto.EscrowStatus == EscrowStatus.Released)
-      {
-        entity.ClosedAtUtc = now;
-      }
+      if (dto.EscrowStatus == EscrowStatus.Released) entity.ClosedAtUtc = now;
     }
 
     await db.SaveChangesAsync(ct);

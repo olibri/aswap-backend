@@ -104,10 +104,14 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
         if (upsertOrder.IsPartial == true)
         {
             var childDto = BuildChildUpsertFrom(upsertOrder, entity);
-            await childOffers.UpsertAsync(childDto with { EscrowStatus = EscrowStatus.PartiallyOnChain }, CancellationToken.None);
+            var childDtoUpdated = await childOffers.UpsertAsync(childDto, CancellationToken.None);
+            if (childDtoUpdated.EscrowStatus is EscrowStatus.SignedByContraAgentSide or EscrowStatus.SignedByOwnerSide)
+            {
+                return; 
+            }
             entity.EscrowPda = upsertOrder.EscrowPda ?? entity.EscrowPda;
             entity.IsPartial = true;
-            entity.EscrowStatus = EscrowStatus.PartiallyOnChain;
+            entity.EscrowStatus = upsertOrder.Status?? entity.EscrowStatus;
 
             //if (upsertOrder.OrderSide == OrderSide.Sell)
             //{
@@ -161,7 +165,7 @@ public class MarketDbCommand(P2PDbContext dbContext, IChildOffersService childOf
             DealId: parent.DealId,
             OrderOwnerWallet: ownerWallet,
             ContraAgentWallet: contraWallet,
-            EscrowStatus: EscrowStatus.PartiallyOnChain,
+            EscrowStatus: dto.Status ?? parent.EscrowStatus,
             FilledAmount: childFilled,
             FillNonce: dto.FillNonce, 
             FillPda: dto.FillPda     
