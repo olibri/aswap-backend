@@ -50,7 +50,7 @@ public class OrderController(
 
   [HttpGet]
   [Route("get-best-price")]
-  public async Task<IActionResult> GetBestPrice(BestPriceRequest bestPrice)
+  public async Task<IActionResult> GetBestPrice([FromQuery]BestPriceRequest bestPrice)
   {
     log.LogInformation("Buyer createOrder request");
     var res = await IBestPriceService.GetBestPriceAsync(bestPrice, CancellationToken.None);

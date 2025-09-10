@@ -2,9 +2,11 @@
 
 namespace Domain.Models.Api.Order;
 
-public readonly record struct BestPriceRequest(
-  OrderSide Side,
-  string FiatCode,
-  string TokenMint,
-  IReadOnlyList<short> MethodIds
-);
+public sealed class BestPriceRequest
+{
+  public OrderSide Side { get; set; }
+  public string FiatCode { get; set; }
+
+  public string TokenMint { get; set; }
+  public IReadOnlyList<short> MethodIds { get; set; }
+};

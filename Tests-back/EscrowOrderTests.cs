@@ -238,8 +238,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var initial = await q.GetNewOfferAsync(deal);
     initial.ShouldNotBeNull();
 
-    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
-    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", accountDbCommand);
 
     // крок 1: часткове заповнення
     await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
@@ -295,8 +295,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var q = fixture.GetService<IMarketDbQueries>();
     var accountDbCommand = fixture.GetService<IAccountDbCommand>();
 
-    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
-    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", accountDbCommand);
     
     var deal = 1747314431853UL;
 
@@ -313,7 +313,6 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       });
     }
 
-    // коли сума == 1.0 (як у твоїх кейсах) – оффер зникає зі списку нових (Released)
     var list = await q.GetAllNewOffersAsync(new OffersQuery());
     list.Data.ShouldBeEmpty();
   }
