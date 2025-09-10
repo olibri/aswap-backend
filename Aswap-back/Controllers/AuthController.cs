@@ -1,5 +1,6 @@
 ﻿using App.Services.Auth;
 using App.Utils;
+using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Auth;
 using Domain.Interfaces.Services.IP;
@@ -16,7 +17,8 @@ public class AuthController(
   ISignatureVerifier verifier,
   IRefreshTokenService refreshStore,
   IClientIpAccessor ipAccessor,
-  IAccountService accounts) : Controller
+  IAccountService accounts,
+  IAccountDbCommand accountDbCommand) : Controller
 {
   [HttpPost]
   public async Task<IActionResult> Authenticate([FromBody] WalletAuthDto dto,
@@ -31,6 +33,8 @@ public class AuthController(
     var banUntil = await accounts.GetBanUntilAsync(dto.Wallet, ct);
     if (banUntil is not null && banUntil > DateTime.UtcNow)
       return StatusCode(403, "User is banned");
+
+    await accountDbCommand.UpsertAccountAsync(dto.Wallet);
 
     var pair = tokens.Generate(dto.Wallet, "user", banUntil);
 

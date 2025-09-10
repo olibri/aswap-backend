@@ -1,6 +1,8 @@
-﻿using Domain.Enums;
+﻿using System.Text.Json;
+using Domain.Enums;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Services.Notification;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Api.CoinJelly;
 using Domain.Models.Dtos;
@@ -15,7 +17,8 @@ public class TgBotHandler(
   ITelegramBotClient bot,
   long adminId,
   IAccountDbQueries accountDbQueries,
-  IMarketDbCommand marketDbCommand) : ITgBotHandler
+  IMarketDbCommand marketDbCommand,
+  INotificationService notificationService) : ITgBotHandler
 {
   public async Task<IReadOnlyList<Message>> NotifyMessageAsync(TgBotDto dto)
   {
@@ -50,13 +53,26 @@ public class TgBotHandler(
       $"<b>Buyer wallet:</b> <code>{dto.BuyerWallet}</code>\n" +
       $"<b>Seller wallet:</b> <code>{dto.SellerWallet}</code>\n\n" +
       $"<a href=\"{dto.OrderUrl}\">🔗 Click</a>";
-
+    
     await marketDbCommand.UpdateCurrentOfferAsync(new UpsertOrderDto
     {
       OrderId = dto.DealId,
       AdminCall = true,
       Status = EscrowStatus.AdminResolving
     });
+
+    var usersToNotify = new[] { dto.BuyerWallet, dto.SellerWallet }.Where(w => !string.IsNullOrEmpty(w));
+
+    foreach (var userWallet in usersToNotify)
+    {
+      await notificationService.CreateNotificationAsync(
+        userWallet!,
+        "Dispute Opened",
+        $"A dispute has been opened for order #{dto.DealId}. Admin review is required.",
+        NotificationType.DisputeOpened,
+        dto.DealId.ToString(),
+        JsonSerializer.Serialize(new { OrderId = dto.DealId, RequiresAdminReview = true }));
+    }
     return await SendSafeAsync(adminId, text);
   }
 

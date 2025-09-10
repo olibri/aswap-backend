@@ -1,4 +1,5 @@
-﻿using Aswap_back.Controllers;
+﻿using App.Db;
+using Aswap_back.Controllers;
 using Domain.Enums;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
@@ -63,10 +64,19 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
   public async Task PartialUpdateOffer()
   {
     PostgresDatabase.ResetState("escrow_orders");
+    PostgresDatabase.ResetState("account");
+
     var controller = fixture.GetService<OrderController>();
     var marketDbQueries = fixture.GetService<IMarketDbQueries>();
+    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
+    var accountDbQueries = fixture.GetService<IAccountDbQueries>();
     await OffersExtensions.CreateFakeOrder(fixture);
 
+    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
+    var account = await accountDbQueries.GetAccountByWalletAsync("wallet0xzzzz");
+
+    account.ShouldNotBeNull();
     var updateOrderDto = new UpsertOrderDto()
     {
       OrderId = 1747314431853UL,
@@ -101,6 +111,10 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var marketDbQuery = fixture.GetService<IMarketDbQueries>();
     await OffersExtensions.CreateFakeOrder(fixture);
 
+    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
+
+    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
     var updateOrderDto1 = new UpsertOrderDto()
     {
       OrderId = 1747314431853UL,
@@ -218,10 +232,14 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var cmd = fixture.GetService<IMarketDbCommand>();
     var q = fixture.GetService<IMarketDbQueries>();
     var childSvc = fixture.GetService<IChildOffersService>();
+    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
 
     var deal = 1747314431853UL;
     var initial = await q.GetNewOfferAsync(deal);
     initial.ShouldNotBeNull();
+
+    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
 
     // крок 1: часткове заповнення
     await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
@@ -275,7 +293,11 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     var cmd = fixture.GetService<IMarketDbCommand>();
     var q = fixture.GetService<IMarketDbQueries>();
+    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
 
+    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
+    
     var deal = 1747314431853UL;
 
     foreach (var f in fills)
