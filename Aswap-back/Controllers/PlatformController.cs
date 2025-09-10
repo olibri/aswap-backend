@@ -8,6 +8,7 @@ using Domain.Models.Api.CoinPrice;
 using Domain.Models.Api.Order;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.Api.Swap;
+using Domain.Models.Api.User;
 using Domain.Models.Dtos;
 using Domain.Models.Dtos.Jupiter;
 using Microsoft.AspNetCore.Mvc;
@@ -132,6 +133,8 @@ public class PlatformController(
   }
 
   [HttpGet("trading-stats/{wallet}")]
+  [ProducesResponseType(typeof(UserTradingStatsDto), 200)]
+
   public async Task<IActionResult> GetTradingStats(string wallet)
   {
     var stats = await userStatsService.GetUserStatsAsync(wallet);
