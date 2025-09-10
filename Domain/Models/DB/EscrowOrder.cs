@@ -79,7 +79,14 @@ public class EscrowOrderEntity : IHasDomainEvents
   [Column("auto_reply", TypeName = "text")]
   public string? AutoReply { get; set; }
 
+  [Column("payment_confirmed_at")]
+  public DateTime? PaymentConfirmedAt { get; set; } // Коли байер підтвердив оплату (статус 4 або 5)
 
+  [Column("crypto_released_at")]
+  public DateTime? CryptoReleasedAt { get; set; } // Коли селер релізнув крипту (статус 3)
+
+  [Column("release_time_seconds")]
+  public int? ReleaseTimeSeconds { get; set; } // Час між PaymentC
   public ICollection<ChildOrderEntity> ChildOrders { get; set; } = new List<ChildOrderEntity>();
   public ICollection<EscrowOrderPaymentMethodEntity> PaymentMethods { get; set; } = [];
 

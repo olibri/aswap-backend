@@ -105,6 +105,9 @@ public class MarketDbCommand(
       throw new InvalidOperationException($"EscrowOrderEntity with DealId {upsertOrder.OrderId} was not found.");
 
     var previousStatus = entity.EscrowStatus;
+    var now = DateTime.UtcNow;
+    entity = TrackReleaseTime(entity, previousStatus, upsertOrder.Status, now);
+
 
     if (upsertOrder.IsPartial == true)
     {
@@ -144,6 +147,27 @@ public class MarketDbCommand(
 
     await dbContext.SaveChangesAsync();
     await NotifyStatusChange(entity, previousStatus, entity.EscrowStatus);
+  }
+  private static EscrowOrderEntity TrackReleaseTime(EscrowOrderEntity entity, EscrowStatus previousStatus, EscrowStatus? newStatus, DateTime now)
+  {
+    if (newStatus == null) return entity;
+
+    if (previousStatus != EscrowStatus.SignedByOwnerSide &&
+        previousStatus != EscrowStatus.SignedByContraAgentSide &&
+        (newStatus == EscrowStatus.SignedByOwnerSide || newStatus == EscrowStatus.SignedByContraAgentSide))
+    {
+      entity.PaymentConfirmedAt = now;
+    }
+
+    if ((previousStatus == EscrowStatus.SignedByOwnerSide || previousStatus == EscrowStatus.SignedByContraAgentSide) &&
+        newStatus == EscrowStatus.Signed &&
+        entity.PaymentConfirmedAt.HasValue)
+    {
+      entity.CryptoReleasedAt = now;
+      entity.ReleaseTimeSeconds = (int)(now - entity.PaymentConfirmedAt.Value).TotalSeconds;
+    }
+
+    return entity;
   }
 
   private EscrowStatus MoveToSignedStatus(EscrowOrderEntity orderEntity, decimal newFilledQ)

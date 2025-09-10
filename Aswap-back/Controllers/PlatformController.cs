@@ -1,5 +1,6 @@
 ﻿using Domain.Interfaces.Chat;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.Services.CoinService;
 using Domain.Interfaces.Services.CoinService.Jupiter;
 using Domain.Interfaces.TelegramBot;
@@ -22,6 +23,7 @@ public class PlatformController(
   IChatDbCommand chatDbCommand,
   IJupiterSwapApi jupiter,
   ISwapService swapService,
+  IUserTradingStatsService userStatsService,
   ILogger<PlatformController> log) : Controller
 {
   [HttpPost]
@@ -127,5 +129,12 @@ public class PlatformController(
     log.LogInformation("Swap history for {userWallet}", q.UserWallet);
     var res = await swapService.SwapHistoryAsync(q, ct);
     return Ok(res);
+  }
+
+  [HttpGet("trading-stats/{wallet}")]
+  public async Task<IActionResult> GetTradingStats(string wallet)
+  {
+    var stats = await userStatsService.GetUserStatsAsync(wallet);
+    return Ok(stats);
   }
 }

@@ -106,6 +106,10 @@ public class RootBuilder
           .As<INotificationService>()
           .InstancePerLifetimeScope();
 
+        builder.RegisterType<UserTradingStatsService>()
+          .As<IUserTradingStatsService>()
+          .InstancePerLifetimeScope();
+
         builder.RegisterType<ChildOffersService>()
           .As<IChildOffersService>()
           .InstancePerLifetimeScope();
