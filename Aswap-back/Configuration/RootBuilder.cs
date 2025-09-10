@@ -17,6 +17,7 @@ using App.Services.CoinPrice.Planner;
 using App.Services.CoinPrice.Swap;
 using App.Services.CoinPrice.TokenRepo;
 using App.Services.CoinPrice.Workers;
+using App.Services.Notification;
 using App.Services.Order;
 using App.Services.PaymentMethod;
 using App.Services.PaymentMethod.BackgroundWorker;
@@ -45,6 +46,7 @@ using Domain.Interfaces.Services.CoinService.Jupiter;
 using Domain.Interfaces.Services.CoinService.Planner;
 using Domain.Interfaces.Services.CoinService.TokenRepo;
 using Domain.Interfaces.Services.IP;
+using Domain.Interfaces.Services.Notification;
 using Domain.Interfaces.Services.Order;
 using Domain.Interfaces.Services.PaymentMethod;
 using Domain.Interfaces.Strategy;
@@ -98,6 +100,10 @@ public class RootBuilder
         builder.RegisterType<CoinService>().As<ICoinService>().InstancePerLifetimeScope();
         builder.RegisterType<SwapService>()
           .As<ISwapService>()
+          .InstancePerLifetimeScope();
+
+        builder.RegisterType<NotificationService>()
+          .As<INotificationService>()
           .InstancePerLifetimeScope();
 
         builder.RegisterType<ChildOffersService>()
@@ -238,6 +244,7 @@ public class RootBuilder
         //  .InstancePerLifetimeScope();
 
         builder.RegisterType<WebHookController>().InstancePerDependency();
+        builder.RegisterType<NotificationController>().InstancePerDependency();
         builder.RegisterType<CoinJellyController>().InstancePerDependency();
         builder.RegisterType<TelegramHookController>().InstancePerDependency();
         builder.RegisterType<AdminController>().InstancePerDependency();

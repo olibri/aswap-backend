@@ -59,6 +59,8 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
   public DbSet<ChildOrderEntity> ChildOrders { get; set; }
 
+  public DbSet<UserNotificationEntity> UserNotifications { get; set; }
+
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     modelBuilder.Entity<ChildOrderEntity>(entity =>
@@ -79,6 +81,37 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
 
       entity.HasIndex(x => new { x.EscrowStatus, x.CreatedAtUtc })
         .HasDatabaseName("ix_child_order_status_created");
+    });
+
+    modelBuilder.Entity<UserNotificationEntity>(entity =>
+    {
+      entity.HasKey(x => x.Id);
+
+      entity.Property(x => x.CreatedAt)
+        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      entity.Property(x => x.NotificationType)
+        .HasConversion<string>()
+        .HasColumnName("notification_type")
+        .HasMaxLength(40);
+
+      entity.Property(x => x.Metadata)
+        .HasColumnType("jsonb");
+
+      entity.HasIndex(x => new { x.UserWallet, x.CreatedAt })
+        .HasDatabaseName("ix_user_notifications_wallet_created");
+
+      entity.HasIndex(x => new { x.UserWallet, x.IsRead, x.CreatedAt })
+        .HasDatabaseName("ix_user_notifications_wallet_read_created");
+
+      entity.HasIndex(x => x.RelatedEntityId)
+        .HasDatabaseName("ix_user_notifications_related_entity");
+
+      entity.HasOne(x => x.User)
+        .WithMany()
+        .HasForeignKey(x => x.UserWallet)
+        .HasPrincipalKey(a => a.WalletAddress)
+        .OnDelete(DeleteBehavior.Cascade);
     });
 
     modelBuilder.Entity<AccountSwapHistoryEntity>(entity =>
