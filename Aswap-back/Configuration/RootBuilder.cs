@@ -385,10 +385,6 @@ public class RootBuilder
           {
             var jwtOpt = cfg.GetSection("Jwt").Get<TokenOptions>()!;
 
-            // ✅ ДОДАТИ: Очистити дефолтні мапінги
-            //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
-            // ✅ ДОДАТИ: Події для діагностики
             options.Events = new JwtBearerEvents
             {
               OnMessageReceived = context =>
@@ -437,7 +433,7 @@ public class RootBuilder
               ValidateAudience = true,
               ValidateLifetime = true,
               ValidateIssuerSigningKey = true,
-              ClockSkew = TimeSpan.FromMinutes(5) // ✅ Збільшити до 5 хвилин
+              ClockSkew = TimeSpan.FromSeconds(30) 
             };
           });
         services.AddAuthorization();

@@ -55,7 +55,7 @@ public sealed class BestPriceService(IDbContextFactory<P2PDbContext> dbf) : IBes
     {
       OrderId = o.Id,
       Side = o.OfferSide,
-      Price = o.Price,
+      Price = o.Price / 100,
       MethodIds = o.PaymentMethods.Select(pm => pm.MethodId).ToArray()
     });
   }
