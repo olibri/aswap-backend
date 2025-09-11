@@ -52,7 +52,12 @@ public class NotificationController(INotificationService notificationService) : 
 
   private string GetUserWallet()
   {
-    return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-           ?? throw new UnauthorizedAccessException("User wallet not found in token");
+    var wallet = User.FindFirst("sub")?.Value
+                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(wallet))
+      throw new UnauthorizedAccessException("User wallet not found in token");
+
+    return wallet;
   }
 }
