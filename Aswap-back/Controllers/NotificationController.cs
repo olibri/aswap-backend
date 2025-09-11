@@ -2,15 +2,37 @@
 using Domain.Models.Api.QuerySpecs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Aswap_back.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class NotificationController(INotificationService notificationService) : Controller
 {
+  [HttpGet("test")]
+  //[AllowAnonymous] // Тимчасово без авторизації
+  public IActionResult Test()
+  {
+    var now = DateTime.UtcNow;
+    Console.WriteLine($"Server UTC time: {now}");
+    Console.WriteLine($"Unix timestamp: {((DateTimeOffset)now).ToUnixTimeSeconds()}");
+
+    // Перевірте ваш токен
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var token = tokenHandler.ReadJwtToken(
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1TnZxYVM4akRmWjMxeFRmYnpRd2c3WmFEdXRtVllqV0pjMnZLTHMzRmQxRSIsInJvbGUiOiJ1c2VyIiwibmJmIjoxNzU3NTczMDQ5LCJleHAiOjE3NTc1NzM5NDksImlzcyI6IkFzd2FwIiwiYXVkIjoiQXN3YXBBcHAifQ.imJYNlOKwDySxXlbRcjakp64npSkMXCQj3R6kovV72U");
+    Console.WriteLine($"Token nbf: {token.Claims.FirstOrDefault(c => c.Type == "nbf")?.Value}");
+    Console.WriteLine($"Token exp: {token.Claims.FirstOrDefault(c => c.Type == "exp")?.Value}");
+
+    var userWallet = GetUserWallet();
+    Console.WriteLine($"userWallet: {userWallet}");
+
+    return Ok(new { message = "Controller works without auth", time = DateTime.UtcNow });
+  }
+
   [HttpGet]
   public async Task<IActionResult> GetNotifications([FromQuery] NotificationQuery query)
   {
@@ -52,11 +74,22 @@ public class NotificationController(INotificationService notificationService) : 
 
   private string GetUserWallet()
   {
-    var wallet = User.FindFirst("sub")?.Value
-                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    // Спробувати різні claim types
+    var wallet = User.FindFirst("http://schemas.xmlsoap.org/2003/ws/2005/05/identity/claims/nameidentifier")?.Value // ASP.NET mapped
+                 ?? User.FindFirst("sub")?.Value // JWT standard
+                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value // CLR constant
+                 ?? User.Identity?.Name; // Fallback
 
     if (string.IsNullOrEmpty(wallet))
+    {
+      Console.WriteLine("=== DEBUG CLAIMS ===");
+      foreach (var claim in User.Claims)
+      {
+        Console.WriteLine($"  {claim.Type} = {claim.Value}");
+      }
+
       throw new UnauthorizedAccessException("User wallet not found in token");
+    }
 
     return wallet;
   }

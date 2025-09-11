@@ -6,6 +6,7 @@ using Domain.Interfaces.Services.Auth;
 using Domain.Interfaces.Services.IP;
 using Domain.Models.Api.Auth;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Aswap_back.Controllers;
 
@@ -77,6 +78,7 @@ public class AuthController(
   [HttpPost("refresh")]
   public async Task<IActionResult> Refresh(CancellationToken ct)
   {
+  
     var refresh = Request.Cookies["refresh_token"];
     if (string.IsNullOrEmpty(refresh)) return Unauthorized("No refresh cookie");
 

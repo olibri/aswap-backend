@@ -1,4 +1,5 @@
-﻿using System.Net.Mime;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net.Mime;
 using System.Text;
 using App.Chat;
 using App.CoinJelly;
@@ -383,6 +384,49 @@ public class RootBuilder
           .AddJwtBearer(options =>
           {
             var jwtOpt = cfg.GetSection("Jwt").Get<TokenOptions>()!;
+
+            // ✅ ДОДАТИ: Очистити дефолтні мапінги
+            //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+            // ✅ ДОДАТИ: Події для діагностики
+            options.Events = new JwtBearerEvents
+            {
+              OnMessageReceived = context =>
+              {
+                var authHeader = context.Request.Headers["Authorization"].ToString();
+                Console.WriteLine($"Authorization header: '{authHeader}'");
+
+                if (authHeader.StartsWith("Bearer "))
+                {
+                  var token = authHeader.Substring("Bearer ".Length);
+                  Console.WriteLine($"Token length: {token.Length}");
+                  Console.WriteLine($"Token parts count: {token.Split('.').Length}");
+                  Console.WriteLine($"Token preview: {token.Substring(0, Math.Min(50, token.Length))}...");
+                }
+
+                return Task.CompletedTask;
+              },
+              OnTokenValidated = context =>
+              {
+                Console.WriteLine("JWT Token validated!");
+                foreach (var claim in context.Principal.Claims)
+                {
+                  Console.WriteLine($"  {claim.Type} = {claim.Value}");
+                }
+                return Task.CompletedTask;
+              },
+              OnAuthenticationFailed = context =>
+              {
+                Console.WriteLine($"JWT Auth failed: {context.Exception.Message}");
+                Console.WriteLine($"Exception type: {context.Exception.GetType().Name}");
+                if (context.Exception.InnerException != null)
+                {
+                  Console.WriteLine($"Inner exception: {context.Exception.InnerException.Message}");
+                }
+                return Task.CompletedTask;
+              }
+            };
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
               ValidIssuer = jwtOpt.Issuer,
@@ -393,7 +437,7 @@ public class RootBuilder
               ValidateAudience = true,
               ValidateLifetime = true,
               ValidateIssuerSigningKey = true,
-              ClockSkew = TimeSpan.FromSeconds(30)
+              ClockSkew = TimeSpan.FromMinutes(5) // ✅ Збільшити до 5 хвилин
             };
           });
         services.AddAuthorization();
