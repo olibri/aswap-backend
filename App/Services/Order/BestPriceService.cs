@@ -16,7 +16,6 @@ public sealed class BestPriceService(IDbContextFactory<P2PDbContext> dbf) : IBes
     await using var db = await dbf.CreateDbContextAsync(ct);
 
     var q = BuildInitialQuery(db, req);
-    q = ApplyPaymentMethodFilter(q, req);
     q = ApplyPriceSorting(q, req.Side);
 
     return await MapToBestPriceDto(q).FirstOrDefaultAsync(ct);
@@ -33,13 +32,6 @@ public sealed class BestPriceService(IDbContextFactory<P2PDbContext> dbf) : IBes
         (o.EscrowStatus == EscrowStatus.OnChain || o.EscrowStatus == EscrowStatus.PartiallyOnChain));
   }
 
-  private static IQueryable<EscrowOrderEntity> ApplyPaymentMethodFilter(
-    IQueryable<EscrowOrderEntity> q, BestPriceRequest req)
-  {
-    return req.MethodIds.Count == 0
-      ? q
-      : q.Where(o => o.PaymentMethods.Any(pm => req.MethodIds.Contains(pm.MethodId)));
-  }
 
   private static IOrderedQueryable<EscrowOrderEntity> ApplyPriceSorting(
     IQueryable<EscrowOrderEntity> q, OrderSide side)

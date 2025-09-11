@@ -8,5 +8,4 @@ public sealed class BestPriceRequest
   public string FiatCode { get; set; }
 
   public string TokenMint { get; set; }
-  public IReadOnlyList<short> MethodIds { get; set; }
 };
