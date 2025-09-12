@@ -17,8 +17,9 @@ public sealed class BestPriceService(IDbContextFactory<P2PDbContext> dbf) : IBes
 
     var q = BuildInitialQuery(db, req);
     q = ApplyPriceSorting(q, req.Side);
+    var res = await MapToBestPriceDto(q).FirstOrDefaultAsync(ct);
 
-    return await MapToBestPriceDto(q).FirstOrDefaultAsync(ct);
+    return res;
   }
 
   private static IQueryable<EscrowOrderEntity> BuildInitialQuery(P2PDbContext db, BestPriceRequest req)
@@ -48,7 +49,6 @@ public sealed class BestPriceService(IDbContextFactory<P2PDbContext> dbf) : IBes
       OrderId = o.Id,
       Side = o.OfferSide,
       Price = o.Price / 100,
-      MethodIds = o.PaymentMethods.Select(pm => pm.MethodId).ToArray()
     });
   }
 }

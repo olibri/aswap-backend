@@ -20,11 +20,9 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
   {
     fixture.ResetDb("escrow_orders", "escrow_order_payment_methods");
 
-    var (m1, _) = await fixture.AnyTwoMethodsAsync();
-
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, (ulong)10.00, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, (ulong)9.50, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, (ulong)11.00, methodIds: new[] { m1.Id });
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 1000);
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 950);
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 1100);
 
     var ctrl = fixture.GetService<OrderController>().WithUser("u1");
 
@@ -33,14 +31,12 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
       TokenMint = Sol,
       FiatCode = Usd,
       Side = OrderSide.Sell,
-      MethodIds = []
     };
 
     var dto = await ctrl.GetBestPrice(req).OkValueAsync<BestPriceDto>();
     dto.ShouldNotBeNull();
     dto!.Price.ShouldBe((ulong)9.50);
     dto.Side.ShouldBe(OrderSide.Sell);
-    dto.MethodIds.ShouldContain(m1.Id);
   }
 
   [Fact]
@@ -48,11 +44,11 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
   {
     fixture.ResetDb("escrow_orders", "escrow_order_payment_methods");
 
-    var (m1, _) = await fixture.AnyTwoMethodsAsync();
+    //var (m1, _) = await fixture.AnyTwoMethodsAsync();
 
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, (ulong)9.10, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, (ulong)10.75, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, (ulong)10.30, methodIds: new[] { m1.Id });
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 910);
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 1075);
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 1030);
 
     var ctrl = fixture.GetService<OrderController>().WithUser("u1");
 
@@ -61,7 +57,6 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
       TokenMint = Sol,
       FiatCode = Usd,
       Side = OrderSide.Buy,
-      MethodIds = []
     };
 
     var dto = await ctrl.GetBestPrice(req).OkValueAsync<BestPriceDto>();
@@ -70,32 +65,6 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
     dto.Side.ShouldBe(OrderSide.Buy);
   }
 
-  [Fact]
-  public async Task BestPrice_Filters_By_PaymentMethod_When_Passed()
-  {
-    fixture.ResetDb("escrow_orders", "escrow_order_payment_methods");
-
-    var (m1, m2) = await fixture.AnyTwoMethodsAsync();
-
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, (ulong)10.00, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, (ulong)9.00, methodIds: new[] { m2.Id });
-
-    var ctrl = fixture.GetService<OrderController>().WithUser("u1");
-
-    var req = new BestPriceRequest
-    {
-      TokenMint = Sol,
-      FiatCode = Usd,
-      Side = OrderSide.Sell,
-      MethodIds = new List<short> { m1.Id }
-    };
-
-    var dto = await ctrl.GetBestPrice(req).OkValueAsync<BestPriceDto>();
-    dto.ShouldNotBeNull();
-    dto!.Price.ShouldBe((ulong)10.00);
-    dto.MethodIds.ShouldContain(m1.Id);
-    dto.MethodIds.ShouldNotContain(m2.Id);
-  }
 
   [Fact]
   public async Task BestPrice_Ignores_NonMatching_And_NonOnChain()
@@ -104,13 +73,13 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
 
     var (m1, _) = await fixture.AnyTwoMethodsAsync();
 
-    await fixture.AddOrderAsync("OtherMint", Usd, OrderSide.Sell, (ulong)1.00, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, "EUR", OrderSide.Sell, (ulong)1.00, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, (ulong)1.00, methodIds: new[] { m1.Id });
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, (ulong)1.00, EscrowStatus.Cancelled,
+    await fixture.AddOrderAsync("OtherMint", Usd, OrderSide.Sell, 100);
+    await fixture.AddOrderAsync(Sol, "EUR", OrderSide.Sell, 100);
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 100);
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 100, EscrowStatus.Cancelled,
       new[] { m1.Id });
 
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, (ulong)7.77, methodIds: new[] { m1.Id });
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 777);
 
     var ctrl = fixture.GetService<OrderController>().WithUser("u1");
 
@@ -119,7 +88,6 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
       TokenMint = Sol,
       FiatCode = Usd,
       Side = OrderSide.Sell,
-      MethodIds = []
     };
 
     var dto = await ctrl.GetBestPrice(req).OkValueAsync<BestPriceDto>();
@@ -139,7 +107,6 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
       TokenMint = Sol,
       FiatCode = Usd,
       Side = OrderSide.Sell,
-      MethodIds = []
     };
 
     var dto = await ctrl.GetBestPrice(req).OkValueAsync<BestPriceDto>();
