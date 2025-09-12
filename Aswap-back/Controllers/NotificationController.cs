@@ -3,6 +3,7 @@ using Domain.Models.Api.QuerySpecs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using App.Utils;
 
 namespace Aswap_back.Controllers;
 
@@ -14,7 +15,7 @@ public class NotificationController(INotificationService notificationService) : 
   [HttpGet]
   public async Task<IActionResult> GetNotifications([FromQuery] NotificationQuery query)
   {
-    var userWallet = GetUserWallet();
+    var userWallet = User.GetUserWallet();
     var result = await notificationService.GetUserNotificationsAsync(userWallet, query);
     return Ok(result);
   }
@@ -22,7 +23,7 @@ public class NotificationController(INotificationService notificationService) : 
   [HttpGet("unread-count")]
   public async Task<IActionResult> GetUnreadCount()
   {
-    var userWallet = GetUserWallet();
+    var userWallet = User.GetUserWallet();
     var count = await notificationService.GetUnreadCountAsync(userWallet);
     return Ok(new { count });
   }
@@ -37,7 +38,7 @@ public class NotificationController(INotificationService notificationService) : 
   [HttpPut("read-all")]
   public async Task<IActionResult> MarkAllAsRead()
   {
-    var userWallet = GetUserWallet();
+    var userWallet = User.GetUserWallet();
     await notificationService.MarkAllAsReadAsync(userWallet);
     return NoContent();
   }
@@ -45,17 +46,8 @@ public class NotificationController(INotificationService notificationService) : 
   [HttpGet("realtime")]
   public async Task<IActionResult> GetRealtimeNotifications([FromQuery] DateTime since)
   {
-    var userWallet = GetUserWallet();
+    var userWallet = User.GetUserWallet();
     var notifications = await notificationService.GetRealtimeNotificationsAsync(userWallet, since);
     return Ok(notifications);
-  }
-
-  private string GetUserWallet()
-  {
-    var wallet = User.FindFirst("sub")?.Value
-                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(wallet)) throw new UnauthorizedAccessException("User wallet not found in token");
-
-    return wallet;
   }
 }
