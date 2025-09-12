@@ -44,8 +44,6 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
   {
     fixture.ResetDb("escrow_orders", "escrow_order_payment_methods");
 
-    //var (m1, _) = await fixture.AnyTwoMethodsAsync();
-
     await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 910);
     await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 1075);
     await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 1030);
