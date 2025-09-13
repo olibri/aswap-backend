@@ -1,6 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Net.Mime;
-using System.Text;
+﻿using System.Text;
 using App.Chat;
 using App.CoinJelly;
 using App.Db;
@@ -23,6 +21,8 @@ using App.Services.Order;
 using App.Services.PaymentMethod;
 using App.Services.PaymentMethod.BackgroundWorker;
 using App.Services.Sessions;
+using App.Services.Storage;
+using App.Services.Storage.Attachment;
 using App.Strategy;
 using App.Strategy.EventsHandler;
 using App.Telegram;
@@ -50,6 +50,8 @@ using Domain.Interfaces.Services.IP;
 using Domain.Interfaces.Services.Notification;
 using Domain.Interfaces.Services.Order;
 using Domain.Interfaces.Services.PaymentMethod;
+using Domain.Interfaces.Services.Storage;
+using Domain.Interfaces.Services.Storage.Attachments;
 using Domain.Interfaces.Strategy;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models;
@@ -60,6 +62,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Minio;
 using Telegram.Bot;
 using Unchase.Swashbuckle.AspNetCore.Extensions.Extensions;
 
@@ -162,6 +165,13 @@ public class RootBuilder
           .As<IRefreshTokenService>()
           .InstancePerLifetimeScope();
 
+        builder.RegisterType<MinioService>()
+          .As<IMinioService>()
+          .InstancePerLifetimeScope();
+
+        builder.RegisterType<AttachmentService>()
+          .As<IAttachmentService>()
+          .InstancePerLifetimeScope();
 
         builder.RegisterType<SolSignatureVerifier>()
           .As<INetworkVerifier>()
@@ -255,6 +265,7 @@ public class RootBuilder
         builder.RegisterType<TelegramHookController>().InstancePerDependency();
         builder.RegisterType<AdminController>().InstancePerDependency();
         builder.RegisterType<SessionPingController>().InstancePerDependency();
+        builder.RegisterType<AttachmentController>().InstancePerDependency();
         builder.RegisterType<AuthController>().InstancePerDependency();
         builder.RegisterType<RatingController>().InstancePerDependency();
         builder.RegisterType<PaymentController>().InstancePerDependency();
@@ -372,6 +383,19 @@ public class RootBuilder
         });
         services.AddSingleton<IJsonSerializer, SystemTextJsonSerializer>();
         services.AddSingleton<OutboxSaveChangesInterceptor>();
+        services.AddSingleton<IMinioClient>(provider =>
+        {
+          var endpoint = cfg["MinIO:Endpoint"] ?? "localhost:9000";
+          var accessKey = cfg["MinIO:AccessKey"] ?? "aswap_minio";
+          var secretKey = cfg["MinIO:SecretKey"] ?? "aswap_minio";
+          var secure = cfg.GetValue<bool>("MinIO:Secure", false);
+
+          return new MinioClient()
+            .WithEndpoint(endpoint)
+            .WithCredentials(accessKey, secretKey)
+            .WithSSL(secure)
+            .Build();
+        });
         services.AddHostedService<TokenBootstrapHostedService>();
         services.AddHostedService<MinutePriceIngestHostedService>();
         services.AddHostedService<DailyPriceRetentionHostedService>();
@@ -405,10 +429,7 @@ public class RootBuilder
               OnTokenValidated = context =>
               {
                 Console.WriteLine("JWT Token validated!");
-                foreach (var claim in context.Principal.Claims)
-                {
-                  Console.WriteLine($"  {claim.Type} = {claim.Value}");
-                }
+                foreach (var claim in context.Principal.Claims) Console.WriteLine($"  {claim.Type} = {claim.Value}");
                 return Task.CompletedTask;
               },
               OnAuthenticationFailed = context =>
@@ -416,9 +437,7 @@ public class RootBuilder
                 Console.WriteLine($"JWT Auth failed: {context.Exception.Message}");
                 Console.WriteLine($"Exception type: {context.Exception.GetType().Name}");
                 if (context.Exception.InnerException != null)
-                {
                   Console.WriteLine($"Inner exception: {context.Exception.InnerException.Message}");
-                }
                 return Task.CompletedTask;
               }
             };
@@ -433,7 +452,7 @@ public class RootBuilder
               ValidateAudience = true,
               ValidateLifetime = true,
               ValidateIssuerSigningKey = true,
-              ClockSkew = TimeSpan.FromSeconds(30) 
+              ClockSkew = TimeSpan.FromSeconds(30)
             };
           });
         services.AddAuthorization();
