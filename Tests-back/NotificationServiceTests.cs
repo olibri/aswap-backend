@@ -79,7 +79,7 @@ public class NotificationServiceTests(TestFixture fixture) : IClassFixture<TestF
           NotificationType.SystemMessage);
     }
 
-    var query = new NotificationQuery { Number = 1, Size = 10 };
+    var query = new NotificationQuery { Size = 10 };
 
     // Act
     var result = await _notificationService.GetUserNotificationsAsync("test_wallet_2", query);

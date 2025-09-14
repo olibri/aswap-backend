@@ -17,10 +17,11 @@ public class NotificationService(IDbContextFactory<P2PDbContext> dbFactory) : IN
   {
     await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-    var baseQuery = db.Set<UserNotificationEntity>()
+    var baseQuery = db.UserNotifications
       .AsNoTracking()
       .Where(n => n.UserWallet == userWallet);
 
+    // Фільтри
     if (query.IsRead.HasValue)
       baseQuery = baseQuery.Where(n => n.IsRead == query.IsRead.Value);
 
@@ -30,8 +31,10 @@ public class NotificationService(IDbContextFactory<P2PDbContext> dbFactory) : IN
     if (query.ToDate.HasValue)
       baseQuery = baseQuery.Where(n => n.CreatedAt <= query.ToDate.Value);
 
+    // Загальна кількість
     var total = await baseQuery.CountAsync(ct);
 
+    // ✅ Використовуємо query.Skip і query.Take (що автоматично рахуються)
     var notifications = await baseQuery
       .OrderByDescending(n => n.CreatedAt)
       .Skip(query.Skip)
@@ -46,13 +49,16 @@ public class NotificationService(IDbContextFactory<P2PDbContext> dbFactory) : IN
         n.IsRead,
         n.CreatedAt,
         n.ReadAt,
-        n.Metadata
-      ))
+        n.Metadata))
       .ToListAsync(ct);
 
-    return new PagedResult<UserNotificationDto>(notifications, query.Page, query.Size, total);
+    return new PagedResult<UserNotificationDto>(
+      notifications,
+      query.Page,
+      query.Size,
+      total
+    );
   }
-
   public async Task<UserNotificationDto> CreateNotificationAsync(
     string userWallet,
     string title,

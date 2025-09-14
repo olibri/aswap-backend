@@ -2,7 +2,6 @@
 using Domain.Models.Api.QuerySpecs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using App.Utils;
 
 namespace Aswap_back.Controllers;
