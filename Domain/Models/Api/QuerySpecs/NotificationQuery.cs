@@ -1,4 +1,5 @@
 ﻿using Swashbuckle.AspNetCore.Annotations;
+using System.Text.Json.Serialization;
 
 namespace Domain.Models.Api.QuerySpecs;
 
@@ -16,6 +17,11 @@ public sealed record NotificationQuery(
   DateTime? ToDate = null
 )
 {
+  [SwaggerIgnore]
+  [JsonIgnore]
   public int Skip => (Page - 1) * Size;
+
+  [SwaggerIgnore]
+  [JsonIgnore]
   public int Take => Size;
 }
