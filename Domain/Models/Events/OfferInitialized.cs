@@ -14,11 +14,11 @@ public class OfferInitialized : IAnchorEvent
 
     [BorshPropertyOrder(1)]
     [BorshFixedArray(32)]
-    public byte[]? Seller { get; set; } = new byte[32];
+    public byte[] Seller { get; set; } = new byte[32];
 
     [BorshPropertyOrder(1)]
     [BorshFixedArray(32)]
-    public byte[]? Buyer { get; set; } = new byte[32];
+    public byte[] Buyer { get; set; } = new byte[32];
 
     [BorshPropertyOrder(2)]
     [BorshFixedArray(32)]
@@ -37,8 +37,7 @@ public class OfferInitialized : IAnchorEvent
 
     public override string ToString() =>
         $"OfferInitialized {{ Escrow={ConvertHelper.ToBase58(Escrow)}, " +
-        $"Seller={ConvertHelper.ToBase58(Seller)}, Buyer={ConvertHelper.ToBase58(Buyer)}," +
-        $" Token={ConvertHelper.ToBase58(TokenMint)}, " +
+        $"Seller={ConvertHelper.ToBase58(Seller)}, Token={ConvertHelper.ToBase58(TokenMint)}, " +
         $"Fiat={ConvertHelper.Fiat(FiatCode)}, Amount={Amount}, Price={Price}, " +
         $"DealId={DealId}, Ts={Ts}, OfferType={(OfferType == 0 ? "Sell" : "Buy")} }}";
 
