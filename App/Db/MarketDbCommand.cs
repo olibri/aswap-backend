@@ -41,7 +41,7 @@ public class MarketDbCommand(
     }
   }
 
-  public async Task CreateBuyerOfferAsync(BuyOrderInitialized offer)
+  public async Task CreateBuyerOfferAsync(OfferInitialized offer)
   {
     try
     {
