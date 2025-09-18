@@ -41,6 +41,26 @@ public class MarketDbCommand(
     }
   }
 
+  public async Task CreateBuyerOfferAsync(BuyOrderInitialized offer)
+  {
+    try
+    {
+      var mappedEntity = EscrowOrderMapper.ToEntity(offer);
+
+      mappedEntity.DomainEvents.Add(new OfferCreated(
+        Guid.NewGuid(), mappedEntity.Id, mappedEntity.DealId,
+        mappedEntity.BuyerFiat, OrderSide.Buy, EventType.OfferCreated));
+
+      await dbContext.EscrowOrders.AddAsync(mappedEntity);
+      await dbContext.SaveChangesAsync();
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e);
+      throw;
+    }
+  }
+
   public async Task<ulong> CreateBuyerOfferAsync(UpsertOrderDto dto)
   {
     var exists = await dbContext.EscrowOrders

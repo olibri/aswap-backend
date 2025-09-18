@@ -38,6 +38,26 @@ public static partial class EscrowOrderMapper
         dest.BuyerFiat = null;
     }
 
+    [MapProperty(nameof(BuyOrderInitialized.Escrow), nameof(EscrowOrderEntity.EscrowPda),
+        Use = nameof(ConvertHelper.ToBase58))]
+    [MapProperty(nameof(BuyOrderInitialized.Buyer), nameof(EscrowOrderEntity.BuyerFiat),
+        Use = nameof(ConvertHelper.ToBase58))]
+    [MapProperty(nameof(BuyOrderInitialized.TokenMint), nameof(EscrowOrderEntity.TokenMint),
+        Use = nameof(ConvertHelper.ToBase58))]
+    [MapProperty(nameof(BuyOrderInitialized.FiatCode), nameof(EscrowOrderEntity.FiatCode),
+        Use = nameof(ConvertHelper.Fiat))]
+    [MapProperty(nameof(BuyOrderInitialized.Ts), nameof(EscrowOrderEntity.CreatedAtUtc),
+        Use = nameof(ConvertHelper.FromUnixSeconds))]
+    public static partial EscrowOrderEntity ToEntity(BuyOrderInitialized ev);
+
+    private static void OnAfterToEntity(BuyOrderInitialized src, EscrowOrderEntity dest)
+    {
+        dest.Id = Guid.NewGuid();
+        dest.EscrowStatus = EscrowStatus.PendingOnChain;
+        dest.OfferSide = OrderSide.Buy; // Buy order завжди має OrderSide.Buy
+        dest.SellerCrypto = null; // У Buy ордері немає seller на початку
+    }
+
     //Trash because I use it in ConvertHelper
     private static string ToBase58(byte[] bytes) =>
         Base58.Bitcoin.Encode(bytes);

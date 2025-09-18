@@ -1,7 +1,7 @@
 ﻿using App.Services.Auth;
 using App.Utils;
 using Domain.Interfaces.Database.Command;
-using Domain.Interfaces.Services;
+using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.Services.Auth;
 using Domain.Interfaces.Services.IP;
 using Domain.Models.Api.Auth;

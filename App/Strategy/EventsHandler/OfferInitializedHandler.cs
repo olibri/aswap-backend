@@ -8,19 +8,21 @@ namespace App.Strategy.EventsHandler;
 public sealed class OfferInitializedHandler(IMarketDbCommand marketDbCommand)
     : IAnchorEventHandler
 {
-    public bool CanHandle(IAnchorEvent ev) => ev is OfferInitialized;
+    public bool CanHandle(IAnchorEvent ev) => ev is OfferInitialized or BuyOrderInitialized;
     public async Task HandleAsync(IAnchorEvent ev, CancellationToken ct = default)
     {
-        if (ev is not OfferInitialized offerInitialized)
-            throw new ArgumentException("Invalid event type", nameof(ev));
-        try
+        switch (ev)
         {
-            await marketDbCommand.CreateSellerOfferAsync(offerInitialized);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
+            case OfferInitialized offerInit:
+                if (offerInit.OfferType == 0) 
+                    await marketDbCommand.CreateSellerOfferAsync(offerInit);
+                else 
+                    throw new NotImplementedException();
+                break;
+
+            case BuyOrderInitialized buyOrder:
+                await marketDbCommand.CreateBuyerOfferAsync(buyOrder);
+                break;
         }
     }
 }

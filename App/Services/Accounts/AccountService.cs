@@ -1,4 +1,4 @@
-﻿using Domain.Interfaces.Services;
+﻿using Domain.Interfaces.Services.Account;
 using Domain.Models.Api.Auth;
 using Domain.Models.DB.Metrics;
 using Infrastructure;

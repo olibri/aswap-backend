@@ -1,6 +1,6 @@
 ﻿using Domain.Models.Api.Auth;
 
-namespace Domain.Interfaces.Services;
+namespace Domain.Interfaces.Services.Account;
 
 public interface IAccountService
 {

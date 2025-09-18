@@ -19,6 +19,10 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
   public DbSet<AccountEntity> Account { get; set; }
   public DbSet<TelegramLinkEntity> TelegramLinks { get; set; }
 
+  /* ─────────── Referral system tables ─────────── */
+  public DbSet<ReferralRewardEntity> ReferralRewards { get; set; }
+  public DbSet<ReferralStatsDailyEntity> ReferralStatsDaily { get; set; }
+
   /* ─────────── Metrics tables ─────────── */
   public DbSet<EventEntity> Events { get; set; }
   public DbSet<OutboxMessage> OutboxMessages { get; set; }
@@ -310,6 +314,85 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     {
       entity.Property(e => e.CreatedAtUtc)
         .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      // Referral code должен быть уникальным
+      entity.HasIndex(x => x.ReferralCode)
+        .IsUnique()
+        .HasDatabaseName("ux_account_referral_code");
+
+      // Индекс для поиска по referrer
+      entity.HasIndex(x => x.ReferredBy)
+        .HasDatabaseName("ix_account_referred_by");
+
+      // Self-referencing relationship
+      entity.HasOne(x => x.MyInviter)
+        .WithMany(x => x.MyInvited)
+        .HasForeignKey(x => x.ReferredBy)
+        .HasPrincipalKey(x => x.WalletAddress)
+        .OnDelete(DeleteBehavior.SetNull);
+    });
+
+    modelBuilder.Entity<ReferralRewardEntity>(entity =>
+    {
+      entity.HasKey(x => x.Id);
+
+      entity.Property(x => x.CreatedAt)
+        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      // Индексы для оптимизации запросов
+      entity.HasIndex(x => new { x.ReferrerWallet, x.CreatedAt })
+        .HasDatabaseName("ix_referral_rewards_referrer_created");
+
+      entity.HasIndex(x => new { x.RefereeWallet, x.CreatedAt })
+        .HasDatabaseName("ix_referral_rewards_referee_created");
+
+      entity.HasIndex(x => x.OrderId)
+        .IsUnique()
+        .HasDatabaseName("ux_referral_rewards_order");
+
+      entity.HasIndex(x => new { x.ProcessedAt, x.CreatedAt })
+        .HasDatabaseName("ix_referral_rewards_processed_created");
+
+      // Foreign keys
+      entity.HasOne(x => x.InviterAccount)
+        .WithMany(a => a.EarnedRewards)
+        .HasForeignKey(x => x.ReferrerWallet)
+        .HasPrincipalKey(a => a.WalletAddress)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      entity.HasOne(x => x.InvitedAccount)
+        .WithMany()
+        .HasForeignKey(x => x.RefereeWallet)
+        .HasPrincipalKey(a => a.WalletAddress)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      entity.HasOne(x => x.Order)
+        .WithMany()
+        .HasForeignKey(x => x.OrderId)
+        .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<ReferralStatsDailyEntity>(entity =>
+    {
+      entity.HasKey(x => new { x.Day, x.ReferrerWallet });
+
+      entity.Property(x => x.CreatedAt)
+        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+      entity.HasIndex(x => new { x.ReferrerWallet, x.Day })
+        .HasDatabaseName("ix_referral_stats_referrer_day");
+
+      entity.HasIndex(x => new { x.Day, x.RewardsEarnedUsd })
+        .HasDatabaseName("ix_referral_stats_day_rewards");
+
+      entity.HasIndex(x => new { x.TotalReferrals, x.Day })
+        .HasDatabaseName("ix_referral_stats_total_day");
+
+      entity.HasOne(x => x.InviterAccount)
+        .WithMany()
+        .HasForeignKey(x => x.ReferrerWallet)
+        .HasPrincipalKey(a => a.WalletAddress)
+        .OnDelete(DeleteBehavior.Cascade);
     });
 
     modelBuilder.Entity<TelegramLinkEntity>(entity =>

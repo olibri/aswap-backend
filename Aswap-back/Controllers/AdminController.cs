@@ -1,7 +1,7 @@
 ﻿using Domain.Interfaces.CoinJelly;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Metrics;
-using Domain.Interfaces.Services;
+using Domain.Interfaces.Services.Account;
 using Domain.Models.Api.Auth;
 using Domain.Models.Api.CoinJelly;
 using Domain.Models.Api.Metrics;
@@ -56,7 +56,8 @@ public class AdminController(
   {
     var res = await coinJellyService.AddNewCoinJellyMethod(dto, ct);
     return Ok(res);
-  }
+  }  
+  
 
   [HttpDelete("delete-jelly-method")]
   public async Task<IActionResult> DeleteCoinJellyMethod([FromBody] Guid id, CancellationToken ct)

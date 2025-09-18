@@ -1,5 +1,5 @@
 ﻿using Aswap_back.Controllers;
-using Domain.Interfaces.Services;
+using Domain.Interfaces.Services.Account;
 using Domain.Models.Api.Auth;
 using Shouldly;
 
