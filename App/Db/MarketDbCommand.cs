@@ -168,16 +168,16 @@ public class MarketDbCommand(
     await dbContext.SaveChangesAsync();
     await NotifyStatusChange(entity, previousStatus, entity.EscrowStatus);
   }
-  private static EscrowOrderEntity TrackReleaseTime(EscrowOrderEntity entity, EscrowStatus previousStatus, EscrowStatus? newStatus, DateTime now)
+
+  private static EscrowOrderEntity TrackReleaseTime(EscrowOrderEntity entity, EscrowStatus previousStatus,
+    EscrowStatus? newStatus, DateTime now)
   {
     if (newStatus == null) return entity;
 
     if (previousStatus != EscrowStatus.SignedByOwnerSide &&
         previousStatus != EscrowStatus.SignedByContraAgentSide &&
         (newStatus == EscrowStatus.SignedByOwnerSide || newStatus == EscrowStatus.SignedByContraAgentSide))
-    {
       entity.PaymentConfirmedAt = now;
-    }
 
     if ((previousStatus == EscrowStatus.SignedByOwnerSide || previousStatus == EscrowStatus.SignedByContraAgentSide) &&
         newStatus == EscrowStatus.Signed &&
@@ -203,10 +203,11 @@ public class MarketDbCommand(
   {
     if (oldStatus == newStatus) return;
 
-    // Визначаємо кого нотифікувати
     var usersToNotify = new List<string>();
-    if (!string.IsNullOrEmpty(order.SellerCrypto)) usersToNotify.Add(order.SellerCrypto);
-    if (!string.IsNullOrEmpty(order.BuyerFiat)) usersToNotify.Add(order.BuyerFiat);
+    if (!string.IsNullOrEmpty(order.SellerCrypto) && order.SellerCrypto != "11111111111111111111111111111111")
+      usersToNotify.Add(order.SellerCrypto);
+    if (!string.IsNullOrEmpty(order.BuyerFiat) && order.SellerCrypto != "11111111111111111111111111111111")
+      usersToNotify.Add(order.BuyerFiat);
 
     var statusMessage = GetStatusMessage(newStatus);
     var metadata =
