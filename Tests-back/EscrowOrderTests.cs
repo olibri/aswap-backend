@@ -5,9 +5,12 @@ using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
 using Domain.Interfaces.Services.Order;
 using Domain.Models.Api.QuerySpecs;
+using Domain.Models.DB;
 using Domain.Models.Dtos;
 using Domain.Models.Enums;
+using Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Tests_back.Extensions;
 using Tests_back.Extensions.Offers;
@@ -24,19 +27,20 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     //arrange
     var db = fixture.GetService<IMarketDbQueries>();
     var result = await OffersExtensions.CreateFakeOrder(fixture);
+    //var offer1 = await db.GetAllNewOffersAsync(new OffersQuery());
 
     //act
-    var offer = await db.GetNewOfferAsync(1747314431853);
+    var offer = await db.GetNewOfferAsync(1758270209859);
 
     //assert
     result.ShouldBeOfType<OkResult>();
     offer.ShouldNotBeNull();
-    offer.DealId.ShouldBe(1747314431853UL);
+    offer.DealId.ShouldBe(1758270209859UL);
     offer.FiatCode.ShouldBe("USD");
-    offer.Amount.ShouldBe(1UL);
-    offer.Price.ShouldBe(3m);
+    offer.Amount.ShouldBe(33UL);
+    offer.Price.ShouldBe(100m);
     offer.Status.ShouldBe(EscrowStatus.PendingOnChain);
-    offer.BuyerFiat.ShouldBeNull();
+    offer.BuyerFiat.ShouldBe("11111111111111111111111111111111");
     offer.OfferSide.ShouldBe(OrderSide.Sell);
   }
 
@@ -59,7 +63,19 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var offers = okResult.Value as PagedResult<EscrowOrderDto>;
     offers.Data.Count.ShouldBe(ordersCount);
   }
-
+  private static async Task SeedUserAsync(P2PDbContext db, string walletAddress)
+  {
+    if (!await db.Account.AnyAsync(a => a.WalletAddress == walletAddress))
+    {
+      db.Account.Add(new AccountEntity
+      {
+        WalletAddress = walletAddress,
+        CreatedAtUtc = DateTime.UtcNow,
+        LastActiveTime = DateTime.UtcNow
+      });
+      await db.SaveChangesAsync();
+    }
+  }
   [Fact]
   public async Task PartialUpdateOffer()
   {
@@ -67,6 +83,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     PostgresDatabase.ResetState("account");
 
     var controller = fixture.GetService<OrderController>();
+    var db = fixture.GetService<P2PDbContext>();
     var marketDbQueries = fixture.GetService<IMarketDbQueries>();
     var accountDbCommand = fixture.GetService<IAccountDbCommand>();
     var accountDbQueries = fixture.GetService<IAccountDbQueries>();
@@ -74,12 +91,17 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
     await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
+
+    await SeedUserAsync(db, "wallet0xzzzz");
+    await SeedUserAsync(db, "FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ");
+    await SeedUserAsync(db, "CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW");
+
     var account = await accountDbQueries.GetAccountByWalletAsync("wallet0xzzzz");
 
     account.ShouldNotBeNull();
     var updateOrderDto = new UpsertOrderDto()
     {
-      OrderId = 1747314431853UL,
+      OrderId = 1758270209859UL,
       MaxFiatAmount = 10000,
       MinFiatAmount = 10,
       Status = EscrowStatus.OnChain,
@@ -110,14 +132,18 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var marketDbCommand = fixture.GetService<IMarketDbCommand>();
     var marketDbQuery = fixture.GetService<IMarketDbQueries>();
     await OffersExtensions.CreateFakeOrder(fixture);
+    var db = fixture.GetService<P2PDbContext>();
 
     var accountDbCommand = fixture.GetService<IAccountDbCommand>();
 
     await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
     await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
+    await SeedUserAsync(db, "wallet0xzzzz");
+    await SeedUserAsync(db, "FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ");
+    await SeedUserAsync(db, "CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW");
     var updateOrderDto1 = new UpsertOrderDto()
     {
-      OrderId = 1747314431853UL,
+      OrderId = 1758270209859UL,
       MaxFiatAmount = 10000,
       MinFiatAmount = 10,
       Status = EscrowStatus.OnChain,
@@ -135,12 +161,12 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     var updateOrderDto2 = new UpsertOrderDto()
     {
-      OrderId = 1747314431853UL,
+      OrderId = 1758270209859UL,
       FilledQuantity = 0.9m
     };
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
     var updatedOrder2 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
-    updatedOrder2.Data.ShouldBeEmpty();
+    updatedOrder2.Data[0].FilledQuantity.ShouldBe(1m);
   }
 
   [Fact]
@@ -148,7 +174,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
   {
     PostgresDatabase.ResetState("escrow_orders");
     var marketDbCommand = fixture.GetService<IMarketDbCommand>();
-    var dealId = 1747314411853UL;
+    var dealId = 1758270209859UL;
 
     var updateOrderDto = new UpsertOrderDto()
     {
@@ -187,7 +213,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var q = fixture.GetService<IMarketDbQueries>();
     var childSvc = fixture.GetService<IChildOffersService>();
 
-    var deal = 1747314431853UL;
+    var deal = 1758270209859UL;
     var parent = await q.GetNewOfferAsync(deal);
     parent.ShouldNotBeNull();
     parent.Status.ShouldBeOneOf(EscrowStatus.PendingOnChain, EscrowStatus.OnChain);
@@ -234,7 +260,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var childSvc = fixture.GetService<IChildOffersService>();
     var accountDbCommand = fixture.GetService<IAccountDbCommand>();
 
-    var deal = 1747314431853UL;
+    var deal = 1758270209859UL;
     var initial = await q.GetNewOfferAsync(deal);
     initial.ShouldNotBeNull();
 
@@ -298,7 +324,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", accountDbCommand);
     await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", accountDbCommand);
     
-    var deal = 1747314431853UL;
+    var deal = 1758270209859UL;
 
     foreach (var f in fills)
     {
