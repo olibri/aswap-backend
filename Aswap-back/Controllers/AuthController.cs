@@ -35,7 +35,14 @@ public class AuthController(
     if (banUntil is not null && banUntil > DateTime.UtcNow)
       return StatusCode(403, "User is banned");
 
-    await accountDbCommand.UpsertAccountAsync(dto.Wallet);
+    var referralCode = Request.Cookies["referral_code"];
+    await accounts.CreateAccountWithReferralAsync(dto.Wallet, referralCode, ct);
+
+    if (!string.IsNullOrEmpty(referralCode))
+    {
+      Response.Cookies.Delete("referral_code");
+    }
+
 
     var pair = tokens.Generate(dto.Wallet, "user", banUntil);
 

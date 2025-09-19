@@ -1,23 +1,24 @@
 ﻿using App.Mapper;
 using Domain.Interfaces.Chat;
+using Domain.Interfaces.Database.Command;
+using Domain.Interfaces.Services.Account;
 using Domain.Models.DB;
 using Domain.Models.Dtos;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using Domain.Interfaces.Database.Command;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 
 namespace App.Chat;
 
-public class ChatDbCommand(P2PDbContext dbContext, IAccountDbCommand accountDbCommand) : IChatDbCommand
+public class ChatDbCommand(P2PDbContext dbContext, IAccountService accountService) : IChatDbCommand
 {
   public async Task<Guid> CreateMessageAsync(MessageDto message)
   {
     //TODO: add user/admin validation
     try
     {
-      await accountDbCommand.UpsertAccountAsync(message.AccountId);
+      await accountService.CreateAccountWithReferralAsync(message.AccountId);
       await UpsertRoomAsync(message);
       var res = await dbContext.Messages.AddAsync(ChatMapper.ToEntity(message));
       await dbContext.SaveChangesAsync();

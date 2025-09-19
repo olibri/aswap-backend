@@ -106,6 +106,10 @@ public class RootBuilder
           .As<ISwapService>()
           .InstancePerLifetimeScope();
 
+        builder.RegisterType<ReferralService>()
+          .As<IReferralService>()
+          .InstancePerLifetimeScope();
+
         builder.RegisterType<NotificationService>()
           .As<INotificationService>()
           .InstancePerLifetimeScope();
@@ -260,6 +264,7 @@ public class RootBuilder
         //  .InstancePerLifetimeScope();
 
         builder.RegisterType<WebHookController>().InstancePerDependency();
+        builder.RegisterType<ReferralController>().InstancePerDependency();
         builder.RegisterType<NotificationController>().InstancePerDependency();
         builder.RegisterType<CoinJellyController>().InstancePerDependency();
         builder.RegisterType<TelegramHookController>().InstancePerDependency();
@@ -281,6 +286,7 @@ public class RootBuilder
           .UseUrls($"http://*:{port}")
           .Configure(app =>
           {
+            app.UseMiddleware<ReferralTrackingMiddleware>();
             //app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseSwagger();
             app.UseSwaggerUI();

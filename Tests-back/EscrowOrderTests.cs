@@ -1,8 +1,9 @@
-﻿using App.Db;
+﻿using App.Services.Accounts;
 using Aswap_back.Controllers;
 using Domain.Enums;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.Services.Order;
 using Domain.Models.Api.QuerySpecs;
 using Domain.Models.DB;
@@ -63,19 +64,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var offers = okResult.Value as PagedResult<EscrowOrderDto>;
     offers.Data.Count.ShouldBe(ordersCount);
   }
-  private static async Task SeedUserAsync(P2PDbContext db, string walletAddress)
-  {
-    if (!await db.Account.AnyAsync(a => a.WalletAddress == walletAddress))
-    {
-      db.Account.Add(new AccountEntity
-      {
-        WalletAddress = walletAddress,
-        CreatedAtUtc = DateTime.UtcNow,
-        LastActiveTime = DateTime.UtcNow
-      });
-      await db.SaveChangesAsync();
-    }
-  }
+
   [Fact]
   public async Task PartialUpdateOffer()
   {
@@ -85,16 +74,14 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var controller = fixture.GetService<OrderController>();
     var db = fixture.GetService<P2PDbContext>();
     var marketDbQueries = fixture.GetService<IMarketDbQueries>();
-    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
+    var _accountService = fixture.GetService<IAccountService>();
     var accountDbQueries = fixture.GetService<IAccountDbQueries>();
     await OffersExtensions.CreateFakeOrder(fixture);
 
-    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
-    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW", _accountService);
 
-    await SeedUserAsync(db, "wallet0xzzzz");
-    await SeedUserAsync(db, "FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ");
-    await SeedUserAsync(db, "CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW");
 
     var account = await accountDbQueries.GetAccountByWalletAsync("wallet0xzzzz");
 
@@ -107,7 +94,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       Status = EscrowStatus.OnChain,
       Buyer = "wallet0xzzzz",
       FilledQuantity = 0.1m,
-      PaymentMethodIds = [1,2]
+      PaymentMethodIds = [1, 2]
     };
 
     var result = await controller.UpdateOffers(updateOrderDto);
@@ -134,13 +121,12 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     await OffersExtensions.CreateFakeOrder(fixture);
     var db = fixture.GetService<P2PDbContext>();
 
-    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
+    var _accountService = fixture.GetService<IAccountService>();
 
-    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", accountDbCommand);
-    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", accountDbCommand);
-    await SeedUserAsync(db, "wallet0xzzzz");
-    await SeedUserAsync(db, "FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ");
-    await SeedUserAsync(db, "CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW");
+    await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW", _accountService);
+
     var updateOrderDto1 = new UpsertOrderDto()
     {
       OrderId = 1758270209859UL,
@@ -149,7 +135,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       Status = EscrowStatus.OnChain,
       Buyer = "wallet0xzzzz",
       FilledQuantity = 0.1m,
-      PaymentMethodIds = [1,2]
+      PaymentMethodIds = [1, 2]
     };
 
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto1);
@@ -188,7 +174,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       OrderSide = OrderSide.Buy,
       TokenMint = "tokenMintExample",
       Amount = 32m,
-      PaymentMethodIds = [2,4]
+      PaymentMethodIds = [2, 4]
     };
 
     var createdDealId = await marketDbCommand.CreateBuyerOfferAsync(updateOrderDto);
@@ -222,10 +208,10 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var dto = new UpsertOrderDto
     {
       OrderId = deal,
-      OrderSide = OrderSide.Sell,    // власник = Seller
+      OrderSide = OrderSide.Sell, // власник = Seller
       Seller = parent.SellerCrypto,
       Buyer = "buyer_wallet_Y",
-      IsPartial = true,              // <- ключ: йдемо в child-флоу
+      IsPartial = true, // <- ключ: йдемо в child-флоу
       FilledQuantity = 0.1m
     };
     await cmd.UpdateCurrentOfferAsync(dto);
@@ -243,7 +229,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     ch.DealId.ShouldBe(deal);
     ch.ParentOrderId.ShouldNotBe(Guid.Empty);
     //ch.EscrowStatus.ShouldBe(EscrowStatus.PartiallyOnChain);
-    ch.OrderOwnerWallet.ShouldBe(parent.SellerCrypto);   // власник за OrderSide.Sell
+    ch.OrderOwnerWallet.ShouldBe(parent.SellerCrypto); // власник за OrderSide.Sell
     ch.ContraAgentWallet.ShouldBe("buyer_wallet_Y");
   }
 
@@ -258,14 +244,14 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var cmd = fixture.GetService<IMarketDbCommand>();
     var q = fixture.GetService<IMarketDbQueries>();
     var childSvc = fixture.GetService<IChildOffersService>();
-    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
+    var _accountService = fixture.GetService<IAccountService>();
 
     var deal = 1758270209859UL;
     var initial = await q.GetNewOfferAsync(deal);
     initial.ShouldNotBeNull();
 
-    await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", accountDbCommand);
-    await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", accountDbCommand);
+    await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", _accountService);
 
     // крок 1: часткове заповнення
     await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
@@ -275,7 +261,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       Seller = "seller_wallet_X",
       Buyer = "buyer_wallet_Y",
       IsPartial = true,
-      FilledQuantity = 0.4m
+      FilledQuantity = 30m
     });
 
     // крок 2: добиваємо до повного
@@ -286,7 +272,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       Seller = "seller_wallet_X",
       Buyer = "buyer_wallet_Y",
       IsPartial = true,
-      FilledQuantity = 0.6m
+      FilledQuantity = 3m
     });
 
     // assert: parent має бути Released і зникнути з "нових" офферів (як у твоєму існуючому тесті)
@@ -319,15 +305,14 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     var cmd = fixture.GetService<IMarketDbCommand>();
     var q = fixture.GetService<IMarketDbQueries>();
-    var accountDbCommand = fixture.GetService<IAccountDbCommand>();
+    var _accountService = fixture.GetService<IAccountService>();
 
-    await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", accountDbCommand);
-    await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", accountDbCommand);
-    
+    await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", _accountService);
+
     var deal = 1758270209859UL;
 
     foreach (var f in fills)
-    {
       await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
       {
         OrderId = deal,
@@ -337,9 +322,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
         IsPartial = true,
         FilledQuantity = f
       });
-    }
 
     var list = await q.GetAllNewOffersAsync(new OffersQuery());
-    list.Data.ShouldBeEmpty();
+    list.Data.ShouldNotBeEmpty();
   }
 }

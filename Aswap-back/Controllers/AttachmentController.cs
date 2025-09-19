@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aswap_back.Controllers;
 
-
 [ApiController]
 [Route("api/attachments")]
 //[Authorize]

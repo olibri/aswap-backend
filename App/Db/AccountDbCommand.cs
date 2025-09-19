@@ -1,35 +1,36 @@
 ﻿using Domain.Interfaces.Database.Command;
+using Domain.Interfaces.Services.Account;
 using Domain.Models.DB;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Db;
 
-public class AccountDbCommand(P2PDbContext dbContext) : IAccountDbCommand
+public class AccountDbCommand(P2PDbContext dbContext, IAccountService accountService) : IAccountDbCommand
 {
 
-    public async Task UpsertAccountAsync(string accountWallet)
-    {
-        var existingAccount = await dbContext.Account
-            .FirstOrDefaultAsync(a => a.WalletAddress == accountWallet);
+    //public async Task UpsertAccountAsync(string accountWallet)
+    //{
+    //    var existingAccount = await dbContext.Account
+    //        .FirstOrDefaultAsync(a => a.WalletAddress == accountWallet);
 
-        if (existingAccount == null)
-        {
-            await dbContext.Account.AddAsync(new AccountEntity
-            {
-                WalletAddress = accountWallet
+    //    if (existingAccount == null)
+    //    {
+    //        await dbContext.Account.AddAsync(new AccountEntity
+    //        {
+    //            WalletAddress = accountWallet
 
-            });
-            await dbContext.SaveChangesAsync();
-        }
-        //TODO: create function to update account LastActiveTime
-        else
-        {
-            existingAccount.LastActiveTime = DateTime.UtcNow;
-            dbContext.Account.Update(existingAccount);
-            await dbContext.SaveChangesAsync();
-        }
-    }
+    //        });
+    //        await dbContext.SaveChangesAsync();
+    //    }
+    //    //TODO: create function to update account LastActiveTime
+    //    else
+    //    {
+    //        existingAccount.LastActiveTime = DateTime.UtcNow;
+    //        dbContext.Account.Update(existingAccount);
+    //        await dbContext.SaveChangesAsync();
+    //    }
+    //}
 
 
     public async Task UpdateAccountInfoAsync(string token, long chatId, string userName)
@@ -44,7 +45,7 @@ public class AccountDbCommand(P2PDbContext dbContext) : IAccountDbCommand
             .FirstOrDefaultAsync(a => a.WalletAddress == link.WalletAddress);
 
         if (acc is null)
-            await UpsertAccountAsync(link.WalletAddress);
+            await accountService.CreateAccountWithReferralAsync(link.WalletAddress);
 
         acc.TelegramId = chatId.ToString();
         acc.Telegram = userName;

@@ -2,7 +2,7 @@
 
 public interface IAccountDbCommand
 {
-    Task UpsertAccountAsync(string accountWallet);
+    //Task UpsertAccountAsync(string accountWallet);
     Task UpdateAccountInfoAsync(string token, long id, string userName);
 
 }

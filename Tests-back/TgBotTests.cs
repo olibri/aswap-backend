@@ -2,6 +2,7 @@
 using Domain.Interfaces.Chat;
 using Domain.Interfaces.Database.Command;
 using Domain.Interfaces.Database.Queries;
+using Domain.Interfaces.Services.Account;
 using Domain.Interfaces.TelegramBot;
 using Domain.Models.Dtos;
 using Domain.Models.Enums;
@@ -16,6 +17,7 @@ public class TgBotTests(TestFixture fixture) : IClassFixture<TestFixture>
   private readonly ITgBotHandler _tgBot = fixture.GetService<ITgBotHandler>();
   private readonly IChatDbCommand _dbChat = fixture.GetService<IChatDbCommand>();
   private readonly IAccountDbCommand _dbAccount = fixture.GetService<IAccountDbCommand>();
+  private readonly IAccountService _accountService = fixture.GetService<IAccountService>();
   private readonly IAccountDbQueries _accountDbQueries = fixture.GetService<IAccountDbQueries>();
   private readonly TelegramHookController tgHookController = fixture.GetService<TelegramHookController>();
   private readonly PlatformController platformController = fixture.GetService<PlatformController>();
@@ -59,7 +61,7 @@ public class TgBotTests(TestFixture fixture) : IClassFixture<TestFixture>
   {
     var user = "user_0xZalupa123";
     var res = await _dbChat.GenerateCode(user);
-    await AccountExtention.SaveFakeUserToDbAsync(user, _dbAccount);
+    await AccountExtention.SaveFakeUserToDbAsync(user, _accountService);
 
     var updateDto = TgBotExtention.CreateFakeUpdateDto(res);
     var result = await tgHookController.Post(updateDto);
@@ -78,7 +80,7 @@ public class TgBotTests(TestFixture fixture) : IClassFixture<TestFixture>
   {
     var user = "user_0xZalupa12355";
     var res = await _dbChat.GenerateCode(user);
-    await AccountExtention.SaveFakeUserToDbAsync(user, _dbAccount);
+    await AccountExtention.SaveFakeUserToDbAsync(user, _accountService);
     await AccountExtention.UpdateFakeUserAsync(res, 5001098171, user, _dbAccount);
 
     var messageDto = new TgBotDto
