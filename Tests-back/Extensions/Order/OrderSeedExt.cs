@@ -16,7 +16,7 @@ public static class OrderSeedExt
     string fiat,
     OrderSide side,
     ulong price,
-    EscrowStatus status = EscrowStatus.OnChain,
+    UniversalOrderStatus status = UniversalOrderStatus.Active,
     IEnumerable<short>? methodIds = null)
   {
     var db = f.GetService<P2PDbContext>();
@@ -26,7 +26,7 @@ public static class OrderSeedExt
       TokenMint = tokenMint,
       FiatCode = fiat,
       OfferSide = side,
-      EscrowStatus = status,
+      Status = status,
       Price = price,
       PaymentMethods = new List<EscrowOrderPaymentMethodEntity>()
     };

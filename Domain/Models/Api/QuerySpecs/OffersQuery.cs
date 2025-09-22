@@ -16,8 +16,8 @@ public sealed record OffersQuery(
   
   [property:
     SwaggerSchema(Description =
-      "EscrowStatus: 0=PendingOnChain, 1=OnChain, 2=PartiallyOnChain, 3=Signed, 4=SignedByOneSide, 5=Released, 6=Cancelled, 7=AdminResolving")]
-  EscrowStatus? Status = null,
+      "UniversalOrderStatus: 0=Created, 1=Active, 3=SignedByOneParty, 4=BothSigned, 5=Completed, 6=Cancelled, 7=AdminResolving")]
+  UniversalOrderStatus? Status = null,
   
   [property: SwaggerSchema(Description = "OrderSide: 0=Sell, 1=Buy")]
   OrderSide? Side = null,

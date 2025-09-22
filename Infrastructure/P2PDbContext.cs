@@ -61,13 +61,13 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
   /* ─────────── SwapHistory ─────────── */
   public DbSet<AccountSwapHistoryEntity> AccountSwapHistory { get; set; }
 
-  public DbSet<ChildOrderEntity> ChildOrders { get; set; }
+  public DbSet<UniversalTicketEntity> ChildOrders { get; set; }
 
   public DbSet<UserNotificationEntity> UserNotifications { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
-    modelBuilder.Entity<ChildOrderEntity>(entity =>
+    modelBuilder.Entity<UniversalTicketEntity>(entity =>
     {
       entity.HasKey(x => x.Id);
 
@@ -80,10 +80,10 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
       entity.HasIndex(x => x.ParentOrderId)
         .HasDatabaseName("ix_child_order_parent");
 
-      entity.HasIndex(x => x.DealId)
+      entity.HasIndex(x => x.TicketId)
         .HasDatabaseName("ix_child_order_deal");
 
-      entity.HasIndex(x => new { x.EscrowStatus, x.CreatedAtUtc })
+      entity.HasIndex(x => new { x.Status, x.CreatedAtUtc })
         .HasDatabaseName("ix_child_order_status_created");
     });
 
@@ -143,11 +143,11 @@ public class P2PDbContext(DbContextOptions<P2PDbContext> opt) : DbContext(opt)
     {
       entity.Property(e => e.CreatedAtUtc)
         .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
-      entity.Property(x => x.EscrowStatus)
+      entity.Property(x => x.Status)
         .HasConversion<int>()
         .HasColumnType("integer")
         .HasColumnName("escrow_status");
-      entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, Status = x.EscrowStatus, x.Price })
+      entity.HasIndex(x => new { x.TokenMint, x.FiatCode, x.OfferSide, Status = x.Status, x.Price })
         .HasDatabaseName("ix_escrow_best_price");
 
       entity.Navigation(x => x.ChildOrders).AutoInclude(false);

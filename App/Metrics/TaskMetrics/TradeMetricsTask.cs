@@ -34,7 +34,7 @@ public sealed class TradeMetricsTask(IServiceScopeFactory scopes) : IPeriodicTas
     {
       var p = JsonSerializer.Deserialize<TradeSettledPayload>(ev.Payload)!;
 
-      var order = await db.EscrowOrders.FirstAsync(o => o.DealId == p.DealId, ct);
+      var order = await db.EscrowOrders.FirstAsync(o => o.OrderId == p.DealId, ct);
 
       var deltaSec = (ev.Ts - order.CreatedAtUtc).TotalSeconds;
       var volume = p.FilledQty * p.PriceFiat; 

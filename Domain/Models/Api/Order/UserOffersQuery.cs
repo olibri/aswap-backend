@@ -4,7 +4,7 @@ using Domain.Models.Enums;
 namespace Domain.Models.Api.Order;
 
 public sealed record UserOffersQuery(
-  EscrowStatus? Status,
+  UniversalOrderStatus? Status,
   string? TokenMint,
   string? FiatCode,
   OrderSide? Side,

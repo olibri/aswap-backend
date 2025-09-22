@@ -8,11 +8,12 @@ namespace Domain.Models.Dtos;
 public class EscrowOrderDto
 {
   public Guid Id { get; set; }
-  public string? EscrowPda { get; set; }
-  public ulong DealId { get; set; }
+  public string? OrderPda { get; set; }
+  public string? VaultPda { get; set; }
+  public ulong OrderId { get; set; }
 
-  public string? SellerCrypto { get; set; }
-  public string? BuyerFiat { get; set; }
+  public string? CreatorWallet { get; set; }
+  public string? AcceptorWallet { get; set; }
   public string? TokenMint { get; set; }
   public string FiatCode { get; set; } = default!;
 
@@ -21,8 +22,8 @@ public class EscrowOrderDto
   public decimal Price { get; set; }
 
   [SwaggerSchema(Description =
-    "EscrowStatus: 0=PendingOnChain, 1=OnChain, 2=PartiallyOnChain, 3=Signed, 4=SignedByOwnerSide, 5=SignedByContraAgentSide, 6=Released, 7=Cancelled, 8=AdminResolving")]
-  public EscrowStatus Status { get; set; }
+    "UniversalOrderStatus: 0=Created, 1=Active, 3=SignedByOneParty, 4=BothSigned, 5=Completed, 6=Cancelled, 7=AdminResolving")]
+  public UniversalOrderStatus Status { get; set; }
 
   public DateTime CreatedAtUtc { get; set; }
   public DateTime? ClosedAtUtc { get; set; }
@@ -31,8 +32,10 @@ public class EscrowOrderDto
   [SwaggerSchema(Description = "OrderSide: 0=Sell, 1=Buy")]
   public OrderSide OfferSide { get; set; }
 
+  public bool IsPartial { get; set; }
   public decimal MinFiatAmount { get; set; }
   public decimal MaxFiatAmount { get; set; }
+  public bool? AdminCall { get; set; }
 
   /* ───── new fields ───── */
   public PriceType PriceType { get; set; }
@@ -46,10 +49,11 @@ public class EscrowOrderDto
   public string[]? Tags { get; set; }
   public string? ReferralCode { get; set; }
   public string? AutoReply { get; set; }
-  public bool? IsPartial { get; set; }
+  public DateTime? PaymentConfirmedAt { get; set; }
+  public DateTime? CryptoReleasedAt { get; set; }
+  public int? ReleaseTimeSeconds { get; set; }
 
   public List<PaymentMethodDto> PaymentMethods { get; set; } = new();
-
   public List<ChildOrderDto> Children { get; set; } = new();
 
   public static EscrowOrderDto FromEntity(EscrowOrderEntity e)
@@ -57,11 +61,12 @@ public class EscrowOrderDto
     var dto = new EscrowOrderDto
     {
       Id = e.Id,
-      EscrowPda = e.EscrowPda,
-      DealId = e.DealId,
+      OrderPda = e.OrderPda,
+      VaultPda = e.VaultPda,
+      OrderId = e.OrderId,
 
-      SellerCrypto = e.SellerCrypto,
-      BuyerFiat = e.BuyerFiat,
+      CreatorWallet = e.CreatorWallet,
+      AcceptorWallet = e.AcceptorWallet,
       TokenMint = e.TokenMint,
       FiatCode = e.FiatCode,
 
@@ -69,13 +74,16 @@ public class EscrowOrderDto
       FilledQuantity = e.FilledQuantity,
       Price = e.Price / 100m,
 
-      Status = e.EscrowStatus,
+      Status = e.Status,
       CreatedAtUtc = e.CreatedAtUtc,
       ClosedAtUtc = e.ClosedAtUtc,
+      DealStartTime = e.DealStartTime,
 
       OfferSide = e.OfferSide,
+      IsPartial = e.IsPartial,
       MinFiatAmount = e.MinFiatAmount,
       MaxFiatAmount = e.MaxFiatAmount,
+      AdminCall = e.AdminCall,
 
       PriceType = e.PriceType,
       BasePrice = e.BasePrice,
@@ -88,8 +96,9 @@ public class EscrowOrderDto
       Tags = e.Tags,
       ReferralCode = e.ReferralCode,
       AutoReply = e.AutoReply,
-      IsPartial = e.IsPartial,
-      DealStartTime = e.DealStartTime,
+      PaymentConfirmedAt = e.PaymentConfirmedAt,
+      CryptoReleasedAt = e.CryptoReleasedAt,
+      ReleaseTimeSeconds = e.ReleaseTimeSeconds,
     };
 
     if (e.PaymentMethods is not null)
@@ -121,6 +130,12 @@ public class EscrowOrderDto
               Name = m.Category.Name
             }
         });
+      }
+
+    if (e.ChildOrders is not null)
+      foreach (var childOrder in e.ChildOrders)
+      {
+        dto.Children.Add(ChildOrderDto.FromEntity(childOrder));
       }
 
     return dto;

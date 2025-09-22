@@ -11,16 +11,15 @@ namespace App.Db;
 
 public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Database.Queries.IMarketDbQueries
 {
-  public async Task<EscrowOrderDto> GetNewOfferAsync(ulong dealId)
+  public async Task<EscrowOrderDto> GetNewOfferAsync(ulong orderId)
   {
-    var order = await dbContext.EscrowOrders.FirstOrDefaultAsync(x => x.DealId == dealId);
+    var order = await dbContext.EscrowOrders.FirstOrDefaultAsync(x => x.OrderId == orderId);
 
     if (order == null)
-      throw new InvalidOperationException($"No order found with dealId: {dealId}");
+      throw new InvalidOperationException($"No order found with orderId: {orderId}");
 
     return EscrowOrderDto.FromEntity(order);
   }
-
 
   public async Task<PagedResult<EscrowOrderDto>> GetAllNewOffersAsync(
     OffersQuery q, CancellationToken ct = default)
@@ -28,9 +27,8 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
     var qDb = q with { PriceFrom = q.PriceFrom * 100m };
 
     var baseQ = dbContext.EscrowOrders
-      .Where(o => o.EscrowStatus == EscrowStatus.PendingOnChain
-                  || o.EscrowStatus == EscrowStatus.OnChain
-                  || o.EscrowStatus == EscrowStatus.PartiallyOnChain)
+      .Where(o => o.Status == UniversalOrderStatus.Created
+                  || o.Status == UniversalOrderStatus.Active)
       .Include(o => o.PaymentMethods)
       .ThenInclude(link => link.Method)
       .ThenInclude(m => m.Category)
@@ -44,72 +42,60 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
     return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
   }
 
-
   public Task<EscrowOrderDto[]> GetAllAdminOffersAsync()
   {
     return dbContext.EscrowOrders
-      .Where(o => o.EscrowStatus == EscrowStatus.AdminResolving)
+      .Where(o => o.Status == UniversalOrderStatus.AdminResolving)
       .OrderByDescending(o => o.CreatedAtUtc)
       .Select(o => EscrowOrderDto.FromEntity(o))
       .ToArrayAsync();
   }
 
-
   public async Task<PagedResult<EscrowOrderDto>> GetAllUsersOffersAsync(string userId, UserOffersQuery q)
   {
     var baseQ = dbContext.EscrowOrders
-      .Where(e => e.BuyerFiat == userId || e.SellerCrypto == userId)
+      .Where(e => e.AcceptorWallet == userId || e.CreatorWallet == userId)
       .Include(o => o.PaymentMethods)
       .ThenInclude(link => link.Method)
       .ThenInclude(m => m.Category)
+      .Include(o => o.ChildOrders)
       .AsSplitQuery()
       .AsNoTracking(); 
 
     var spec = q.BuildSpec();
     var page = await spec.ExecuteAsync(baseQ);
 
-    var dealIds = page.Data.Select(e => e.DealId).Distinct().ToArray();
+    var orderIds = page.Data.Select(e => e.OrderId).Distinct().ToArray();
 
-    // Одним запитом тягнемо всіх дітей цих дилів
-    var children = await dbContext.Set<ChildOrderEntity>()
+    // Одним запитом тягнемо всіх дітей цих orders
+    var children = await dbContext.Set<UniversalTicketEntity>()
       .AsNoTracking()
-      .Where(c => dealIds.Contains(c.DealId))
+      .Where(c => orderIds.Contains(c.TicketId))
       .OrderByDescending(c => c.CreatedAtUtc)
-      .Select(c => new ChildOrderDto(
-        c.Id,
-        c.ParentOrderId,
-        c.DealId,
-        c.OrderOwnerWallet,
-        c.ContraAgentWallet,
-        c.EscrowStatus,
-        c.CreatedAtUtc,
-        c.ClosedAtUtc,
-        c.FilledAmount,
-        c.FillNonce,
-        c.FillPda))
       .ToListAsync();
 
-
-    var byDeal = children
-      .GroupBy(c => c.DealId)
-      .ToDictionary(g => g.Key, g => g.ToList());
+    var byOrderId = children
+      .GroupBy(c => c.TicketId)
+      .ToDictionary(g => g.Key, g => g.Select(ChildOrderDto.FromEntity).ToList());
 
     var items = page.Data.Select(e =>
     {
       var dto = EscrowOrderDto.FromEntity(e);
-      if (byDeal.TryGetValue(e.DealId, out var kids))
+      if (byOrderId.TryGetValue(e.OrderId, out var kids))
         dto.Children = kids;
       else
         dto.Children = new List<ChildOrderDto>();
 
       return dto;
-    }).ToList(); return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
+    }).ToList(); 
+    
+    return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
   }
 
   public async Task<EscrowOrderDto?> CheckOrderStatusAsync(ulong orderId)
   {
     return await dbContext.EscrowOrders
-      .Where(x => x.DealId == orderId)
+      .Where(x => x.OrderId == orderId)
       .Select(o => EscrowOrderDto.FromEntity(o))
       .FirstOrDefaultAsync();
   }

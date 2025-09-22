@@ -12,11 +12,11 @@ public class UpsertOrderDto : IValidatableObject
   [Required] public OrderSide OrderSide { get; set; }
   [Required] public PriceType PriceType { get; set; } = PriceType.Fixed;
 
-  public EscrowStatus? Status { get; set; }
-  public string? Buyer { get; set; }
-  public string? Seller { get; set; }
+  public UniversalOrderStatus? Status { get; set; }
+  public string? AcceptorWallet { get; set; }
+  public string? CreatorWallet { get; set; }
 
-  public string? EscrowPda { get; set; }
+  public string? OrderPda { get; set; }
 
   [Range(0, double.MaxValue)] public decimal? Amount { get; set; }
 
@@ -49,7 +49,7 @@ public class UpsertOrderDto : IValidatableObject
 
   public bool? IsPartial { get; set; }
   public int? FillNonce { get; set; }
-  public string? FillPda { get; set; }
+  public string? TicketPda { get; set; }
   public DateTime? DealStartTime { get; set; }
 
 

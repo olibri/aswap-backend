@@ -15,31 +15,65 @@ public static partial class EscrowOrderMapper
 {
 
     [MapProperty(
-        nameof(OfferInitialized.OfferType),
-        nameof(EscrowOrderEntity.OfferSide),
-        Use = nameof(ToOrderSide)
+        nameof(UniversalOrderCreated.Order),
+        nameof(EscrowOrderEntity.OrderPda),
+        Use = nameof(ConvertHelper.ToBase58)
     )]
-    [MapProperty(nameof(OfferInitialized.Escrow), nameof(EscrowOrderEntity.EscrowPda),
-        Use = nameof(ConvertHelper.ToBase58))]
-    [MapProperty(nameof(OfferInitialized.Seller), nameof(EscrowOrderEntity.SellerCrypto),
-        Use = nameof(ConvertHelper.ToBase58))]
-    [MapProperty(nameof(OfferInitialized.Buyer), nameof(EscrowOrderEntity.BuyerFiat),
-        Use = nameof(ConvertHelper.ToBase58))]
-    [MapProperty(nameof(OfferInitialized.TokenMint), nameof(EscrowOrderEntity.TokenMint),
-        Use = nameof(ConvertHelper.ToBase58))]
-    [MapProperty(nameof(OfferInitialized.FiatCode), nameof(EscrowOrderEntity.FiatCode),
-        Use = nameof(ConvertHelper.Fiat))]
-    [MapProperty(nameof(OfferInitialized.Ts), nameof(EscrowOrderEntity.CreatedAtUtc),
-        Use = nameof(ConvertHelper.FromUnixSeconds))]
-    public static partial EscrowOrderEntity ToEntity(OfferInitialized ev);
+    [MapProperty(
+        nameof(UniversalOrderCreated.Creator),
+        nameof(EscrowOrderEntity.CreatorWallet),
+        Use = nameof(ConvertHelper.ToBase58)
+    )]
+    [MapProperty(
+        nameof(UniversalOrderCreated.CryptoMint),
+        nameof(EscrowOrderEntity.TokenMint),
+        Use = nameof(ConvertHelper.ToBase58)
+    )]
+    [MapProperty(
+        nameof(UniversalOrderCreated.IsSellOrder),
+        nameof(EscrowOrderEntity.OfferSide),
+        Use = nameof(ToOrderSideFromBool)
+    )]
+    [MapProperty(
+        nameof(UniversalOrderCreated.CryptoAmount),
+        nameof(EscrowOrderEntity.Amount)
+    )]
+    [MapProperty(
+        nameof(UniversalOrderCreated.FiatAmount),
+        nameof(EscrowOrderEntity.FiatCode),
+        Use = nameof(FiatAmountToCode)
+    )]
+    [MapProperty(
+        nameof(UniversalOrderCreated.OrderId),
+        nameof(EscrowOrderEntity.OrderId)
+    )]
+    [MapProperty(
+        nameof(UniversalOrderCreated.Vault),
+        nameof(EscrowOrderEntity.VaultPda),
+        Use = nameof(ConvertHelper.ToBase58)
+    )]
+    [MapProperty(
+        nameof(UniversalOrderCreated.Timestamp),
+        nameof(EscrowOrderEntity.CreatedAtUtc),
+        Use = nameof(ConvertHelper.FromUnixSeconds)
+    )]
+    public static partial EscrowOrderEntity ToEntity(UniversalOrderCreated ev);
 
-    private static void OnAfterToEntity(OfferInitialized src, EscrowOrderEntity dest)
+    private static void OnAfterToEntity(UniversalOrderCreated src, EscrowOrderEntity dest)
     {
         dest.Id = Guid.NewGuid();
-        dest.EscrowStatus = EscrowStatus.PendingOnChain;
-        dest.BuyerFiat = null;
+        dest.Status = UniversalOrderStatus.Created;
     }
 
+    private static OrderSide ToOrderSideFromBool(bool isSellOrder) =>
+        isSellOrder ? OrderSide.Sell : OrderSide.Buy;
+
+    private static string FiatAmountToCode(ulong fiatAmount)
+    {
+        // Конвертація ulong в string для fiat code
+        // Можливо потрібна інша логіка в залежності від того, як кодується fiat amount
+        return fiatAmount.ToString();
+    }
 
     //Trash because I use it in ConvertHelper
     private static string ToBase58(byte[] bytes) =>
@@ -53,15 +87,13 @@ public static partial class EscrowOrderMapper
     private static DateTime FromUnixSeconds(long ts) =>
         DateTimeOffset.FromUnixTimeSeconds(ts).UtcDateTime;
 
-
     private static string Fiat(byte[] code) =>
         Encoding.ASCII.GetString(code).TrimEnd('\0');
 
-
-    [MapProperty(nameof(UpsertOrderDto.OrderId), nameof(EscrowOrderEntity.DealId))]
-    [MapProperty(nameof(UpsertOrderDto.Seller), nameof(EscrowOrderEntity.SellerCrypto))]
-    [MapProperty(nameof(UpsertOrderDto.Buyer), nameof(EscrowOrderEntity.BuyerFiat))]
-    [MapProperty(nameof(UpsertOrderDto.Status), nameof(EscrowOrderEntity.EscrowStatus))]
+    [MapProperty(nameof(UpsertOrderDto.OrderId), nameof(EscrowOrderEntity.OrderId))]
+    [MapProperty(nameof(UpsertOrderDto.CreatorWallet), nameof(EscrowOrderEntity.CreatorWallet))]
+    [MapProperty(nameof(UpsertOrderDto.AcceptorWallet), nameof(EscrowOrderEntity.AcceptorWallet))]
+    [MapProperty(nameof(UpsertOrderDto.Status), nameof(EscrowOrderEntity.Status))]
     [MapProperty(nameof(UpsertOrderDto.OrderSide), nameof(EscrowOrderEntity.OfferSide))]
     [MapProperty(nameof(UpsertOrderDto.MinFiatAmount), nameof(EscrowOrderEntity.MinFiatAmount))]
     [MapProperty(nameof(UpsertOrderDto.MaxFiatAmount), nameof(EscrowOrderEntity.MaxFiatAmount))]

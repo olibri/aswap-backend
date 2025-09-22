@@ -13,7 +13,7 @@ namespace Tests_back;
 
 public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixture>
 {
-  private async Task SeedAsync(int n, EscrowStatus st, OrderSide side, string fiat, CancellationToken ct = default)
+  private async Task SeedAsync(int n, UniversalOrderStatus st, OrderSide side, string fiat, CancellationToken ct = default)
   {
     var db = fixture.GetService<P2PDbContext>();
     await db.SeedAsync(n, st, "So111...", side, false, ct);
@@ -23,7 +23,7 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
   public async Task Pagination_Works()
   {
     PostgresDatabase.ResetState("escrow_orders");
-    await SeedAsync(30, EscrowStatus.OnChain, OrderSide.Sell, "USD");
+    await SeedAsync(30, UniversalOrderStatus.Active, OrderSide.Sell, "USD");
 
     var queries = fixture.GetService<IMarketDbQueries>();
     var q = new OffersQuery().With(2, 10); // стор.2 по 10
@@ -36,7 +36,7 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
   public async Task Sorting_ByPrice_Asc_Works()
   {
     PostgresDatabase.ResetState("escrow_orders");
-    await SeedAsync(15, EscrowStatus.OnChain, OrderSide.Sell, "USD");
+    await SeedAsync(15, UniversalOrderStatus.Active, OrderSide.Sell, "USD");
 
     var queries = fixture.GetService<IMarketDbQueries>();
     var q = new OffersQuery().With(sort: OfferSortField.Price, dir: SortDir.Asc);
@@ -45,34 +45,34 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
     var prices = res.Data.Select(o => o.Price).ToList();
     prices.ShouldBe(prices.OrderBy(p => p).ToList());
   }
-
+      
   [Fact]
   public async Task Filter_ByStatus_And_Side_Works()
   {
     PostgresDatabase.ResetState("escrow_orders");
 
-    await SeedAsync(10, EscrowStatus.OnChain, OrderSide.Sell, "USD");
-    await SeedAsync(5, EscrowStatus.OnChain, OrderSide.Buy, "USD");
+    await SeedAsync(10, UniversalOrderStatus.Active, OrderSide.Sell, "USD");
+    await SeedAsync(5, UniversalOrderStatus.Active, OrderSide.Buy, "USD");
 
     var db = fixture.GetService<P2PDbContext>();
     var totalRows = await db.EscrowOrders.CountAsync();
     totalRows.ShouldBe(15);
 
     var queries = fixture.GetService<IMarketDbQueries>();
-    var q = new OffersQuery().With(status: EscrowStatus.OnChain, side: OrderSide.Buy);
+    var q = new OffersQuery().With(status: UniversalOrderStatus.Active, side: OrderSide.Buy);
 
 
     var res = await queries.GetAllNewOffersAsync(q);
 
     res.Data.Count.ShouldBe(5);
-    res.Data.All(o => o.Status == EscrowStatus.OnChain && o.OfferSide == OrderSide.Buy).ShouldBeTrue();
+    res.Data.All(o => o.Status == UniversalOrderStatus.Active && o.OfferSide == OrderSide.Buy).ShouldBeTrue();
   }
 
   [Fact]
   public async Task Filter_By_PriceFrom_Works()
   {
     PostgresDatabase.ResetState("escrow_orders");
-    await SeedAsync(25, EscrowStatus.OnChain, OrderSide.Sell, "USD");
+    await SeedAsync(25, UniversalOrderStatus.Active, OrderSide.Sell, "USD");
 
     var db = fixture.GetService<P2PDbContext>();
 
@@ -106,7 +106,7 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
 
     var db = fixture.GetService<P2PDbContext>();
 
-    await SeedAsync(6, EscrowStatus.OnChain, OrderSide.Sell, "USD");
+    await SeedAsync(6, UniversalOrderStatus.Active, OrderSide.Sell, "USD");
     var orders = await db.EscrowOrders
       .Include(o => o.PaymentMethods)
       .ThenInclude(pm => pm.Method)
@@ -134,7 +134,6 @@ public class EscrowOrderQueryTests(TestFixture fixture) : IClassFixture<TestFixt
     res.Data.Count.ShouldBe(expectedIds.Count);
     res.Data.All(o => expectedIds.Contains(o.Id)).ShouldBeTrue();
   }
-
 
   [Fact]
   public async Task Get_Country_By_IP()

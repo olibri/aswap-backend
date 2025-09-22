@@ -12,7 +12,7 @@ public static class TvlUtils
     IEnumerable<EscrowOrderEntity> orders)
   {
     return orders
-      .Where(o => o.EscrowStatus is EscrowStatus.OnChain or EscrowStatus.PartiallyOnChain)
+      .Where(o => o.Status is UniversalOrderStatus.Active or UniversalOrderStatus.Created)
       .GroupBy(o => o.TokenMint)
       .ToDictionary(
         g => g.Key!,

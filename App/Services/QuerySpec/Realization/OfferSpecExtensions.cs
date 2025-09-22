@@ -13,7 +13,7 @@ public static class OfferSpecExtensions
     var spec = new QuerySpec<EscrowOrderEntity>();
 
     if (q.Status is not null)
-      spec.Where(new EqualFilter<EscrowOrderEntity, EscrowStatus>(o => o.EscrowStatus, q.Status.Value));
+      spec.Where(new EqualFilter<EscrowOrderEntity, UniversalOrderStatus>(o => o.Status, q.Status.Value));
 
     if (q.Side is not null)
       spec.Where(new EqualFilter<EscrowOrderEntity, OrderSide>(o => o.OfferSide, q.Side.Value));

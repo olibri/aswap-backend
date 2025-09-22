@@ -74,7 +74,7 @@ public class BestPriceControllerTests(TestFixture fixture) : IClassFixture<TestF
     await fixture.AddOrderAsync("OtherMint", Usd, OrderSide.Sell, 100);
     await fixture.AddOrderAsync(Sol, "EUR", OrderSide.Sell, 100);
     await fixture.AddOrderAsync(Sol, Usd, OrderSide.Buy, 100);
-    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 100, EscrowStatus.Cancelled,
+    await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 100, UniversalOrderStatus.Cancelled,
       new[] { m1.Id });
 
     await fixture.AddOrderAsync(Sol, Usd, OrderSide.Sell, 777);

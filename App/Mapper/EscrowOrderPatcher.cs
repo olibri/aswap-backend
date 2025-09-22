@@ -8,15 +8,15 @@ public static class EscrowOrderPatcher
   public static void ApplyUpsert(
     EscrowOrderEntity entity,
     UpsertOrderDto dto,
-    Func<EscrowOrderEntity, decimal, Domain.Enums.EscrowStatus>? moveToSignedStatus = null)
+    Func<EscrowOrderEntity, decimal, Domain.Enums.UniversalOrderStatus>? moveToSignedStatus = null)
   {
-    entity.DealId = dto.OrderId;
+    entity.OrderId = dto.OrderId;
     entity.FiatCode = dto.FiatCode ?? entity.FiatCode;
     entity.TokenMint = dto.TokenMint ?? entity.TokenMint;
 
-    if (dto.Status.HasValue) entity.EscrowStatus = dto.Status.Value;
-    entity.BuyerFiat = dto.Buyer ?? entity.BuyerFiat;
-    entity.SellerCrypto = dto.Seller ?? entity.SellerCrypto;
+    if (dto.Status.HasValue) entity.Status = dto.Status.Value;
+    entity.AcceptorWallet = dto.AcceptorWallet ?? entity.AcceptorWallet;
+    entity.CreatorWallet = dto.CreatorWallet ?? entity.CreatorWallet;
     entity.OfferSide = dto.OrderSide;
 
     if (dto.Amount.HasValue) entity.Amount = ToAtomic(dto.Amount.Value, 1_000_000m);
@@ -25,10 +25,9 @@ public static class EscrowOrderPatcher
     if (dto.FilledQuantity.HasValue)
     {
       if (moveToSignedStatus is not null)
-        entity.EscrowStatus = moveToSignedStatus(entity, dto.FilledQuantity.Value);
+        entity.Status = moveToSignedStatus(entity, dto.FilledQuantity.Value);
       entity.FilledQuantity += dto.FilledQuantity.Value;
     }
-
 
     if (dto.MinFiatAmount.HasValue) entity.MinFiatAmount = dto.MinFiatAmount.Value;
     if (dto.MaxFiatAmount.HasValue) entity.MaxFiatAmount = dto.MaxFiatAmount.Value;
@@ -37,9 +36,9 @@ public static class EscrowOrderPatcher
     entity.BasePrice = dto.BasePrice ?? entity.BasePrice;
     entity.MarginPercent = dto.MarginPercent ?? entity.MarginPercent;
     entity.PaymentWindowMinutes = dto.PaymentWindowMinutes ?? entity.PaymentWindowMinutes;
-    entity.ListingMode = dto.ListingMode ;
+    entity.ListingMode = dto.ListingMode;
     entity.IsPartial = dto.IsPartial ?? entity.IsPartial;
-    entity.EscrowPda = dto.EscrowPda ?? entity.EscrowPda;
+    entity.OrderPda = dto.OrderPda ?? entity.OrderPda;
     entity.DealStartTime = dto.DealStartTime ?? entity.DealStartTime;
 
     if (dto.VisibleInCountries is not null) entity.VisibleInCountries = dto.VisibleInCountries;

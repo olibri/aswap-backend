@@ -15,17 +15,17 @@ public sealed class UserTradingStatsService(IDbContextFactory<P2PDbContext> dbFa
 
     var userOrders = db.EscrowOrders
       .AsNoTracking()
-      .Where(o => o.SellerCrypto == userWallet || o.BuyerFiat == userWallet);
+      .Where(o => o.CreatorWallet == userWallet || o.AcceptorWallet== userWallet);
 
     var completedOrders = await userOrders
-      .Where(o => o.EscrowStatus == EscrowStatus.Released)
+      .Where(o => o.Status == UniversalOrderStatus.Completed)
       .ToListAsync(ct);
 
     var totalTrades = completedOrders.Count;
 
     var buyTradesCount = completedOrders.Count(o =>
-      (o.OfferSide == OrderSide.Buy && o.BuyerFiat == userWallet) ||
-      (o.OfferSide == OrderSide.Sell && o.SellerCrypto == userWallet));
+      (o.OfferSide == OrderSide.Buy && o.AcceptorWallet == userWallet) ||
+      (o.OfferSide == OrderSide.Sell && o.CreatorWallet == userWallet));
 
     var sellTradesCount = totalTrades - buyTradesCount;
 
@@ -38,7 +38,7 @@ public sealed class UserTradingStatsService(IDbContextFactory<P2PDbContext> dbFa
 
     var completionRate30D = ordersLast30Days.Count == 0
       ? 0m
-      : (decimal)ordersLast30Days.Count(o => o.EscrowStatus == EscrowStatus.Released) / ordersLast30Days.Count * 100m;
+      : (decimal)ordersLast30Days.Count(o => o.Status == UniversalOrderStatus.Completed) / ordersLast30Days.Count * 100m;
 
     var averageReleaseTime = await CalculateAverageReleaseTimeAsync(db, userWallet, ct);
 
@@ -68,7 +68,7 @@ public sealed class UserTradingStatsService(IDbContextFactory<P2PDbContext> dbFa
   {
     var releaseTimeSeconds = await db.EscrowOrders
       .AsNoTracking()
-      .Where(o => o.SellerCrypto == userWallet &&
+      .Where(o => o.CreatorWallet == userWallet &&
                   o.ReleaseTimeSeconds.HasValue)
       .Select(o => o.ReleaseTimeSeconds!.Value)
       .ToListAsync(ct);

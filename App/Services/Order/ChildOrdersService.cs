@@ -18,20 +18,19 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
     var parent = await db.EscrowOrders
       .AsNoTracking()
       .Where(x => x.Id == dto.ParentOrderId)
-      .Select(x => new { x.Id, x.DealId, x.IsPartial })
+      .Select(x => new { x.Id, x.OrderId, x.IsPartial })
       .SingleOrDefaultAsync(ct);
 
     if (parent is null)
       throw new InvalidOperationException($"Parent order '{dto.ParentOrderId}' not found.");
 
+    if (parent.OrderId != dto.TicketId)
+      throw new InvalidOperationException($"TicketId mismatch: parent={parent.OrderId}, dto={dto.TicketId}.");
 
-    if (parent.DealId != dto.DealId)
-      throw new InvalidOperationException($"DealId mismatch: parent={parent.DealId}, dto={dto.DealId}.");
+    UniversalTicketEntity? entity = null;
 
-    ChildOrderEntity? entity = null;
-
-    if (dto.EscrowStatus is EscrowStatus.SignedByContraAgentSide or EscrowStatus.SignedByOwnerSide)
-      entity = await db.Set<ChildOrderEntity>()
+    if (dto.Status is UniversalOrderStatus.SignedByOneParty or UniversalOrderStatus.BothSigned)
+      entity = await db.Set<UniversalTicketEntity>()
         .FirstOrDefaultAsync(x =>
           x.ParentOrderId == dto.ParentOrderId, ct);
 
@@ -39,65 +38,51 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
 
     if (entity is null)
     {
-      entity = new ChildOrderEntity
+      entity = new UniversalTicketEntity
       {
         Id = Guid.NewGuid(),
         ParentOrderId = dto.ParentOrderId,
-        DealId = dto.DealId,
+        TicketId = dto.TicketId,
         OrderOwnerWallet = dto.OrderOwnerWallet,
         ContraAgentWallet = dto.ContraAgentWallet,
-        EscrowStatus = dto.EscrowStatus,
+        Status = dto.Status,
         CreatedAtUtc = now,
-        FilledAmount = dto.FilledAmount,
-        FillNonce = dto.FillNonce,
-        FillPda = dto.FillPda
+        Amount = dto.Amount,
+        TicketPda = dto.TicketPda
       };
 
       db.Add(entity);
     }
     else
     {
-      entity.EscrowStatus = dto.EscrowStatus;
+      entity.Status = dto.Status;
+      entity.Amount = dto.Amount;
+      entity.TicketPda = dto.TicketPda;
+      entity.UpdatedAt = now;
 
-      entity.FilledAmount = dto.FilledAmount;
-      entity.FillPda = dto.FillPda;
-      entity.FillNonce = dto.FillNonce;
-
-      if (dto.EscrowStatus == EscrowStatus.Released) entity.ClosedAtUtc = now;
+      if (dto.Status == UniversalOrderStatus.Completed) 
+        entity.ClosedAtUtc = now;
     }
 
     await db.SaveChangesAsync(ct);
-    return ToDto(entity);
+    return ChildOrderDto.FromEntity(entity);
   }
 
-  public async Task<IReadOnlyList<ChildOrderDto>> GetByParentAsync(long dealId, CancellationToken ct = default)
+  public async Task<IReadOnlyList<ChildOrderDto>> GetByParentAsync(long ticketId, CancellationToken ct = default)
   {
-    if (dealId < 0) throw new ArgumentOutOfRangeException(nameof(dealId));
-    var deal = (ulong)dealId;
+    if (ticketId < 0) throw new ArgumentOutOfRangeException(nameof(ticketId));
+    var ticket = (ulong)ticketId;
 
     await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-    var items = await db.Set<ChildOrderEntity>()
+    var items = await db.Set<UniversalTicketEntity>()
       .AsNoTracking()
-      .Where(x => x.DealId == deal)
+      .Where(x => x.TicketId == ticket)
       .OrderByDescending(x => x.CreatedAtUtc)
-      .Select(x => new ChildOrderDto(
-        x.Id,
-        x.ParentOrderId,
-        x.DealId,
-        x.OrderOwnerWallet,
-        x.ContraAgentWallet,
-        x.EscrowStatus,
-        x.CreatedAtUtc,
-        x.ClosedAtUtc,
-        x.FilledAmount,
-        x.FillNonce,
-        x.FillPda))
       .ToListAsync(ct);
 
-    return items;
+    return items.Select(ChildOrderDto.FromEntity).ToList();
   }
-
 
   private static void Validate(ChildOrderUpsertDto dto)
   {
@@ -109,22 +94,5 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
       throw new ArgumentException("ContraAgentWallet is required.", nameof(dto));
     if (dto.OrderOwnerWallet == dto.ContraAgentWallet)
       throw new ArgumentException("OrderOwnerWallet and ContraAgentWallet must differ.", nameof(dto));
-  }
-
-  private static ChildOrderDto ToDto(ChildOrderEntity e)
-  {
-    return new ChildOrderDto(
-      e.Id,
-      e.ParentOrderId,
-      e.DealId,
-      e.OrderOwnerWallet,
-      e.ContraAgentWallet,
-      e.EscrowStatus,
-      e.CreatedAtUtc,
-      e.ClosedAtUtc,
-      e.FilledAmount,
-      e.FillNonce,
-      e.FillPda
-    );
   }
 }

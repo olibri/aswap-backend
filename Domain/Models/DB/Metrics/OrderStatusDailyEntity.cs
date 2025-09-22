@@ -8,6 +8,6 @@ namespace Domain.Models.DB.Metrics;
 public class OrderStatusDailyEntity
 {
   [Key, Column("day")] public DateTime Day { get; set; } // date
-  [Key, Column("status")] public EscrowStatus Status { get; set; }
+  [Key, Column("status")] public UniversalOrderStatus Status { get; set; }
   [Column("cnt")] public int Cnt { get; set; }
 }

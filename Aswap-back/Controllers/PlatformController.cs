@@ -52,7 +52,7 @@ public class PlatformController(
     if (order is null)
       return NotFound();
 
-    return Ok(new { isConfirmed = order.DealId });
+    return Ok(new { isConfirmed = order.OrderId });
   }
 
 

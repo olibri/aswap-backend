@@ -50,15 +50,15 @@ public class TgBotHandler(
     var text =
       $"<b>🚨 Потрібно втручання адміна</b>\n\n" +
       $"<b>Order ID:</b> <code>{dto.DealId}</code>\n" +
-      $"<b>Buyer wallet:</b> <code>{dto.BuyerWallet}</code>\n" +
-      $"<b>Seller wallet:</b> <code>{dto.SellerWallet}</code>\n\n" +
+      $"<b>AcceptorWallet wallet:</b> <code>{dto.BuyerWallet}</code>\n" +
+      $"<b>CreatorWallet wallet:</b> <code>{dto.SellerWallet}</code>\n\n" +
       $"<a href=\"{dto.OrderUrl}\">🔗 Click</a>";
     
     await marketDbCommand.UpdateCurrentOfferAsync(new UpsertOrderDto
     {
       OrderId = dto.DealId,
       AdminCall = true,
-      Status = EscrowStatus.AdminResolving
+      Status = UniversalOrderStatus.AdminResolving
     });
 
     var usersToNotify = new[] { dto.BuyerWallet, dto.SellerWallet }.Where(w => !string.IsNullOrEmpty(w));
@@ -81,8 +81,8 @@ public class TgBotHandler(
     var text =
       $"<b>✅ Order created</b>\n\n" +
       $"<b>Order ID:</b> <code>{botDto.DealId}</code>\n" +
-      $"<b>Buyer wallet:</b> <code>{botDto.BuyerWallet}</code>\n" +
-      $"<b>Seller wallet:</b> <code>{botDto.SellerWallet}</code>\n\n" +
+      $"<b>AcceptorWallet wallet:</b> <code>{botDto.BuyerWallet}</code>\n" +
+      $"<b>CreatorWallet wallet:</b> <code>{botDto.SellerWallet}</code>\n\n" +
       $"<a href=\"{botDto.OrderUrl}\">🔗 Click</a>";
 
     IEnumerable<string?> wallets = botDto.Receiver switch

@@ -2,7 +2,7 @@ namespace Tests_back.Extensions;
 
 public static class TestJson
 {
-    public const string OfferInitialized = @"
+    public const string UniversalOrderCreated = @"
 {
   ""data"": [
     {

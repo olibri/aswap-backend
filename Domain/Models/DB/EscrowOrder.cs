@@ -11,16 +11,25 @@ public class EscrowOrderEntity : IHasDomainEvents
 {
   [Key] [Column("id")] public Guid Id { get; set; }
 
-  [MaxLength(60)] [Column("escrow_pda")] public string? EscrowPda { get; set; }
+  [MaxLength(60)] [Column("order_pda")] public string? OrderPda { get; set; }
+
+  [MaxLength(60)]
+  [Column("vault_pda")]
+  public string? VaultPda { get; set; }
 
 
-  [Column("deal_id")] public ulong DealId { get; set; }
+  [Column("order_id")] public ulong OrderId { get; set; }
 
   // on-chain state
 
-  [Column("seller_crypto")] public string? SellerCrypto { get; set; }
+  [MaxLength(60)]
+  [Column("creator_wallet")]
+  public string? CreatorWallet { get; set; }
 
-  [Column("buyer_fiat")] public string? BuyerFiat { get; set; }
+  [MaxLength(60)]
+  [Column("acceptor_wallet")]
+  public string? AcceptorWallet { get; set; }
+
 
   [Column("token_mint")] public string? TokenMint { get; set; }
 
@@ -33,7 +42,8 @@ public class EscrowOrderEntity : IHasDomainEvents
   [Column("price", TypeName = "numeric(20,0)")]
   public ulong Price { get; set; }
 
-  [Column("escrow_status")] public EscrowStatus EscrowStatus { get; set; }
+  [Column("status")]
+  public UniversalOrderStatus Status { get; set; }
 
   [Column("created_at_utc")] public DateTime CreatedAtUtc { get; set; }
 
@@ -87,7 +97,7 @@ public class EscrowOrderEntity : IHasDomainEvents
 
   [Column("release_time_seconds")]
   public int? ReleaseTimeSeconds { get; set; } // Час між PaymentC
-  public ICollection<ChildOrderEntity> ChildOrders { get; set; } = new List<ChildOrderEntity>();
+  public ICollection<UniversalTicketEntity> ChildOrders { get; set; } = new List<UniversalTicketEntity>();
   public ICollection<EscrowOrderPaymentMethodEntity> PaymentMethods { get; set; } = [];
 
   [NotMapped] public List<DomainEvent> DomainEvents { get; } = new();

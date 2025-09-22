@@ -18,7 +18,7 @@ public static class OffersExtensions
   {
     var controller = fixture.GetService<WebHookController>();
 
-    controller.SetJsonBody(TestJson.OfferInitialized);
+    controller.SetJsonBody(TestJson.UniversalOrderCreated);
     var token = new CancellationToken();
 
     var result = await controller.QuickNodeCallback(token);
@@ -33,7 +33,7 @@ public static class OffersExtensions
 
   public static List<EscrowOrderEntity> Generate(
     int count,
-    EscrowStatus? status = null,
+    UniversalOrderStatus? status = null,
     string? tokenMint = null,
     OrderSide? side = null,
     bool partialFill = false,
@@ -48,20 +48,22 @@ public static class OffersExtensions
       list.Add(new EscrowOrderEntity
       {
         Id = Guid.NewGuid(),
-        EscrowPda = $"EscrowPda{i:D4}",
-        DealId = (ulong)Rnd.NextInt64(1_000_000_000_000),
-        SellerCrypto = $"wallet_{Rnd.Next(1, 100)}",
-        BuyerFiat = null,
+        OrderPda = $"OrderPda{i:D4}",
+        VaultPda = $"VaultPda{i:D4}",
+        OrderId = (ulong)Rnd.NextInt64(1_000_000_000_000),
+        CreatorWallet = $"wallet_{Rnd.Next(1, 100)}",
+        AcceptorWallet = null,
         TokenMint = tokenMint ?? (Rnd.Next(2) == 0 ? "USDc" : "So11111111111111111111111111111111111111112"),
         FiatCode = "USD",
         Amount = (ulong)amt,
         Price = (ulong)Rnd.Next(100, 10_000),
-        EscrowStatus = status ?? (EscrowStatus)Rnd.Next(Enum.GetValues<EscrowStatus>().Length),
+        Status = status ?? (UniversalOrderStatus)Rnd.Next(Enum.GetValues<UniversalOrderStatus>().Length),
         CreatedAtUtc = DateTime.UtcNow.AddMinutes(-Rnd.Next(0, 10_000)),
         OfferSide = side ?? (Rnd.Next(2) == 0 ? OrderSide.Sell : OrderSide.Buy),
         MinFiatAmount = 10,
         MaxFiatAmount = 10000,
-        FilledQuantity = filled
+        FilledQuantity = filled,
+        IsPartial = partialFill
       });
     }
 
@@ -89,7 +91,7 @@ public static class OffersExtensions
   public static async Task<List<EscrowOrderEntity>> SeedAsync(
     this P2PDbContext db,
     int count,
-    EscrowStatus? status = null,
+    UniversalOrderStatus? status = null,
     string? tokenMint = null,
     OrderSide? side = null,
     bool partialFill = false,
@@ -108,11 +110,9 @@ public static class OffersExtensions
   {
     return orders
       .Where(o => o.TokenMint == tokenMint &&
-                  o.EscrowStatus is EscrowStatus.OnChain or EscrowStatus.PartiallyOnChain)
+                  o.Status is UniversalOrderStatus.Created or UniversalOrderStatus.Active)
       .Sum(o => (o.Amount ?? 0m) - o.FilledQuantity);
   }
-
-
 
   public static async Task<List<EscrowOrderEntity>> SeedTradesAsync(
     this P2PDbContext db,
@@ -125,7 +125,7 @@ public static class OffersExtensions
   {
     var orders = Generate(
       count,
-      EscrowStatus.Released,
+      UniversalOrderStatus.Completed,
       tokenMint,
       OrderSide.Sell,
       false,
@@ -143,7 +143,7 @@ public static class OffersExtensions
       Ts = settledTs,
       EventType = EventType.TradeSettled,
       Payload = JsonSerializer.Serialize(
-        new TradeSettledPayload(o.DealId, tokenMint, qtyEach, priceFiat))
+        new TradeSettledPayload(o.OrderId, tokenMint, qtyEach, priceFiat))
     });
 
     await db.EscrowOrders.AddRangeAsync(orders, ct);

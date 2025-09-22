@@ -39,7 +39,7 @@ public class OrderController(
   [Route("create-buyer-createOrder")]
   public async Task<IActionResult> CreateBuyerOffer(UpsertOrderDto createOrder)
   {
-    log.LogInformation("Buyer createOrder request");
+    log.LogInformation("AcceptorWallet createOrder request");
     await marketDbCommand.CreateBuyerOfferAsync(createOrder);
 
     var region = geo.ResolveCountry(ipAccessor.GetClientIp()) ?? "ZZ";
@@ -52,7 +52,7 @@ public class OrderController(
   [Route("get-best-price")]
   public async Task<IActionResult> GetBestPrice([FromQuery]BestPriceRequest bestPrice)
   {
-    log.LogInformation("Buyer createOrder request");
+    log.LogInformation("AcceptorWallet createOrder request");
     var res = await IBestPriceService.GetBestPriceAsync(bestPrice, CancellationToken.None);
 
     return Ok(res);

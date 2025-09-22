@@ -72,19 +72,22 @@ public static class ReferralExtensions
     var order = new EscrowOrderEntity
     {
       Id = Guid.NewGuid(),
-      DealId = (ulong)Rnd.NextInt64(1_000_000_000_000),
-      SellerCrypto = referrerWallet,
-      BuyerFiat = refereeWallet,
+      OrderId = (ulong)Rnd.NextInt64(1_000_000_000_000),
+      OrderPda = $"OrderPda_{Guid.NewGuid():N}",
+      VaultPda = $"VaultPda_{Guid.NewGuid():N}",
+      CreatorWallet = referrerWallet,
+      AcceptorWallet = refereeWallet,
       TokenMint = "USDC",
       FiatCode = "USD",
       Amount = (ulong)orderValueUsd,
       Price = 1,
-      EscrowStatus = Domain.Enums.EscrowStatus.Released,
+      Status = Domain.Enums.UniversalOrderStatus.Completed,
       CreatedAtUtc = DateTime.UtcNow,
       OfferSide = Domain.Models.Enums.OrderSide.Sell,
       MinFiatAmount = 1,
       MaxFiatAmount = 1000,
-      FilledQuantity = orderValueUsd
+      FilledQuantity = orderValueUsd,
+      IsPartial = false
     };
 
     db.EscrowOrders.Add(order);

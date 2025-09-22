@@ -23,10 +23,10 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     var orders = new[]
     {
       new EscrowOrderEntity
-        { TokenMint = "USDc", EscrowStatus = EscrowStatus.OnChain, Amount = 100, FilledQuantity = 0 },
+        { TokenMint = "USDc", Status = UniversalOrderStatus.Active, Amount = 100, FilledQuantity = 0 },
       new EscrowOrderEntity
-        { TokenMint = "USDc", EscrowStatus = EscrowStatus.PartiallyOnChain, Amount = 50, FilledQuantity = 20 },
-      new EscrowOrderEntity { TokenMint = "BONK", EscrowStatus = EscrowStatus.Cancelled, Amount = 99 }
+        { TokenMint = "USDc", Status = UniversalOrderStatus.Active, Amount = 50, FilledQuantity = 20 },
+      new EscrowOrderEntity { TokenMint = "BONK", Status = UniversalOrderStatus.Cancelled, Amount = 99 }
     };
 
     var tvl = TvlUtils.Calculate(orders);
@@ -41,10 +41,9 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     await using var scope = fixture.Host.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
 
-
     var seeded = await db.SeedAsync(
       50,
-      EscrowStatus.OnChain,
+      UniversalOrderStatus.Active,
       "USDc",
       OrderSide.Sell,
       fixedAmount: 100);
@@ -71,10 +70,10 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     await using var scope = fixture.Host.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
 
-    await db.SeedAsync(10, EscrowStatus.OnChain, "USDc", OrderSide.Buy, fixedAmount: 100);
-    await db.SeedAsync(3, EscrowStatus.PartiallyOnChain, "USDc", OrderSide.Buy, fixedAmount: 100);
-    await db.SeedAsync(7, EscrowStatus.Released, "USDc", OrderSide.Sell, fixedAmount: 100);
-    await db.SeedAsync(5, EscrowStatus.Cancelled, "USDc", OrderSide.Sell, fixedAmount: 100);
+    await db.SeedAsync(10, UniversalOrderStatus.Active, "USDc", OrderSide.Buy, fixedAmount: 100);
+    await db.SeedAsync(3, UniversalOrderStatus.Active, "USDc", OrderSide.Buy, fixedAmount: 100);
+    await db.SeedAsync(7, UniversalOrderStatus.Completed, "USDc", OrderSide.Sell, fixedAmount: 100);
+    await db.SeedAsync(5, UniversalOrderStatus.Cancelled, "USDc", OrderSide.Sell, fixedAmount: 100);
 
     var factory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
     var task = new OrderStatusSnapshotTask(factory);
@@ -85,10 +84,9 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
       .Where(s => s.Day == day)
       .ToDictionaryAsync(s => s.Status, s => s.Cnt);
 
-    snaps[EscrowStatus.OnChain].ShouldBe(10);
-    snaps[EscrowStatus.PartiallyOnChain].ShouldBe(3);
-    snaps[EscrowStatus.Released].ShouldBe(7);
-    snaps[EscrowStatus.Cancelled].ShouldBe(5);
+    snaps[UniversalOrderStatus.Active].ShouldBe(13); // 10 + 3
+    snaps[UniversalOrderStatus.Completed].ShouldBe(7);
+    snaps[UniversalOrderStatus.Cancelled].ShouldBe(5);
   }
 
   [Fact]
@@ -157,7 +155,6 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     snap.MauUsers.ShouldBe(exp.MauUsers);
   }
 
-
   [Fact]
   public async Task Session_Start_creates_row_and_updates_account()
   {
@@ -222,8 +219,8 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     await using var scope = fixture.Host.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<P2PDbContext>();
 
-    var tvl1 = await db.SeedAsync(1, EscrowStatus.OnChain, "USDc", OrderSide.Sell, fixedAmount: 100);
-    var tvl2 = await db.SeedAsync(1, EscrowStatus.PartiallyOnChain, "USDc", OrderSide.Sell, partialFill: true, fixedAmount: 50);
+    var tvl1 = await db.SeedAsync(1, UniversalOrderStatus.Active, "USDc", OrderSide.Sell, fixedAmount: 100);
+    var tvl2 = await db.SeedAsync(1, UniversalOrderStatus.Active, "USDc", OrderSide.Sell, partialFill: true, fixedAmount: 50);
     var tvlOrders = tvl1.Concat(tvl2).ToList();
 
     var settled = DateTime.UtcNow;
@@ -243,14 +240,13 @@ public class MetricsTests(TestFixture fixture) : IClassFixture<TestFixture>
     var dto = await fixture.ExecuteDashboardAsync(from: today, to: today);
 
     dto.Tvl7d.AssertLast("USDc", tvlOrders.ExpectedTvl("USDc"));
-    dto.OrdersSummary["Released"].ShouldBe(3);                          
+    dto.OrdersSummary["Completed"].ShouldBe(3);                          
     dto.VolumeByAsset["USDc"].ShouldBe(expTrade.Volume);                        
     dto.AvgDealTimeSec!.Value.ShouldBe(expTrade.AvgSec, 0.6);  
     dto.Users.Dau.ShouldBe(expUsers.DauUsers);                                  
     dto.Ips.Dau.ShouldBe(expUsers.DauIps);                                      
     dto.OnlineUsers.ShouldBeGreaterThanOrEqualTo(2);                    
   }
-
 
   [Fact]
   public async Task AdminDashboard_Respects_Date_Range_AsOf_To()

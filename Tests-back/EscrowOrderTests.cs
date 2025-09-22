@@ -36,12 +36,12 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     //assert
     result.ShouldBeOfType<OkResult>();
     offer.ShouldNotBeNull();
-    offer.DealId.ShouldBe(1758270209859UL);
+    offer.OrderId.ShouldBe(1758270209859UL);
     offer.FiatCode.ShouldBe("USD");
     offer.Amount.ShouldBe(33UL);
     offer.Price.ShouldBe(100m);
-    offer.Status.ShouldBe(EscrowStatus.PendingOnChain);
-    offer.BuyerFiat.ShouldBe("11111111111111111111111111111111");
+    offer.Status.ShouldBe(UniversalOrderStatus.Created);
+    offer.AcceptorWallet.ShouldBe("11111111111111111111111111111111");
     offer.OfferSide.ShouldBe(OrderSide.Sell);
   }
 
@@ -91,8 +91,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       OrderId = 1758270209859UL,
       MaxFiatAmount = 10000,
       MinFiatAmount = 10,
-      Status = EscrowStatus.OnChain,
-      Buyer = "wallet0xzzzz",
+      Status = UniversalOrderStatus.Active,
+      AcceptorWallet = "wallet0xzzzz",
       FilledQuantity = 0.1m,
       PaymentMethodIds = [1, 2]
     };
@@ -106,8 +106,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     updatedOrder.ShouldNotBeNull();
     updatedOrder.Data[0].MinFiatAmount.ShouldBe(10);
     updatedOrder.Data[0].MaxFiatAmount.ShouldBe(10000);
-    updatedOrder.Data[0].Status.ShouldBe(EscrowStatus.OnChain);
-    updatedOrder.Data[0].BuyerFiat.ShouldBe("wallet0xzzzz");
+    updatedOrder.Data[0].Status.ShouldBe(UniversalOrderStatus.Active);
+    updatedOrder.Data[0].AcceptorWallet.ShouldBe("wallet0xzzzz");
     updatedOrder.Data[0].FilledQuantity.ShouldBe(0.1m);
     updatedOrder.Data[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
   }
@@ -132,8 +132,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       OrderId = 1758270209859UL,
       MaxFiatAmount = 10000,
       MinFiatAmount = 10,
-      Status = EscrowStatus.OnChain,
-      Buyer = "wallet0xzzzz",
+      Status = UniversalOrderStatus.Active,
+      AcceptorWallet = "wallet0xzzzz",
       FilledQuantity = 0.1m,
       PaymentMethodIds = [1, 2]
     };
@@ -160,16 +160,16 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
   {
     PostgresDatabase.ResetState("escrow_orders");
     var marketDbCommand = fixture.GetService<IMarketDbCommand>();
-    var dealId = 1758270209859UL;
+    var orderId = 1758270209859UL;
 
     var updateOrderDto = new UpsertOrderDto()
     {
-      OrderId = dealId,
+      OrderId = orderId,
       MaxFiatAmount = 10000,
       MinFiatAmount = 10,
       FiatCode = "USD",
-      Status = EscrowStatus.OnChain,
-      Buyer = "wallet0xzzzz",
+      Status = UniversalOrderStatus.Active,
+      AcceptorWallet = "wallet0xzzzz",
       FilledQuantity = 0.1m,
       OrderSide = OrderSide.Buy,
       TokenMint = "tokenMintExample",
@@ -177,12 +177,12 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
       PaymentMethodIds = [2, 4]
     };
 
-    var createdDealId = await marketDbCommand.CreateBuyerOfferAsync(updateOrderDto);
-    createdDealId.ShouldBe(dealId);
+    var createdOrderId = await marketDbCommand.CreateBuyerOfferAsync(updateOrderDto);
+    createdOrderId.ShouldBe(orderId);
     var marketDbQuery = fixture.GetService<IMarketDbQueries>();
-    var createdOrder = await marketDbQuery.GetNewOfferAsync(dealId);
+    var createdOrder = await marketDbQuery.GetNewOfferAsync(orderId);
     createdOrder.ShouldNotBeNull();
-    createdOrder.DealId.ShouldBe(dealId);
+    createdOrder.OrderId.ShouldBe(orderId);
     createdOrder.PaymentMethods.Count.ShouldBeGreaterThan(1);
   }
 
@@ -191,7 +191,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
   public async Task PartialFlow_CreatesChild_And_SetsParent_PartiallyOnChain()
   {
     PostgresDatabase.ResetState("escrow_orders");
-    PostgresDatabase.ResetState("child_order");
+    PostgresDatabase.ResetState("universal_tickets");
 
     // arrange
     await OffersExtensions.CreateFakeOrder(fixture);
@@ -199,37 +199,36 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var q = fixture.GetService<IMarketDbQueries>();
     var childSvc = fixture.GetService<IChildOffersService>();
 
-    var deal = 1758270209859UL;
-    var parent = await q.GetNewOfferAsync(deal);
+    var orderId = 1758270209859UL;
+    var parent = await q.GetNewOfferAsync(orderId);
     parent.ShouldNotBeNull();
-    parent.Status.ShouldBeOneOf(EscrowStatus.PendingOnChain, EscrowStatus.OnChain);
+    parent.Status.ShouldBeOneOf(UniversalOrderStatus.Created, UniversalOrderStatus.Active);
 
     // act: partial флоу
     var dto = new UpsertOrderDto
     {
-      OrderId = deal,
-      OrderSide = OrderSide.Sell, // власник = Seller
-      Seller = parent.SellerCrypto,
-      Buyer = "buyer_wallet_Y",
+      OrderId = orderId,
+      OrderSide = OrderSide.Sell, // власник = CreatorWallet
+      CreatorWallet = parent.CreatorWallet,
+      AcceptorWallet = "buyer_wallet_Y",
       IsPartial = true, // <- ключ: йдемо в child-флоу
       FilledQuantity = 0.1m
     };
     await cmd.UpdateCurrentOfferAsync(dto);
 
     // assert: parent оновлено мінімально і має Partial статус
-    var after = await q.GetNewOfferAsync(deal);
+    var after = await q.GetNewOfferAsync(orderId);
     after.ShouldNotBeNull();
     after.FilledQuantity.ShouldBe(0.1m);
 
-    // child створено і теж PartiallyOnChain
-    var children = await childSvc.GetByParentAsync((long)deal);
+    // child створено
+    var children = await childSvc.GetByParentAsync((long)orderId);
     children.Count.ShouldBe(1);
 
     var ch = children[0];
-    ch.DealId.ShouldBe(deal);
+    ch.TicketId.ShouldBe(orderId);
     ch.ParentOrderId.ShouldNotBe(Guid.Empty);
-    //ch.EscrowStatus.ShouldBe(EscrowStatus.PartiallyOnChain);
-    ch.OrderOwnerWallet.ShouldBe(parent.SellerCrypto); // власник за OrderSide.Sell
+    ch.OrderOwnerWallet.ShouldBe(parent.CreatorWallet); // власник за OrderSide.Sell
     ch.ContraAgentWallet.ShouldBe("buyer_wallet_Y");
   }
 
@@ -237,7 +236,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
   public async Task PartialFlow_MultipleSteps_Finally_Releases_Parent()
   {
     PostgresDatabase.ResetState("escrow_orders");
-    PostgresDatabase.ResetState("child_order");
+    PostgresDatabase.ResetState("universal_tickets");
 
     // arrange
     await OffersExtensions.CreateFakeOrder(fixture);
@@ -246,8 +245,8 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var childSvc = fixture.GetService<IChildOffersService>();
     var _accountService = fixture.GetService<IAccountService>();
 
-    var deal = 1758270209859UL;
-    var initial = await q.GetNewOfferAsync(deal);
+    var orderId = 1758270209859UL;
+    var initial = await q.GetNewOfferAsync(orderId);
     initial.ShouldNotBeNull();
 
     await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", _accountService);
@@ -256,10 +255,10 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     // крок 1: часткове заповнення
     await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
     {
-      OrderId = deal,
+      OrderId = orderId,
       OrderSide = OrderSide.Sell,
-      Seller = "seller_wallet_X",
-      Buyer = "buyer_wallet_Y",
+      CreatorWallet = "seller_wallet_X",
+      AcceptorWallet = "buyer_wallet_Y",
       IsPartial = true,
       FilledQuantity = 30m
     });
@@ -267,22 +266,21 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     // крок 2: добиваємо до повного
     await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
     {
-      OrderId = deal,
+      OrderId = orderId,
       OrderSide = OrderSide.Sell,
-      Seller = "seller_wallet_X",
-      Buyer = "buyer_wallet_Y",
+      CreatorWallet = "seller_wallet_X",
+      AcceptorWallet = "buyer_wallet_Y",
       IsPartial = true,
       FilledQuantity = 3m
     });
 
-    // assert: parent має бути Released і зникнути з "нових" офферів (як у твоєму існуючому тесті)
+    // assert: parent має бути Completed і зникнути з "нових" офферів
     var list = await q.GetAllNewOffersAsync(new OffersQuery());
     list.Data.ShouldBeEmpty();
 
     // діти є (2 шт)
-    var children = await childSvc.GetByParentAsync((long)deal);
+    var children = await childSvc.GetByParentAsync((long)orderId);
     children.Count.ShouldBe(2);
-    //children.ShouldAllBe(x => x.EscrowStatus == EscrowStatus.PartiallyOnChain);
   }
 
 
@@ -299,7 +297,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
   public async Task PartialFlow_Sequences_Reach_Release(decimal[] fills)
   {
     PostgresDatabase.ResetState("escrow_orders");
-    PostgresDatabase.ResetState("child_order");
+    PostgresDatabase.ResetState("universal_tickets");
 
     await OffersExtensions.CreateFakeOrder(fixture);
 
@@ -310,15 +308,15 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", _accountService);
     await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", _accountService);
 
-    var deal = 1758270209859UL;
+    var orderId = 1758270209859UL;
 
     foreach (var f in fills)
       await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto
       {
-        OrderId = deal,
+        OrderId = orderId,
         OrderSide = OrderSide.Sell,
-        Seller = "seller_wallet_X",
-        Buyer = "buyer_wallet_Y",
+        CreatorWallet = "seller_wallet_X",
+        AcceptorWallet = "buyer_wallet_Y",
         IsPartial = true,
         FilledQuantity = f
       });

@@ -74,7 +74,7 @@ public sealed class AdminMetricsService(P2PDbContext db) : IAdminMetricsService
   {
     var rows = await db.EscrowOrders
       .AsNoTracking()
-      .GroupBy(o => o.EscrowStatus)
+      .GroupBy(o => o.Status)
       .Select(g => new { Key = g.Key.ToString(), Cnt = g.Count() })
       .ToListAsync(ct);
 

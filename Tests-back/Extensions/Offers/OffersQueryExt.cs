@@ -18,7 +18,7 @@ public static class OffersQueryExt
     this OffersQuery q,
     int? page = null, int? size = null,
     OfferSortField? sort = null, SortDir? dir = null,
-    EscrowStatus? status = null, OrderSide? side = null,
+    UniversalOrderStatus? status = null, OrderSide? side = null,
     string? fiat = null, string? mint = null, decimal? priceFrom = null, string[]? paymentMethod = null)
   {
     return q with

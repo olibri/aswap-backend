@@ -21,35 +21,15 @@ public class MarketDbCommand(
   IChildOffersService childOffers,
   INotificationService notificationService) : IMarketDbCommand
 {
-  public async Task CreateSellerOfferAsync(OfferInitialized offer)
+  public async Task CreateOfferAsync(UniversalOrderCreated offer)
   {
     try
     {
       var mappedEntity = EscrowOrderMapper.ToEntity(offer);
 
       mappedEntity.DomainEvents.Add(new OfferCreated(
-        Guid.NewGuid(), mappedEntity.Id, mappedEntity.DealId,
-        mappedEntity.SellerCrypto, OrderSide.Sell, EventType.OfferCreated));
-
-      await dbContext.EscrowOrders.AddAsync(mappedEntity);
-      await dbContext.SaveChangesAsync();
-    }
-    catch (Exception e)
-    {
-      Console.WriteLine(e);
-      throw;
-    }
-  }
-
-  public async Task CreateBuyerOfferAsync(OfferInitialized offer)
-  {
-    try
-    {
-      var mappedEntity = EscrowOrderMapper.ToEntity(offer);
-
-      mappedEntity.DomainEvents.Add(new OfferCreated(
-        Guid.NewGuid(), mappedEntity.Id, mappedEntity.DealId,
-        mappedEntity.BuyerFiat, OrderSide.Buy, EventType.OfferCreated));
+        Guid.NewGuid(), mappedEntity.Id, mappedEntity.OrderId,
+        mappedEntity.CreatorWallet, mappedEntity.OfferSide, EventType.OfferCreated));
 
       await dbContext.EscrowOrders.AddAsync(mappedEntity);
       await dbContext.SaveChangesAsync();
@@ -65,9 +45,9 @@ public class MarketDbCommand(
   {
     var exists = await dbContext.EscrowOrders
       .AsNoTracking()
-      .AnyAsync(x => x.DealId == dto.OrderId, CancellationToken.None);
+      .AnyAsync(x => x.OrderId == dto.OrderId, CancellationToken.None);
     if (exists)
-      throw new InvalidOperationException($"Order with DealId={dto.OrderId} already exists.");
+      throw new InvalidOperationException($"Order with OrderId={dto.OrderId} already exists.");
 
     await using var tx =
       await dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, CancellationToken.None);
@@ -80,8 +60,8 @@ public class MarketDbCommand(
     entity.DomainEvents.Add(new OfferCreated(
       Guid.NewGuid(),
       entity.Id,
-      entity.DealId,
-      entity.BuyerFiat,
+      entity.OrderId,
+      entity.CreatorWallet,
       OrderSide.Buy,
       EventType.OfferCreated));
 
@@ -95,7 +75,7 @@ public class MarketDbCommand(
       .ToListAsync(CancellationToken.None);
 
     if (validIds.Count != desiredIds.Length)
-      throw new ValidationException("Some payment methods don’t exist.");
+      throw new ValidationException("Some payment methods don't exist.");
 
     var links = validIds.Select(id => new EscrowOrderPaymentMethodEntity
     {
@@ -108,8 +88,7 @@ public class MarketDbCommand(
 
     await tx.CommitAsync(CancellationToken.None);
 
-
-    return entity.DealId;
+    return entity.OrderId;
   }
 
   public async Task UpdateCurrentOfferAsync(UpsertOrderDto upsertOrder)
@@ -119,37 +98,31 @@ public class MarketDbCommand(
 
     var entity = await dbContext.EscrowOrders
       .Include(x => x.PaymentMethods)
-      .FirstOrDefaultAsync(x => x.DealId == upsertOrder.OrderId);
+      .FirstOrDefaultAsync(x => x.OrderId == upsertOrder.OrderId);
 
     if (entity is null)
-      throw new InvalidOperationException($"EscrowOrderEntity with DealId {upsertOrder.OrderId} was not found.");
+      throw new InvalidOperationException($"EscrowOrderEntity with OrderId {upsertOrder.OrderId} was not found.");
 
-    var previousStatus = entity.EscrowStatus;
+    var previousStatus = entity.Status;
     var now = DateTime.UtcNow;
     entity = TrackReleaseTime(entity, previousStatus, upsertOrder.Status, now);
-
 
     if (upsertOrder.IsPartial == true)
     {
       var childDto = BuildChildUpsertFrom(upsertOrder, entity);
       var childDtoUpdated = await childOffers.UpsertAsync(childDto, CancellationToken.None);
-      if (childDtoUpdated.EscrowStatus is EscrowStatus.SignedByContraAgentSide or EscrowStatus.SignedByOwnerSide)
+      if (childDtoUpdated.Status is UniversalOrderStatus.SignedByOneParty or UniversalOrderStatus.BothSigned)
       {
-        await NotifyStatusChange(entity, previousStatus, entity.EscrowStatus);
+        await NotifyStatusChange(entity, previousStatus, entity.Status);
         return;
       }
 
-      entity.EscrowPda = upsertOrder.EscrowPda ?? entity.EscrowPda;
+      entity.OrderPda = upsertOrder.OrderPda ?? entity.OrderPda;
       entity.IsPartial = true;
-      entity.EscrowStatus = upsertOrder.Status ?? entity.EscrowStatus;
+      entity.Status = upsertOrder.Status ?? entity.Status;
 
-      //if (upsertOrder.OrderSide == OrderSide.Sell)
-      //{
-      entity.SellerCrypto = upsertOrder.Seller ?? entity.SellerCrypto;
-
-      //{
-      entity.BuyerFiat = upsertOrder.Buyer ?? entity.BuyerFiat;
-      //}
+      entity.CreatorWallet = upsertOrder.CreatorWallet ?? entity.CreatorWallet;
+      entity.AcceptorWallet = upsertOrder.AcceptorWallet ?? entity.AcceptorWallet;
 
       if (upsertOrder.FilledQuantity.HasValue)
       {
@@ -158,7 +131,7 @@ public class MarketDbCommand(
       }
 
       await dbContext.SaveChangesAsync(CancellationToken.None);
-      await NotifyStatusChange(entity, previousStatus, entity.EscrowStatus);
+      await NotifyStatusChange(entity, previousStatus, entity.Status);
 
       return;
     }
@@ -166,21 +139,21 @@ public class MarketDbCommand(
     EscrowOrderPatcher.ApplyUpsert(entity, upsertOrder, MoveToSignedStatus);
 
     await dbContext.SaveChangesAsync();
-    await NotifyStatusChange(entity, previousStatus, entity.EscrowStatus);
+    await NotifyStatusChange(entity, previousStatus, entity.Status);
   }
 
-  private static EscrowOrderEntity TrackReleaseTime(EscrowOrderEntity entity, EscrowStatus previousStatus,
-    EscrowStatus? newStatus, DateTime now)
+  private static EscrowOrderEntity TrackReleaseTime(EscrowOrderEntity entity, UniversalOrderStatus previousStatus,
+    UniversalOrderStatus? newStatus, DateTime now)
   {
     if (newStatus == null) return entity;
 
-    if (previousStatus != EscrowStatus.SignedByOwnerSide &&
-        previousStatus != EscrowStatus.SignedByContraAgentSide &&
-        (newStatus == EscrowStatus.SignedByOwnerSide || newStatus == EscrowStatus.SignedByContraAgentSide))
+    if (previousStatus != UniversalOrderStatus.SignedByOneParty &&
+        previousStatus != UniversalOrderStatus.BothSigned &&
+        (newStatus == UniversalOrderStatus.SignedByOneParty || newStatus == UniversalOrderStatus.BothSigned))
       entity.PaymentConfirmedAt = now;
 
-    if ((previousStatus == EscrowStatus.SignedByOwnerSide || previousStatus == EscrowStatus.SignedByContraAgentSide) &&
-        newStatus == EscrowStatus.Signed &&
+    if ((previousStatus == UniversalOrderStatus.SignedByOneParty) &&
+        newStatus == UniversalOrderStatus.BothSigned &&
         entity.PaymentConfirmedAt.HasValue)
     {
       entity.CryptoReleasedAt = now;
@@ -190,81 +163,76 @@ public class MarketDbCommand(
     return entity;
   }
 
-  private EscrowStatus MoveToSignedStatus(EscrowOrderEntity orderEntity, decimal newFilledQ)
+  private UniversalOrderStatus MoveToSignedStatus(EscrowOrderEntity orderEntity, decimal newFilledQ)
   {
     var fromEntity = EscrowOrderDto.FromEntity(orderEntity);
     if (fromEntity.FilledQuantity + newFilledQ >= fromEntity.Amount)
-      return EscrowStatus.Signed;
+      return UniversalOrderStatus.BothSigned;
 
-    return orderEntity.EscrowStatus;
+    return orderEntity.Status;
   }
 
-  private async Task NotifyStatusChange(EscrowOrderEntity order, EscrowStatus oldStatus, EscrowStatus newStatus)
+  private async Task NotifyStatusChange(EscrowOrderEntity order, UniversalOrderStatus oldStatus, UniversalOrderStatus newStatus)
   {
     if (oldStatus == newStatus) return;
 
     var usersToNotify = new List<string>();
-    if (!string.IsNullOrEmpty(order.SellerCrypto) && order.SellerCrypto != "11111111111111111111111111111111")
-      usersToNotify.Add(order.SellerCrypto);
-    if (!string.IsNullOrEmpty(order.BuyerFiat) && order.SellerCrypto != "11111111111111111111111111111111")
-      usersToNotify.Add(order.BuyerFiat);
+    if (!string.IsNullOrEmpty(order.CreatorWallet) && order.CreatorWallet != "11111111111111111111111111111111")
+      usersToNotify.Add(order.CreatorWallet);
+    if (!string.IsNullOrEmpty(order.AcceptorWallet) && order.AcceptorWallet != "11111111111111111111111111111111")
+      usersToNotify.Add(order.AcceptorWallet);
 
     var statusMessage = GetStatusMessage(newStatus);
     var metadata =
-      JsonSerializer.Serialize(new { OrderId = order.DealId, OldStatus = oldStatus, NewStatus = newStatus });
+      JsonSerializer.Serialize(new { OrderId = order.OrderId, OldStatus = oldStatus, NewStatus = newStatus });
 
     foreach (var userWallet in usersToNotify)
       await notificationService.CreateNotificationAsync(
         userWallet,
         "Order Status Changed",
-        $"Your order #{order.DealId} status changed to {statusMessage}",
+        $"Your order #{order.OrderId} status changed to {statusMessage}",
         NotificationType.OrderStatusChanged,
-        order.DealId.ToString(),
+        order.OrderId.ToString(),
         metadata);
   }
 
-  private static string GetStatusMessage(EscrowStatus status)
+  private static string GetStatusMessage(UniversalOrderStatus status)
   {
     return status switch
     {
-      EscrowStatus.Signed => "Signed by both parties",
-      EscrowStatus.SignedByOwnerSide => "Signed by offer creator",
-      EscrowStatus.SignedByContraAgentSide => "Signed by contra agent",
-      EscrowStatus.Released => "Trade completed successfully",
-      EscrowStatus.Cancelled => "Cancelled",
-      EscrowStatus.AdminResolving => "Under admin review",
+      UniversalOrderStatus.BothSigned => "Signed by both parties",
+      UniversalOrderStatus.SignedByOneParty => "Signed by one party",
+      UniversalOrderStatus.Completed => "Trade completed successfully",
+      UniversalOrderStatus.Cancelled => "Cancelled",
+      UniversalOrderStatus.AdminResolving => "Under admin review",
       _ => status.ToString()
     };
   }
 
   private static ChildOrderUpsertDto BuildChildUpsertFrom(UpsertOrderDto dto, EscrowOrderEntity parent)
   {
-    var ownerWallet = parent.OfferSide == OrderSide.Sell ? parent.SellerCrypto : parent.BuyerFiat;
-    var contraWallet = parent.OfferSide == OrderSide.Sell ? dto.Buyer : dto.Seller;
+    var ownerWallet = parent.OfferSide == OrderSide.Sell ? parent.CreatorWallet : parent.AcceptorWallet;
+    var contraWallet = parent.OfferSide == OrderSide.Sell ? dto.AcceptorWallet : dto.CreatorWallet;
 
     if (string.IsNullOrWhiteSpace(ownerWallet))
-      throw new ArgumentException("Owner wallet is required for child upsert (derived from dto.Seller/dto.Buyer).",
+      throw new ArgumentException("Owner wallet is required for child upsert (derived from dto.CreatorWallet/dto.AcceptorWallet).",
         nameof(dto));
     if (string.IsNullOrWhiteSpace(contraWallet))
-      throw new ArgumentException("Contra wallet is required for child upsert (derived from dto.Seller/dto.Buyer).",
+      throw new ArgumentException("Contra wallet is required for child upsert (derived from dto.CreatorWallet/dto.AcceptorWallet).",
         nameof(dto));
 
-    int? childFilled = dto.FilledQuantity.HasValue
-      ? decimal.ToInt32(decimal.Round(dto.FilledQuantity.Value, 0, MidpointRounding.AwayFromZero))
-      : null;
+    decimal? childAmount = dto.FilledQuantity;
 
     return new ChildOrderUpsertDto(
       parent.Id,
-      parent.DealId,
+      parent.OrderId,
       ownerWallet,
       contraWallet,
-      dto.Status ?? parent.EscrowStatus,
-      childFilled,
-      dto.FillNonce,
-      dto.FillPda
+      dto.Status ?? parent.Status,
+      childAmount,
+      dto.TicketPda
     );
   }
-
 
   private static void TryReleaseParentIfFullyFilled(EscrowOrderEntity entity)
   {
@@ -273,7 +241,7 @@ public class MarketDbCommand(
 
     if (entity.FilledQuantity >= totalHuman.Value)
     {
-      entity.EscrowStatus = EscrowStatus.Released;
+      entity.Status = UniversalOrderStatus.Completed;
       if (entity.ClosedAtUtc is null)
         entity.ClosedAtUtc = DateTime.UtcNow;
     }

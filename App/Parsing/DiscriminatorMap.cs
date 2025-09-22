@@ -11,7 +11,7 @@ public static class DiscriminatorMap
 
     private static readonly Dictionary<string, Type> Map = new()
     {
-        { Hex(Disc("OfferInitialized")),  typeof(OfferInitialized)  },
+        { Hex(Disc("OfferInitialized")),  typeof(UniversalOrderCreated)  },
         { Hex(Disc("EscrowInitialized")), typeof(EscrowInitialized) },
         { Hex(Disc("OfferClaimed")),      typeof(OfferClaimed)      },
         { Hex(Disc("BuyerSigned")),       typeof(BuyerSigned)       },

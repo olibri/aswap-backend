@@ -4,11 +4,10 @@ namespace Domain.Models.Api.Order;
 
 public sealed record ChildOrderUpsertDto(
   Guid ParentOrderId,
-  ulong DealId,
+  ulong TicketId,
   string OrderOwnerWallet,
   string ContraAgentWallet,
-  EscrowStatus EscrowStatus,
-  int? FilledAmount,
-  int? FillNonce,
-  string? FillPda
+  UniversalOrderStatus Status,
+  decimal? Amount,
+  string? TicketPda
 );

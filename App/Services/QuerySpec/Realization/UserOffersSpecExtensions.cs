@@ -13,7 +13,7 @@ public static class UserOffersSpecExtensions
     var spec = new QuerySpec<EscrowOrderEntity>();
 
     if (q.Status is not null)
-      spec.Where(new EqualFilter<EscrowOrderEntity, EscrowStatus>(e => e.EscrowStatus, q.Status.Value));
+      spec.Where(new EqualFilter<EscrowOrderEntity, UniversalOrderStatus>(e => e.Status, q.Status.Value));
 
     if (!string.IsNullOrWhiteSpace(q.TokenMint))
       spec.Where(new EqualFilter<EscrowOrderEntity, string>(e => e.TokenMint!, q.TokenMint!));

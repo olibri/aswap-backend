@@ -6,28 +6,28 @@ namespace Domain.Models.Dtos;
 public sealed record ChildOrderDto(
   Guid Id,
   Guid ParentOrderId,
-  ulong DealId,
+  ulong TicketId,
   string OrderOwnerWallet,
   string ContraAgentWallet,
-  EscrowStatus EscrowStatus,
+  UniversalOrderStatus Status,
   DateTime CreatedAtUtc,
   DateTime? ClosedAtUtc,
-  int? FilledAmount,
-  int? FillNonce,
-  string? FillPda
+  DateTime? UpdatedAt,
+  decimal? Amount,
+  string? TicketPda
 )
 {
-  public static ChildOrderDto FromEntity(ChildOrderEntity e) => new(
+  public static ChildOrderDto FromEntity(UniversalTicketEntity e) => new(
     Id: e.Id,
     ParentOrderId: e.ParentOrderId,
-    DealId: e.DealId,
+    TicketId: e.TicketId,
     OrderOwnerWallet: e.OrderOwnerWallet,
     ContraAgentWallet: e.ContraAgentWallet,
-    EscrowStatus: e.EscrowStatus,
+    Status: e.Status,
     CreatedAtUtc: e.CreatedAtUtc,
     ClosedAtUtc: e.ClosedAtUtc,
-    FilledAmount: e.FilledAmount,
-    FillNonce: e.FillNonce,
-    FillPda: e.FillPda
+    UpdatedAt: e.UpdatedAt,
+    Amount: e.Amount,
+    TicketPda: e.TicketPda
   );
 }
