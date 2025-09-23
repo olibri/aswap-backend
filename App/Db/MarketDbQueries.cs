@@ -67,7 +67,6 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
 
     var orderIds = page.Data.Select(e => e.OrderId).Distinct().ToArray();
 
-    // Одним запитом тягнемо всіх дітей цих orders
     var children = await dbContext.Set<UniversalTicketEntity>()
       .AsNoTracking()
       .Where(c => orderIds.Contains(c.TicketId))

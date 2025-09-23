@@ -96,6 +96,7 @@ public class MarketDbCommand(
     //TODO: remove this delay, it's just for testing purposes
     await Task.Delay(4000);
 
+    upsertOrder.FilledQuantity *= 1000000m;
     var entity = await dbContext.EscrowOrders
       .Include(x => x.PaymentMethods)
       .FirstOrDefaultAsync(x => x.OrderId == upsertOrder.OrderId);
@@ -136,7 +137,7 @@ public class MarketDbCommand(
       return;
     }
 
-    EscrowOrderPatcher.ApplyUpsert(entity, upsertOrder, MoveToSignedStatus);
+    EscrowOrderPatcher.ApplyUpsert(entity, upsertOrder);
 
     await dbContext.SaveChangesAsync();
     await NotifyStatusChange(entity, previousStatus, entity.Status);
@@ -163,14 +164,6 @@ public class MarketDbCommand(
     return entity;
   }
 
-  private UniversalOrderStatus MoveToSignedStatus(EscrowOrderEntity orderEntity, decimal newFilledQ)
-  {
-    var fromEntity = EscrowOrderDto.FromEntity(orderEntity);
-    if (fromEntity.FilledQuantity + newFilledQ >= fromEntity.Amount)
-      return UniversalOrderStatus.BothSigned;
-
-    return orderEntity.Status;
-  }
 
   private async Task NotifyStatusChange(EscrowOrderEntity order, UniversalOrderStatus oldStatus, UniversalOrderStatus newStatus)
   {

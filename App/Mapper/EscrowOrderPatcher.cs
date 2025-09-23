@@ -1,4 +1,5 @@
-﻿using Domain.Models.DB;
+﻿using Domain.Enums;
+using Domain.Models.DB;
 using Domain.Models.Dtos;
 
 namespace App.Mapper;
@@ -7,14 +8,14 @@ public static class EscrowOrderPatcher
 {
   public static void ApplyUpsert(
     EscrowOrderEntity entity,
-    UpsertOrderDto dto,
-    Func<EscrowOrderEntity, decimal, Domain.Enums.UniversalOrderStatus>? moveToSignedStatus = null)
+    UpsertOrderDto dto)
   {
     entity.OrderId = dto.OrderId;
     entity.FiatCode = dto.FiatCode ?? entity.FiatCode;
     entity.TokenMint = dto.TokenMint ?? entity.TokenMint;
 
-    if (dto.Status.HasValue) entity.Status = dto.Status.Value;
+    if (dto.Status.HasValue) 
+      entity.Status = dto.Status.Value;
     entity.AcceptorWallet = dto.AcceptorWallet ?? entity.AcceptorWallet;
     entity.CreatorWallet = dto.CreatorWallet ?? entity.CreatorWallet;
     entity.OfferSide = dto.OrderSide;
@@ -22,12 +23,7 @@ public static class EscrowOrderPatcher
     if (dto.Amount.HasValue) entity.Amount = ToAtomic(dto.Amount.Value, 1_000_000m);
     if (dto.Price.HasValue) entity.Price = ToAtomic(dto.Price.Value, 100m);
 
-    if (dto.FilledQuantity.HasValue)
-    {
-      if (moveToSignedStatus is not null)
-        entity.Status = moveToSignedStatus(entity, dto.FilledQuantity.Value);
-      entity.FilledQuantity += dto.FilledQuantity.Value;
-    }
+    entity.FilledQuantity += dto.FilledQuantity.Value;
 
     if (dto.MinFiatAmount.HasValue) entity.MinFiatAmount = dto.MinFiatAmount.Value;
     if (dto.MaxFiatAmount.HasValue) entity.MaxFiatAmount = dto.MaxFiatAmount.Value;
@@ -40,6 +36,10 @@ public static class EscrowOrderPatcher
     entity.IsPartial = dto.IsPartial ?? entity.IsPartial;
     entity.OrderPda = dto.OrderPda ?? entity.OrderPda;
     entity.DealStartTime = dto.DealStartTime ?? entity.DealStartTime;
+
+
+    if (entity.FilledQuantity + dto.FilledQuantity >= entity.Amount && entity.IsPartial)
+      entity.Status = UniversalOrderStatus.Completed;
 
     if (dto.VisibleInCountries is not null) entity.VisibleInCountries = dto.VisibleInCountries;
     if (dto.MinAccountAgeDays.HasValue) entity.MinAccountAgeDays = dto.MinAccountAgeDays;
