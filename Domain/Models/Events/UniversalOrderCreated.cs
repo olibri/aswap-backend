@@ -49,7 +49,8 @@ public class UniversalOrderCreated : IAnchorEvent
   [BorshPropertyOrder(8)]
   public long Timestamp { get; set; }
 
-  // Зручний геттер для зворотної сумісності з OfferKind
+  // Computed helper, not part of the BORSH layout
+  [BorshIgnore]
   public OfferKind Kind => IsSellOrder ? OfferKind.Sell : OfferKind.Buy;
 
   public override string ToString() =>

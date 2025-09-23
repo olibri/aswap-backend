@@ -31,18 +31,18 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     //var offer1 = await db.GetAllNewOffersAsync(new OffersQuery());
 
     //act
-    var offer = await db.GetNewOfferAsync(1758270209859);
-
+    var offer = await db.GetNewOfferAsync(1758617998578);
+    //"HgppLQ5K89ztCSj38zPFkkYKAvq3hEr4fFwps1QDSKu9"
     //assert
     result.ShouldBeOfType<OkResult>();
     offer.ShouldNotBeNull();
-    offer.OrderId.ShouldBe(1758270209859UL);
-    offer.FiatCode.ShouldBe("USD");
-    offer.Amount.ShouldBe(33UL);
-    offer.Price.ShouldBe(100m);
+    offer.OrderId.ShouldBe(1758617998578UL);
+    offer.FiatCode.ShouldBe("12");
+    offer.Amount.ShouldBe(12UL);
+    offer.Price.ShouldBe(0m);
     offer.Status.ShouldBe(UniversalOrderStatus.Created);
-    offer.AcceptorWallet.ShouldBe("11111111111111111111111111111111");
-    offer.OfferSide.ShouldBe(OrderSide.Sell);
+    offer.AcceptorWallet.ShouldBeNull();
+    offer.OfferSide.ShouldBe(OrderSide.Buy);
   }
 
   [Fact]
@@ -81,6 +81,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", _accountService);
     await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", _accountService);
     await AccountExtention.SaveFakeUserToDbAsync("CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("HgppLQ5K89ztCSj38zPFkkYKAvq3hEr4fFwps1QDSKu9", _accountService);
 
 
     var account = await accountDbQueries.GetAccountByWalletAsync("wallet0xzzzz");
@@ -88,7 +89,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     account.ShouldNotBeNull();
     var updateOrderDto = new UpsertOrderDto()
     {
-      OrderId = 1758270209859UL,
+      OrderId = 1758617998578UL,
       MaxFiatAmount = 10000,
       MinFiatAmount = 10,
       Status = UniversalOrderStatus.Active,
@@ -126,10 +127,11 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     await AccountExtention.SaveFakeUserToDbAsync("wallet0xzzzz", _accountService);
     await AccountExtention.SaveFakeUserToDbAsync("FP31fp4XFN4Hp1QgUM2xfLKJPM4cRtJRxf3bbJN1KUbZ", _accountService);
     await AccountExtention.SaveFakeUserToDbAsync("CjUEM1Qr7UN1VpMzGh4utFWH81ByN5gjobD6itoXawWW", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("HgppLQ5K89ztCSj38zPFkkYKAvq3hEr4fFwps1QDSKu9", _accountService);
 
     var updateOrderDto1 = new UpsertOrderDto()
     {
-      OrderId = 1758270209859UL,
+      OrderId = 1758617998578UL,
       MaxFiatAmount = 10000,
       MinFiatAmount = 10,
       Status = UniversalOrderStatus.Active,
@@ -147,7 +149,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     var updateOrderDto2 = new UpsertOrderDto()
     {
-      OrderId = 1758270209859UL,
+      OrderId = 1758617998578UL,
       FilledQuantity = 0.9m
     };
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
@@ -160,7 +162,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
   {
     PostgresDatabase.ResetState("escrow_orders");
     var marketDbCommand = fixture.GetService<IMarketDbCommand>();
-    var orderId = 1758270209859UL;
+    var orderId = 1758617998578UL;
 
     var updateOrderDto = new UpsertOrderDto()
     {
@@ -198,8 +200,12 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var cmd = fixture.GetService<IMarketDbCommand>();
     var q = fixture.GetService<IMarketDbQueries>();
     var childSvc = fixture.GetService<IChildOffersService>();
+    
+    var _accountService = fixture.GetService<IAccountService>();
+    await AccountExtention.SaveFakeUserToDbAsync("HgppLQ5K89ztCSj38zPFkkYKAvq3hEr4fFwps1QDSKu9", _accountService);
+    await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", _accountService);
 
-    var orderId = 1758270209859UL;
+    var orderId = 1758617998578UL;
     var parent = await q.GetNewOfferAsync(orderId);
     parent.ShouldNotBeNull();
     parent.Status.ShouldBeOneOf(UniversalOrderStatus.Created, UniversalOrderStatus.Active);
@@ -245,7 +251,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     var childSvc = fixture.GetService<IChildOffersService>();
     var _accountService = fixture.GetService<IAccountService>();
 
-    var orderId = 1758270209859UL;
+    var orderId = 1758617998578UL;
     var initial = await q.GetNewOfferAsync(orderId);
     initial.ShouldNotBeNull();
 
@@ -308,7 +314,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     await AccountExtention.SaveFakeUserToDbAsync("seller_wallet_X", _accountService);
     await AccountExtention.SaveFakeUserToDbAsync("buyer_wallet_Y", _accountService);
 
-    var orderId = 1758270209859UL;
+    var orderId = 1758617998578UL;
 
     foreach (var f in fills)
       await cmd.UpdateCurrentOfferAsync(new UpsertOrderDto

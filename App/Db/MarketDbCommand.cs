@@ -211,8 +211,8 @@ public class MarketDbCommand(
 
   private static ChildOrderUpsertDto BuildChildUpsertFrom(UpsertOrderDto dto, EscrowOrderEntity parent)
   {
-    var ownerWallet = parent.OfferSide == OrderSide.Sell ? parent.CreatorWallet : parent.AcceptorWallet;
-    var contraWallet = parent.OfferSide == OrderSide.Sell ? dto.AcceptorWallet : dto.CreatorWallet;
+    var ownerWallet = parent.CreatorWallet;
+    var contraWallet = dto.AcceptorWallet;
 
     if (string.IsNullOrWhiteSpace(ownerWallet))
       throw new ArgumentException("Owner wallet is required for child upsert (derived from dto.CreatorWallet/dto.AcceptorWallet).",

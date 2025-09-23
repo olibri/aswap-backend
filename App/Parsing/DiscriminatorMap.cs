@@ -11,17 +11,22 @@ public static class DiscriminatorMap
 
     private static readonly Dictionary<string, Type> Map = new()
     {
-        { Hex(Disc("OfferInitialized")),  typeof(UniversalOrderCreated)  },
-        { Hex(Disc("EscrowInitialized")), typeof(EscrowInitialized) },
-        { Hex(Disc("OfferClaimed")),      typeof(OfferClaimed)      },
-        { Hex(Disc("BuyerSigned")),       typeof(BuyerSigned)       },
-        { Hex(Disc("SellerSigned")),      typeof(SellerSigned)      },
-        { Hex(Disc("FundsReleased")),     typeof(FundsReleased)     },
+        // Backward compatibility with older program
+        { Hex(Disc("OfferInitialized")),            typeof(UniversalOrderCreated) },
+
+        // New names used by the updated program
+        { Hex(Disc("UniversalOrderCreated")),       typeof(UniversalOrderCreated) },
+        { Hex(Disc("CreateUniversalOrder")),        typeof(UniversalOrderCreated) },
+
+        { Hex(Disc("EscrowInitialized")),           typeof(EscrowInitialized) },
+        { Hex(Disc("OfferClaimed")),                typeof(OfferClaimed)      },
+        { Hex(Disc("BuyerSigned")),                 typeof(BuyerSigned)       },
+        { Hex(Disc("SellerSigned")),                typeof(SellerSigned)      },
+        { Hex(Disc("FundsReleased")),               typeof(FundsReleased)     },
     };
 
     public static bool TryGetType(ReadOnlySpan<byte> disc, out Type? type) =>
         Map.TryGetValue(Hex(disc), out type);
 
     private static string Hex(ReadOnlySpan<byte> b) => Convert.ToHexString(b);
-
 }
