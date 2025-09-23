@@ -38,8 +38,8 @@ public static class EscrowOrderPatcher
     entity.DealStartTime = dto.DealStartTime ?? entity.DealStartTime;
 
 
-    if (entity.FilledQuantity + dto.FilledQuantity >= entity.Amount && entity.IsPartial)
-      entity.Status = UniversalOrderStatus.Completed;
+    //if (entity.FilledQuantity + dto.FilledQuantity >= entity.Amount && entity.IsPartial)
+    //  entity.Status = UniversalOrderStatus.Completed;
 
     if (dto.VisibleInCountries is not null) entity.VisibleInCountries = dto.VisibleInCountries;
     if (dto.MinAccountAgeDays.HasValue) entity.MinAccountAgeDays = dto.MinAccountAgeDays;
