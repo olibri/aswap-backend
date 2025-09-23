@@ -128,7 +128,7 @@ public class MarketDbCommand(
       if (upsertOrder.FilledQuantity.HasValue)
       {
         entity.FilledQuantity += upsertOrder.FilledQuantity.Value;
-        TryReleaseParentIfFullyFilled(entity);
+        //TryReleaseParentIfFullyFilled(entity);
       }
 
       await dbContext.SaveChangesAsync(CancellationToken.None);
