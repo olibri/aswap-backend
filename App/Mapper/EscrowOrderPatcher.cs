@@ -23,7 +23,7 @@ public static class EscrowOrderPatcher
     if (dto.Amount.HasValue) entity.Amount = ToAtomic(dto.Amount.Value, 1_000_000m);
     if (dto.Price.HasValue) entity.Price = ToAtomic(dto.Price.Value, 100m);
 
-    entity.FilledQuantity += dto.FilledQuantity.Value;
+    if(dto.FilledQuantity.HasValue)entity.FilledQuantity += dto.FilledQuantity.Value;
 
     if (dto.MinFiatAmount.HasValue) entity.MinFiatAmount = dto.MinFiatAmount.Value;
     if (dto.MaxFiatAmount.HasValue) entity.MaxFiatAmount = dto.MaxFiatAmount.Value;
