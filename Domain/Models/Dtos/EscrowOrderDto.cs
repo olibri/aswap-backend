@@ -22,7 +22,7 @@ public class EscrowOrderDto
   public decimal Price { get; set; }
 
   [SwaggerSchema(Description =
-    "UniversalOrderStatus: 0=Created, 1=Active, 3=SignedByOneParty, 4=BothSigned, 5=Completed, 6=Cancelled, 7=AdminResolving")]
+    "UniversalOrderStatus: 0=Created, 1=Active, 2=SignedByOneParty, 3=BothSigned, 4=Completed, 5=Cancelled, 6=AdminResolving")]
   public UniversalOrderStatus Status { get; set; }
 
   public DateTime CreatedAtUtc { get; set; }

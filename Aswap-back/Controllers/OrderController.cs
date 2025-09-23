@@ -35,18 +35,18 @@ public class OrderController(
     return Ok();
   }
 
-  [HttpPost]
-  [Route("create-buyer-createOrder")]
-  public async Task<IActionResult> CreateBuyerOffer(UpsertOrderDto createOrder)
-  {
-    log.LogInformation("AcceptorWallet createOrder request");
-    await marketDbCommand.CreateBuyerOfferAsync(createOrder);
+  //[HttpPost]
+  //[Route("create-buyer-createOrder")]
+  //public async Task<IActionResult> CreateBuyerOffer(UpsertOrderDto createOrder)
+  //{
+  //  log.LogInformation("AcceptorWallet createOrder request");
+  //  await marketDbCommand.CreateBuyerOfferAsync(createOrder);
 
-    var region = geo.ResolveCountry(ipAccessor.GetClientIp()) ?? "ZZ";
-    pop.Hit(createOrder.PaymentMethodIds, region);
+  //  var region = geo.ResolveCountry(ipAccessor.GetClientIp()) ?? "ZZ";
+  //  pop.Hit(createOrder.PaymentMethodIds, region);
 
-    return Ok();
-  }
+  //  return Ok();
+  //}
 
   [HttpGet]
   [Route("get-best-price")]

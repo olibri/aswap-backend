@@ -19,9 +19,9 @@ public enum UniversalOrderStatus
 {
   Created = 0,
   Active = 1,
-  SignedByOneParty = 3,
-  BothSigned = 4,
-  Completed = 5,
-  Cancelled = 6,
-  AdminResolving = 7
+  SignedByOneParty = 2,
+  BothSigned = 3,
+  Completed = 4,
+  Cancelled = 5,
+  AdminResolving = 6
 }
