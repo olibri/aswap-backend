@@ -71,7 +71,7 @@ public class EscrowOrderDto
       FiatCode = e.FiatCode,
 
       Amount = e.Amount.HasValue ? e.Amount.Value / 1_000_000m : null,
-      FilledQuantity = e.FilledQuantity,
+      FilledQuantity = e.FilledQuantity / 1_000_000m,
       Price = e.Price / 100m,
 
       Status = e.Status,
@@ -98,7 +98,7 @@ public class EscrowOrderDto
       AutoReply = e.AutoReply,
       PaymentConfirmedAt = e.PaymentConfirmedAt,
       CryptoReleasedAt = e.CryptoReleasedAt,
-      ReleaseTimeSeconds = e.ReleaseTimeSeconds,
+      ReleaseTimeSeconds = e.ReleaseTimeSeconds
     };
 
     if (e.PaymentMethods is not null)
@@ -134,9 +134,7 @@ public class EscrowOrderDto
 
     if (e.ChildOrders is not null)
       foreach (var childOrder in e.ChildOrders)
-      {
         dto.Children.Add(ChildOrderDto.FromEntity(childOrder));
-      }
 
     return dto;
   }

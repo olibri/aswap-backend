@@ -12,6 +12,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using Domain.Interfaces.Services.Notification;
 using Domain.Models.Enums;
+using System.Text.Json;
 
 namespace App.Db;
 
@@ -80,6 +81,7 @@ public class MarketDbCommand(
 
     ScaleFilledQuantity(dto);
     var order = await LoadOrderAsync(dto.OrderId, ct);
+    var previousStatus = order.Status;
 
     if (dto.IsPartial == true)
     {
@@ -91,10 +93,66 @@ public class MarketDbCommand(
     }
 
     await dbContext.SaveChangesAsync(ct);
+    await NotifyStatusChange(order, previousStatus, order.Status, ct);
+
     return EscrowOrderDto.FromEntity(order);
   }
 
-  // ---------- Helpers ----------
+  private static EscrowOrderPatchResult ApplyNonPartial(EscrowOrderEntity order, UpsertOrderDto dto)
+    => EscrowOrderPatcher.ApplyUpsert(order, dto);
+
+  private async Task NotifyStatusChange(
+    EscrowOrderEntity order,
+    UniversalOrderStatus oldStatus,
+    UniversalOrderStatus newStatus,
+    CancellationToken ct = default)
+  {
+    if (oldStatus == newStatus) return;
+
+    var wallets = new[]
+      {
+        order.CreatorWallet,
+        order.AcceptorWallet
+      }
+      .Where(w => !string.IsNullOrWhiteSpace(w))
+      .Distinct(StringComparer.Ordinal)
+      .ToArray();
+
+    if (wallets.Length == 0) return;
+
+    var statusMessage = GetStatusMessage(newStatus);
+    var metadata = JsonSerializer.Serialize(new
+    {
+      OrderId = order.OrderId,
+      OldStatus = oldStatus,
+      NewStatus = newStatus
+    });
+
+    foreach (var wallet in wallets)
+    {
+      await notificationService.CreateNotificationAsync(
+        wallet!,
+        "Order Status Changed",
+        $"Order #{order.OrderId} status: {statusMessage}",
+        NotificationType.OrderStatusChanged,
+        relatedEntityId: order.OrderId.ToString(),
+        metadata: metadata,
+        ct: ct);
+    }
+  }
+
+  private static string GetStatusMessage(UniversalOrderStatus status) =>
+    status switch
+    {
+      UniversalOrderStatus.BothSigned => "Signed by both parties",
+      UniversalOrderStatus.SignedByOneParty => "Signed by one party",
+      UniversalOrderStatus.Completed => "Completed",
+      UniversalOrderStatus.Cancelled => "Cancelled",
+      UniversalOrderStatus.AdminResolving => "Admin resolving",
+      UniversalOrderStatus.Active => "Active",
+      UniversalOrderStatus.Created => "Created",
+      _ => status.ToString()
+    };
 
   private static void ScaleFilledQuantity(UpsertOrderDto dto)
   {
@@ -115,7 +173,6 @@ public class MarketDbCommand(
   {
     order.IsPartial = true;
 
-    // Wallets & status only if provided
     if (!string.IsNullOrWhiteSpace(dto.CreatorWallet))
       order.CreatorWallet = dto.CreatorWallet;
     if (!string.IsNullOrWhiteSpace(dto.AcceptorWallet))
@@ -134,11 +191,6 @@ public class MarketDbCommand(
       var childDto = BuildChildDto(order, dto);
       await childOffers.UpsertAsync(childDto, ct);
     }
-  }
-
-  private static void ApplyNonPartial(EscrowOrderEntity order, UpsertOrderDto dto)
-  {
-    EscrowOrderPatcher.ApplyUpsert(order, dto);
   }
 
   private static ChildOrderUpsertDto BuildChildDto(EscrowOrderEntity order, UpsertOrderDto source)
