@@ -183,6 +183,7 @@ public class MarketDbCommand(
     if (dto.FilledQuantity.HasValue)
       order.FilledQuantity += dto.FilledQuantity.Value;
 
+    
     // Child ticket
     if (!string.IsNullOrWhiteSpace(order.CreatorWallet) &&
         !string.IsNullOrWhiteSpace(order.AcceptorWallet) &&
@@ -202,7 +203,7 @@ public class MarketDbCommand(
 
     return new ChildOrderUpsertDto(
       order.Id,
-      order.OrderId,
+      source.TicketId ?? order.OrderId,
       owner,
       contra,
       source.Status ?? order.Status,

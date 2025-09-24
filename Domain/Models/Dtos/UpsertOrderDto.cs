@@ -48,7 +48,7 @@ public class UpsertOrderDto : IValidatableObject
   public string? AutoReply { get; set; } 
 
   public bool? IsPartial { get; set; }
-  public int? FillNonce { get; set; }
+  public ulong? TicketId { get; set; }
   public string? TicketPda { get; set; }
   public DateTime? DealStartTime { get; set; }
 
