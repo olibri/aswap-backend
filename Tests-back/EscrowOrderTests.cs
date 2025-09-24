@@ -106,7 +106,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     updatedOrder.Data[0].MaxFiatAmount.ShouldBe(10000);
     updatedOrder.Data[0].Status.ShouldBe(UniversalOrderStatus.Active);
     updatedOrder.Data[0].AcceptorWallet.ShouldBe("wallet0xzzzz");
-    updatedOrder.Data[0].FilledQuantity.ShouldBe(100000m);
+    updatedOrder.Data[0].FilledQuantity.ShouldBe(0.1m);
     updatedOrder.Data[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
   }
 
@@ -140,7 +140,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto1);
     var updatedOrder1 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
     Console.WriteLine($"Updated order: {updatedOrder1.Data[0].Amount} ,  {updatedOrder1.Data[0].FilledQuantity}");
-    updatedOrder1.Data[0].FilledQuantity.ShouldBe(100000m);
+    updatedOrder1.Data[0].FilledQuantity.ShouldBe(0.1m);
     updatedOrder1.Data[0].PaymentMethods.Count.ShouldBeGreaterThan(1);
 
 
@@ -151,7 +151,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
     };
     await marketDbCommand.UpdateCurrentOfferAsync(updateOrderDto2);
     var updatedOrder2 = await marketDbQuery.GetAllNewOffersAsync(new OffersQuery());
-    updatedOrder2.Data[0].FilledQuantity.ShouldBe(1000000m);
+    updatedOrder2.Data[0].FilledQuantity.ShouldBe(1m);
   }
 
   [Fact]
@@ -220,7 +220,7 @@ public class EscrowOrderTests(TestFixture fixture) : IClassFixture<TestFixture>
 
     var after = await q.GetNewOfferAsync(orderId);
     after.ShouldNotBeNull();
-    after.FilledQuantity.ShouldBe(100000m);
+    after.FilledQuantity.ShouldBe(0.1m);
 
     var children = await childSvc.GetByParentAsync((long)orderId);
     children.Count.ShouldBe(1);
