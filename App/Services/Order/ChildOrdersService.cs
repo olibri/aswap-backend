@@ -25,7 +25,7 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
       throw new InvalidOperationException($"Parent order '{dto.ParentOrderId}' not found.");
 
     if (parent.Id != dto.ParentOrderId)
-      throw new InvalidOperationException($"TicketId mismatch: parent={parent.OrderId}, dto={dto.TicketId}.");
+      throw new InvalidOperationException($"TicketIdChild mismatch: parent={parent.OrderId}, dto={dto.TicketId}.");
 
     var entity = await db.Set<UniversalTicketEntity>()
       .FirstOrDefaultAsync(x => x.TicketId == dto.TicketId, ct);

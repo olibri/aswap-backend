@@ -24,6 +24,12 @@ public static class EscrowOrderPatcher
       changed.Add(nameof(dto.OrderId));
     }
 
+    if (entity.TicketId != dto.TicketIdMain)
+    {
+      entity.TicketId = dto.TicketIdMain;
+      changed.Add(nameof(dto.TicketIdMain));
+    }
+
     // Required (but still confirm difference)
     if (dto.FiatCode is not null && entity.FiatCode != dto.FiatCode)
     {

@@ -11,6 +11,7 @@ public class EscrowOrderDto
   public string? OrderPda { get; set; }
   public string? VaultPda { get; set; }
   public ulong OrderId { get; set; }
+  public ulong TicketIdMain { get; set; }
 
   public string? CreatorWallet { get; set; }
   public string? AcceptorWallet { get; set; }
@@ -64,6 +65,7 @@ public class EscrowOrderDto
       OrderPda = e.OrderPda,
       VaultPda = e.VaultPda,
       OrderId = e.OrderId,
+      TicketIdMain = e.TicketId ?? 0,
 
       CreatorWallet = e.CreatorWallet,
       AcceptorWallet = e.AcceptorWallet,

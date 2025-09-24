@@ -203,7 +203,7 @@ public class MarketDbCommand(
 
     return new ChildOrderUpsertDto(
       order.Id,
-      source.TicketId ?? order.OrderId,
+      source.TicketIdChild ?? order.OrderId,
       owner,
       contra,
       source.Status ?? order.Status,

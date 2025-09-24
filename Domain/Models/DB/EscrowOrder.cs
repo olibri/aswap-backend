@@ -19,6 +19,7 @@ public class EscrowOrderEntity : IHasDomainEvents
 
 
   [Column("order_id")] public ulong OrderId { get; set; }
+  [Column("ticket_id")] public ulong? TicketId { get; set; }
 
   // on-chain state
 
