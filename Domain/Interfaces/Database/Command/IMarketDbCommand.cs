@@ -5,8 +5,9 @@ namespace Domain.Interfaces.Database.Command;
 
 public interface IMarketDbCommand
 {
-    Task CreateOfferAsync(UniversalOrderCreated offer);
+  Task CreateOfferAsync(UniversalOrderCreated offer);
+  Task<ulong> CreateBuyerOfferAsync(UpsertOrderDto upsertOrderDto);
 
-    Task<ulong> CreateBuyerOfferAsync(UpsertOrderDto upsertOrderDto);
-    Task UpdateCurrentOfferAsync(UpsertOrderDto  upsertOrder);
+  // Was: Task UpdateCurrentOfferAsync(UpsertOrderDto upsertOrder)
+  Task<EscrowOrderDto> UpdateCurrentOfferAsync(UpsertOrderDto upsertOrder, CancellationToken ct = default);
 }

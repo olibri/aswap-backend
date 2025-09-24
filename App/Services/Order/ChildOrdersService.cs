@@ -18,7 +18,7 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
     var parent = await db.EscrowOrders
       .AsNoTracking()
       .Where(x => x.Id == dto.ParentOrderId)
-      .Select(x => new { x.Id, x.OrderId, x.IsPartial })
+      .Select(x => new { x.Id, x.OrderId })
       .SingleOrDefaultAsync(ct);
 
     if (parent is null)
@@ -27,12 +27,8 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
     if (parent.OrderId != dto.TicketId)
       throw new InvalidOperationException($"TicketId mismatch: parent={parent.OrderId}, dto={dto.TicketId}.");
 
-    UniversalTicketEntity? entity = null;
-
-    if (dto.Status is UniversalOrderStatus.SignedByOneParty or UniversalOrderStatus.BothSigned)
-      entity = await db.Set<UniversalTicketEntity>()
-        .FirstOrDefaultAsync(x =>
-          x.ParentOrderId == dto.ParentOrderId, ct);
+    var entity = await db.Set<UniversalTicketEntity>()
+      .FirstOrDefaultAsync(x => x.TicketId == dto.TicketId, ct);
 
     var now = DateTime.UtcNow;
 
@@ -50,7 +46,6 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
         Amount = dto.Amount,
         TicketPda = dto.TicketPda
       };
-
       db.Add(entity);
     }
     else
@@ -59,8 +54,7 @@ public sealed class ChildOffersService(IDbContextFactory<P2PDbContext> dbFactory
       entity.Amount = dto.Amount;
       entity.TicketPda = dto.TicketPda;
       entity.UpdatedAt = now;
-
-      if (dto.Status == UniversalOrderStatus.Completed) 
+      if (dto.Status == UniversalOrderStatus.Completed)
         entity.ClosedAtUtc = now;
     }
 
