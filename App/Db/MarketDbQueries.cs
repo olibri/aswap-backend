@@ -65,22 +65,22 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
     var spec = q.BuildSpec();
     var page = await spec.ExecuteAsync(baseQ);
 
-    var orderIds = page.Data.Select(e => e.OrderId).Distinct().ToArray();
+    var orderIds = page.Data.Select(e => e.Id).Distinct().ToArray();
 
     var children = await dbContext.Set<UniversalTicketEntity>()
       .AsNoTracking()
-      .Where(c => orderIds.Contains(c.TicketId))
+      .Where(c => orderIds.Contains(c.ParentOrderId))
       .OrderByDescending(c => c.CreatedAtUtc)
       .ToListAsync();
 
     var byOrderId = children
-      .GroupBy(c => c.TicketId)
+      .GroupBy(c => c.ParentOrderId)
       .ToDictionary(g => g.Key, g => g.Select(ChildOrderDto.FromEntity).ToList());
 
     var items = page.Data.Select(e =>
     {
       var dto = EscrowOrderDto.FromEntity(e);
-      if (byOrderId.TryGetValue(e.OrderId, out var kids))
+      if (byOrderId.TryGetValue(e.Id, out var kids))
         dto.Children = kids;
       else
         dto.Children = new List<ChildOrderDto>();
