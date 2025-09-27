@@ -27,7 +27,7 @@ public sealed record ChildOrderDto(
     CreatedAtUtc: e.CreatedAtUtc,
     ClosedAtUtc: e.ClosedAtUtc,
     UpdatedAt: e.UpdatedAt,
-    Amount: e.Amount,
+    Amount: e.Amount / 1_000_000,
     TicketPda: e.TicketPda
   );
 }

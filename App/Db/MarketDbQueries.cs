@@ -60,7 +60,7 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
       .ThenInclude(m => m.Category)
       .Include(o => o.ChildOrders)
       .AsSplitQuery()
-      .AsNoTracking(); 
+      .AsNoTracking();
 
     var spec = q.BuildSpec();
     var page = await spec.ExecuteAsync(baseQ);
@@ -75,7 +75,8 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
 
     var byOrderId = children
       .GroupBy(c => c.ParentOrderId)
-      .ToDictionary(g => g.Key, g => g.Select(ChildOrderDto.FromEntity).ToList());
+      .ToDictionary(g => g.Key,
+        g => g.Select(ChildOrderDto.FromEntity).ToList());
 
     var items = page.Data.Select(e =>
     {
@@ -86,8 +87,8 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
         dto.Children = new List<ChildOrderDto>();
 
       return dto;
-    }).ToList(); 
-    
+    }).ToList();
+
     return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
   }
 
