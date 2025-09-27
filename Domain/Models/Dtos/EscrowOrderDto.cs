@@ -57,6 +57,10 @@ public class EscrowOrderDto
   public List<PaymentMethodDto> PaymentMethods { get; set; } = new();
   public List<ChildOrderDto> Children { get; set; } = new();
 
+  /* ───── added fields for UI vendor stats ───── */
+  public int UserOrdersCount { get; set; }
+  public decimal UserSuccessRatePercent { get; set; }
+
   public static EscrowOrderDto FromEntity(EscrowOrderEntity e)
   {
     var dto = new EscrowOrderDto

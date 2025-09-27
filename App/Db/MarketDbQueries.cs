@@ -38,7 +38,54 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
     var spec = qDb.BuildSpec();
     var page = await spec.ExecuteAsync(baseQ);
 
+    // map first
     var items = page.Data.Select(EscrowOrderDto.FromEntity).ToList();
+
+    // batch-load stats for unique creators on the page
+    var creators = page.Data
+      .Select(e => e.CreatorWallet)
+      .Where(w => !string.IsNullOrWhiteSpace(w))
+      .Distinct(StringComparer.OrdinalIgnoreCase)
+      .ToArray();
+
+    if (creators.Length > 0)
+    {
+      var creatorAgg = dbContext.EscrowOrders
+        .AsNoTracking()
+        .Where(o => o.CreatorWallet != null && creators.Contains(o.CreatorWallet))
+        .Select(o => new { User = o.CreatorWallet!, o.Status });
+
+      var acceptorAgg = dbContext.EscrowOrders
+        .AsNoTracking()
+        .Where(o => o.AcceptorWallet != null && creators.Contains(o.AcceptorWallet))
+        .Select(o => new { User = o.AcceptorWallet!, o.Status });
+
+      var agg = await creatorAgg.Concat(acceptorAgg)
+        .GroupBy(x => x.User)
+        .Select(g => new
+        {
+          User = g.Key,
+          Total = g.Count(),
+          Completed = g.Count(x => x.Status == UniversalOrderStatus.Completed)
+        })
+        .ToListAsync(ct);
+
+      var byUser = agg.ToDictionary(
+        x => x.User,
+        x => (Total: x.Total, SuccessPct: x.Total == 0 ? 0m : Math.Round((decimal)x.Completed / x.Total * 100m, 2)),
+        StringComparer.OrdinalIgnoreCase);
+
+      foreach (var dto in items)
+      {
+        if (!string.IsNullOrWhiteSpace(dto.CreatorWallet) &&
+            byUser.TryGetValue(dto.CreatorWallet, out var m))
+        {
+          dto.UserOrdersCount = m.Total;
+          dto.UserSuccessRatePercent = m.SuccessPct;
+        }
+      }
+    }
+
     return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
   }
 
@@ -88,6 +135,27 @@ public class MarketDbQueries(P2PDbContext dbContext) : Domain.Interfaces.Databas
 
       return dto;
     }).ToList();
+
+    // aggregate once for the requested user (lifetime)
+    var totals = await dbContext.EscrowOrders
+      .AsNoTracking()
+      .Where(o => o.CreatorWallet == userId || o.AcceptorWallet == userId)
+      .GroupBy(_ => 1)
+      .Select(g => new
+      {
+        Total = g.Count(),
+        Completed = g.Count(o => o.Status == UniversalOrderStatus.Completed)
+      })
+      .FirstOrDefaultAsync();
+
+    var total = totals?.Total ?? 0;
+    var successPct = total == 0 ? 0m : Math.Round((decimal)(totals!.Completed) / total * 100m, 2);
+
+    foreach (var dto in items)
+    {
+      dto.UserOrdersCount = total;
+      dto.UserSuccessRatePercent = successPct;
+    }
 
     return new PagedResult<EscrowOrderDto>(items, page.Page, page.Size, page.Total);
   }
